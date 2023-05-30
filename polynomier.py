@@ -2,7 +2,7 @@ from manim import *
 from helpers import *
 import numpy as np
 
-slides = False
+slides = True
 if slides:
     from manim_slides import Slide
 
@@ -78,14 +78,14 @@ class Polynomier(Slide if slides else MovingCameraScene):
         else:
             self.add(open_quote)
 
-        mit_navn = Tex("Christoffer ", "Hammar ", "Skovgaard ", "Møller").next_to(open_quote, DOWN)
+        # mit_navn = Tex("Christoffer ", "Hammar ", "Skovgaard ", "Møller").next_to(open_quote, DOWN)
         if not play_latest:
-            self.play(
-                Write(mit_navn),
-                run_time=2
-            )
-            self.slide_pause()
-            self.play(FadeOut(mit_navn), run_time=0.5)
+            # self.play(
+            #     Write(mit_navn),
+            #     run_time=2
+            # )
+            # self.slide_pause()
+            # self.play(FadeOut(mit_navn), run_time=0.5)
 
             self.play(
                 open_quote[-2].animate.set_color(YELLOW),
