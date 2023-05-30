@@ -1,0 +1,12 @@
+# This file is used internally by FFMPEG.
+file 'file:D:/UndervisningsAnimationer/media/videos/polynomier/1080p60/partial_movie_files/KonstantersBetydning/2902699114_2686367673_631829896.mp4'
+file 'file:D:/UndervisningsAnimationer/media/videos/polynomier/1080p60/partial_movie_files/KonstantersBetydning/2902699114_2864397227_230770454.mp4'
+file 'file:D:/UndervisningsAnimationer/media/videos/polynomier/1080p60/partial_movie_files/KonstantersBetydning/3931933789_3315967912_1822400341.mp4'
+file 'file:D:/UndervisningsAnimationer/media/videos/polynomier/1080p60/partial_movie_files/KonstantersBetydning/3931933789_1727935906_3572981195.mp4'
+file 'file:D:/UndervisningsAnimationer/media/videos/polynomier/1080p60/partial_movie_files/KonstantersBetydning/3931933789_2044853872_1332454316.mp4'
+file 'file:D:/UndervisningsAnimationer/media/videos/polynomier/1080p60/partial_movie_files/KonstantersBetydning/3931933789_3662819495_913050170.mp4'
+file 'file:D:/UndervisningsAnimationer/media/videos/polynomier/1080p60/partial_movie_files/KonstantersBetydning/3931933789_3592031970_42999974.mp4'
+file 'file:D:/UndervisningsAnimationer/media/videos/polynomier/1080p60/partial_movie_files/KonstantersBetydning/3931933789_639165019_1931276246.mp4'
+file 'file:D:/UndervisningsAnimationer/media/videos/polynomier/1080p60/partial_movie_files/KonstantersBetydning/3931933789_1486393266_3572981195.mp4'
+file 'file:D:/UndervisningsAnimationer/media/videos/polynomier/1080p60/partial_movie_files/KonstantersBetydning/3931933789_2197436997_793998208.mp4'
+file 'file:D:/UndervisningsAnimationer/media/videos/polynomier/1080p60/partial_movie_files/KonstantersBetydning/3931933789_2292429055_3344405771.mp4'
