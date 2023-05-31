@@ -187,6 +187,7 @@ slides = False
 def slides_pause(self, t=1.0, slides_bool=slides):
     if slides_bool:
         indicator = Dot(fill_opacity=0.5, fill_color=GREEN).scale(0.5).to_edge(DR, buff=0.1)
+        # indicator = Arrow(start=LEFT, end=RIGHT, fill_opacity=0.15, fill_color=GREEN, buff=20).to_edge(DR, buff=0.1)
         self.play(FadeIn(indicator), run_time=0.25)
         xs_pause(self)
         self.pause()
@@ -445,25 +446,40 @@ class Slider(VGroup):
                  smax=5,
                  step_size=1,
                  color=WHITE,
-                 label=None
+                 accent_color=YELLOW,
+                 label=None,
+                 direction="vertical"
                  ):
+        endpoint = UP
+        pticks = [LEFT, RIGHT]
+        scale = 2
+        if direction.lower() == "horizontal":
+            endpoint = RIGHT
+            pticks = [DOWN, UP]
+            scale = 3
+        # if direction.lower() == "vertical":
+        #     endpoint = UP
         n_points = int((smax - smin)/step_size + 1)
         tracker = ValueTracker(0)
         slider = VGroup(
             Line(
                 start=ORIGIN,
-                end=2 * UP,
-                color=WHITE,
+                # end=2 * UP,
+                end=scale * endpoint,
+                color=color,
                 stroke_width=2
             )
         )
         _slider_ticks = [
             Line(
-                start=0.05 * LEFT + i * UP,
-                end=0.05 * RIGHT + i * UP,
-                color=WHITE,
+                # start=0.05 * LEFT + i * UP,
+                # end=0.05 * RIGHT + i * UP,
+                start=0.05 * pticks[0] + i * endpoint,
+                end=0.05 * pticks[1] + i * endpoint,
+                color=color,
                 stroke_width=2
-            ) for i in np.linspace(0, 2, n_points)
+            # ) for i in np.linspace(0, 2, n_points)
+            ) for i in np.linspace(0, scale, n_points)
         ]
         slider.add(*_slider_ticks)
         slider.add(*[
@@ -472,21 +488,27 @@ class Slider(VGroup):
                 num_decimal_places=0,
                 include_sign=n != 0
             ).scale(0.35).next_to(
-                hline, LEFT, buff=0.075
+                # hline, LEFT, buff=0.075
+                hline, pticks[0], buff=0.075
             ) for n, hline in zip(np.arange(smin, smax + 0.01, 1), slider[1:])
         ])
         if label is not None:
             slider.add(
-                MathTex(label, color=color).next_to(slider[0], UP)
+                # MathTex(label).set_color(color=accent_color).next_to(slider[0], UP)
+                # MathTex(label, color=accent_color).next_to(slider[0], UP)
+                MathTex(label, color=accent_color).next_to(slider[0], endpoint)
             )
 
         slider.add(always_redraw(lambda:
             Arrow(
-               0.5 * RIGHT, 0.5 * LEFT, color=color
+               # 0.5 * RIGHT, 0.5 * LEFT, color=accent_color
+               0.5 * pticks[1], 0.5 * pticks[0], color=accent_color
             ).next_to(
-                _slider_ticks[0], RIGHT, buff=0.1
+                # _slider_ticks[0], RIGHT, buff=0.1
+                _slider_ticks[0], pticks[1], buff=0.1
             ).shift(
-                2*(tracker.get_value() - smin) / (smax - smin) * UP
+                # 2*(tracker.get_value() - smin) / (smax - smin) * UP
+                scale*(tracker.get_value() - smin) / (smax - smin) * endpoint
             )
         ))
         super().__init__(slider)
@@ -495,4 +517,7 @@ class Slider(VGroup):
         self.smax = smax
         self.step = step_size
         self.color = color
+        self.accent_color = accent_color
         self.label = label
+        self.direction = direction
+

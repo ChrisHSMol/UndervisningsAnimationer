@@ -137,20 +137,20 @@ class Polynomier(Slide if slides else MovingCameraScene):
         }
         polynomier = VGroup(
             MathTex(
-                "f_0(", "x", ")", " = ", "a_0",
+                "f_0", "(", "x", ")", " = ", "a_0",
             ),
             MathTex(
-                "f_1(", "x", ")", " = ", "a_0", " + ", "a_1", r"\cdot", "x",
+                "f_1", "(", "x", ")", " = ", "a_0", " + ", "a_1", r"\cdot", "x",
             ),
             MathTex(
-                "f_2(", "x", ")", " = ", "a_0", " + ", "a_1", r"\cdot", "x", " + ", "a_2", r"\cdot", "x", "^2",
+                "f_2", "(", "x", ")", " = ", "a_0", " + ", "a_1", r"\cdot", "x", " + ", "a_2", r"\cdot", "x", "^2",
             ),
             MathTex(
-                "f_3(", "x", ")", " = ", "a_0" " + ", "a_1", r"\cdot", "x", " + ",
+                "f_3", "(", "x", ")", " = ", "a_0" " + ", "a_1", r"\cdot", "x", " + ",
                 "a_2", r"\cdot", "x", "^2", " + ", "a_3", r"\cdot", "x", "^3",
             ),
             MathTex(
-                "f_4(", "x", ")", " = ", "a_0", " + ", "a_1", r"\cdot", "x", " + ", "a_2", r"\cdot", "x", "^2", " + ",
+                "f_4", "(", "x", ")", " = ", "a_0", " + ", "a_1", r"\cdot", "x", " + ", "a_2", r"\cdot", "x", "^2", " + ",
                 "a_3", r"\cdot", "x", "^3", " + ", "a_4", r"\cdot", "x", "^4",
             )
         ).arrange(DOWN, aligned_edge=LEFT).to_edge(RIGHT)
@@ -165,7 +165,7 @@ class Polynomier(Slide if slides else MovingCameraScene):
             for i, poly in enumerate(polynomier[1:]):
                 self.play(
                     TransformMatchingTex(
-                        polynomier[i].copy(), poly
+                        polynomier[i].copy(), poly, transform_mismatches=True
                     ),
                     run_time=2
                 )
@@ -437,7 +437,7 @@ class MonotoniForhold(Slide if slides else Scene):
         ]).add(Dot(radius=0.00))
         punktlabels = VGroup(*[
             Tex(
-                f"({plane.p2c(p.get_center())[0]:.2f}; {plane.p2c(p.get_center())[1]:.2f})",
+                f"({plane.p2c(p.get_center())[0]:.2f}, {plane.p2c(p.get_center())[1]:.2f})",
                 color=p.get_color(), z_index=p.get_z_index()
             ).scale(0.45 if p != toppunkter[-1] else 0.0).next_to(p, UP) for p in toppunkter
         ])
@@ -479,7 +479,7 @@ class MonotoniForhold(Slide if slides else Scene):
     def monotoni(self, plane, graph, toppunkter, sub_graphs):
         punktlabels = VGroup(*[
             Tex(
-                f"({plane.p2c(p.get_center())[0]:.2f}; {plane.p2c(p.get_center())[1]:.2f})",
+                f"({plane.p2c(p.get_center())[0]:.2f}, {plane.p2c(p.get_center())[1]:.2f})",
                 color=p.get_color(), z_index=p.get_z_index()
             ).scale(0.45 if p != toppunkter[-1] else 0.0).next_to(p, UP) for p in toppunkter
         ])
@@ -524,13 +524,19 @@ class MonotoniForhold(Slide if slides else Scene):
 class ParallelForskydning(Slide if slides else Scene):
     def construct(self):
         self.lodret()
+        self.vandret()
+        self.samlet()
 
         self.slide_pause(5)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t=t, slides_bool=slides_bool)
 
+    def farver(self):
+        return RED, YELLOW
+
     def lodret(self):
+        hcol, kcol = self.farver()
         width = 14
         plane = NumberPlane(
             x_range=(-10.5, 10.5, 1),
@@ -543,105 +549,265 @@ class ParallelForskydning(Slide if slides else Scene):
                 "stroke_opacity": 0.3
             }
         )
-        # self.play(
-        #     DrawBorderThenFill(plane),
-        #     run_time=2
-        # )
-        # self.slide_pause()
+        self.play(
+            DrawBorderThenFill(plane),
+            run_time=2
+        )
+        self.slide_pause()
 
-        c_tracker = ValueTracker(0)
-        cmin, cmax = -5, 5
+        k_slider = Slider(accent_color=kcol)
+        k_tracker = k_slider.tracker
         graph = always_redraw(lambda:
             plane.plot(
-                lambda x: 0.25 * x**2 + c_tracker.get_value(),
-                color=YELLOW
+                lambda x: 0.25 * x**2 + k_tracker.get_value(),
+                color=GREEN
             )
         )
-        # self.play(
-        #     Create(graph),
-        #     run_time=2
-        # )
-        # self.slide_pause()
-        self.add(plane, graph)
+        self.play(
+            Create(graph),
+            run_time=2
+        )
+        self.slide_pause()
 
-        c_slider = VGroup(
-            Line(
-                start=ORIGIN,
-                end=2 * UP,
-                color=WHITE,
-                stroke_width=2
-            )
-        )
-        _slider_ticks = [
-            Line(
-                start=0.05*LEFT + i*UP,
-                end=0.05*RIGHT + i*UP,
-                color=WHITE,
-                stroke_width=2
-            ) for i in np.linspace(0, 2, 11)
-        ]
-        c_slider.add(*_slider_ticks)
-        c_slider.add(*[
-            DecimalNumber(
-                n,
-                num_decimal_places=0,
-                include_sign=n != 0
-                # include_sign=True
-            ).scale(0.35).next_to(
-                hline, LEFT, buff=0.075
-            ) for n, hline in zip(np.arange(cmin, cmax+0.01, 1), c_slider[1:])
-        ])
-        c_slider.add(
-            MathTex("c", color=YELLOW).next_to(c_slider[0], UP)
-        )
-
-        # c_arrow = always_redraw(lambda:
-        c_slider.add(always_redraw(lambda:
-            Arrow(
-                0.5*RIGHT, 0.5*LEFT, color=YELLOW
-            ).next_to(
-                c_slider[0], RIGHT, buff=0.1
-            ).shift(
-                c_tracker.get_value() / cmax * UP
-            )
+        k_slider.set_z_index(plane.get_z_index() + 5).to_edge(UL)
+        slider_rect = always_redraw(lambda: get_background_rect(
+            k_slider,
+            stroke_colour=kcol,
         ))
-        c_slider.set_z_index(plane.get_z_index() + 5).to_edge(UL)
-        slider_rect = get_background_rect(
-            c_slider,
-            # VGroup(*c_slider, c_arrow),
-            stroke_colour=YELLOW,
-            # fill_opacity=0
-        )
+        label = MathTex("k", color=kcol).next_to(slider_rect, DOWN, buff=0.25, aligned_edge=LEFT)
         self.play(
             DrawBorderThenFill(slider_rect, run_time=1),
             LaggedStart(
-                *[DrawBorderThenFill(c, run_time=1) for c in c_slider],
-                # DrawBorderThenFill(c_arrow, run_time=1.5),
+                *[DrawBorderThenFill(k, run_time=1) for k in k_slider],
                 lag_ratio=0.075
             ),
+            Write(label)
         )
+        self.play(k_tracker.animate.set_value(0), run_time=0.1)
+        self.slide_pause()
 
         for i in range(2):
             if i == 1:
                 forskrift = always_redraw(lambda:
                     VGroup(
                         MathTex("f(x)=x^2"),
-                        # MathTex(f"{c_tracker.get_value():.2f}", color=YELLOW)
-                        DecimalNumber(c_tracker.get_value(), num_decimal_places=2, include_sign=True, color=YELLOW)
-                    ).arrange(RIGHT).next_to(graph, DOWN).shift(UP + 4*RIGHT)
+                        DecimalNumber(k_tracker.get_value(), num_decimal_places=2, include_sign=True, color=kcol)
+                    # ).arrange(RIGHT).next_to(graph, DOWN).shift(UP + 4*RIGHT).set_z_index(plane.get_z_index() + 2)
+                    ).arrange(RIGHT).to_edge(RIGHT).set_z_index(plane.get_z_index() + 2)
                 )
+                frec = get_background_rect(forskrift, stroke_colour=kcol)
                 self.play(
+                    DrawBorderThenFill(frec),
                     Write(forskrift),
                     run_time=0.5
                 )
                 self.slide_pause()
 
-            for c in [1, 2, 5, -2, -5, 3, 0]:
+            for h in [1, 2, 5, -2, -5, 3, 0]:
                 self.play(
-                    c_tracker.animate.set_value(c),
+                    k_tracker.animate.set_value(h),
                     run_time=2
                 ),
                 self.slide_pause()
+
+        self.play(
+            *[FadeOut(m) for m in self.mobjects if m not in [plane, graph]]
+        )
+        self.remove(plane, graph)
+
+    def vandret(self):
+        hcol, kcol = self.farver()
+        width = 14
+        plane = NumberPlane(
+            x_range=(-10.5, 10.5, 1),
+            y_range=(-5.5, 10.5, 1),
+            x_length=width,
+            y_length=width / 16 * 9,
+            background_line_style={
+                "stroke_color": TEAL,
+                "stroke_width": 1.5,
+                "stroke_opacity": 0.3
+            }
+        )
+
+        h_slider = Slider(accent_color=hcol, direction="horizontal")
+        h_tracker = h_slider.tracker
+        # h_tracker = ValueTracker(0)
+        hmin, hmax = -5, 5
+        graph = always_redraw(lambda:
+            plane.plot(
+                lambda x: 0.25 * (x - h_tracker.get_value())**2,
+                color=GREEN
+            )
+        )
+        self.add(plane, graph)
+        self.slide_pause()
+
+        h_slider.set_z_index(plane.get_z_index() + 5).to_edge(DL)
+        slider_rect = get_background_rect(
+            h_slider,
+            stroke_colour=hcol,
+        )
+        label = MathTex("h", color=kcol).next_to(slider_rect, UP, buff=0.25, aligned_edge=LEFT)
+        self.play(
+            DrawBorderThenFill(slider_rect, run_time=1),
+            LaggedStart(
+                *[DrawBorderThenFill(h, run_time=1) for h in h_slider],
+                lag_ratio=0.075
+            ),
+            Write(label)
+        )
+        self.play(h_tracker.animate.set_value(0), run_time=0.1)
+        self.slide_pause()
+
+        for i in range(2):
+            if i == 1:
+                forskrift = always_redraw(lambda:
+                    VGroup(
+                        MathTex("f(x)=(x "),
+                        DecimalNumber(-h_tracker.get_value(), num_decimal_places=2, include_sign=True, color=hcol),
+                        MathTex(")^2")
+                    ).arrange(RIGHT, buff=0.1).next_to(graph, DOWN, buff=0.5).set_z_index(plane.get_z_index() + 2)
+                )
+                frec = get_background_rect(forskrift, stroke_colour=hcol)
+                self.play(
+                    DrawBorderThenFill(frec),
+                    Write(forskrift),
+                    run_time=0.5
+                )
+                self.slide_pause()
+
+            for h in [1, 2, 5, -2, -5, 3, 0]:
+                self.play(
+                    h_tracker.animate.set_value(h),
+                    run_time=2
+                ),
+                self.slide_pause()
+
+        self.play(
+            *[FadeOut(m) for m in self.mobjects if m not in [plane, graph]]
+        )
+        self.remove(plane, graph)
+
+    def samlet(self):
+        np.random.seed(42)
+        hcol, kcol = self.farver()
+        width = 14
+        plane = NumberPlane(
+            x_range=(-10.5, 10.5, 1),
+            y_range=(-5.5, 10.5, 1),
+            x_length=width,
+            y_length=width / 16 * 9,
+            background_line_style={
+                "stroke_color": TEAL,
+                "stroke_width": 1.5,
+                "stroke_opacity": 0.3
+            }
+        )
+
+        k_slider = Slider(accent_color=kcol).to_edge(UL).set_z_index(plane.get_z_index() + 5)
+        k_tracker = k_slider.tracker
+        h_slider = Slider(accent_color=hcol, direction="horizontal").to_edge(LEFT).shift(1.25*DOWN).set_z_index(plane.get_z_index() + 5)
+        h_tracker = h_slider.tracker
+
+        krec = get_background_rect(k_slider, stroke_colour=kcol)
+        hrec = get_background_rect(h_slider, stroke_colour=hcol)
+        labels = VGroup(
+            MathTex("k", color=kcol).next_to(krec, DOWN, buff=0.25, aligned_edge=LEFT),
+            MathTex("h", color=hcol).next_to(hrec, UP, buff=0.25, aligned_edge=LEFT)
+        )
+        graph = always_redraw(lambda:
+            plane.plot(
+                lambda x: 0.25 * (x - h_tracker.get_value())**2 + k_tracker.get_value(),
+                color=GREEN
+            )
+        )
+        self.add(plane, graph)
+        self.slide_pause()
+
+        self.play(
+            *[DrawBorderThenFill(rec, run_time=1) for rec in [krec, hrec]],
+            *[LaggedStart(
+                *[DrawBorderThenFill(h, run_time=1) for h in slider],
+                lag_ratio=0.075
+            ) for slider in [k_slider, h_slider]],
+            Write(labels)
+        )
+        self.play(h_tracker.animate.set_value(0), k_tracker.animate.set_value(0), run_time=0.1)
+        self.slide_pause()
+
+        forskrift = always_redraw(lambda:
+            VGroup(
+                MathTex("f(x)=(x "),
+                DecimalNumber(-h_tracker.get_value(), num_decimal_places=2, include_sign=True, color=hcol),
+                MathTex(")^2"),
+                DecimalNumber(k_tracker.get_value(), num_decimal_places=2, include_sign=True, color=kcol)
+            ).arrange(RIGHT, buff=0.1).to_edge(DL).set_z_index(h_slider.get_z_index() + 2)
+        )
+        frec = get_background_rect(forskrift, stroke_colour=color_gradient([kcol, hcol], 2))
+        self.play(
+            DrawBorderThenFill(frec),
+            Write(forskrift),
+            run_time=0.5
+        )
+        self.slide_pause()
+
+        toppunkt = always_redraw(lambda:
+            Dot(
+                plane.c2p(h_tracker.get_value(), k_tracker.get_value()),
+                color=PURE_GREEN
+            )
+        )
+        koord = always_redraw(lambda:
+            VGroup(
+                MathTex("("),
+                MathTex(f"{h_tracker.get_value():.2f}", color=hcol),
+                MathTex("; "),
+                MathTex(f"{k_tracker.get_value():.2f}", color=kcol),
+                MathTex(")")
+            ).arrange(RIGHT, buff=0.15).next_to(toppunkt, DR).set_z_index(plane.get_z_index() + 2)
+        )
+        koordrec = always_redraw(lambda:
+            get_background_rect(koord, stroke_colour=color_gradient([kcol, hcol], 2)).move_to(koord)
+        )
+        self.play(
+            Create(toppunkt),
+            Write(koord),
+            DrawBorderThenFill(koordrec)
+        )
+        self.slide_pause()
+
+        for x, y in np.append(np.random.uniform(low=-3, high=5, size=(5, 2)), [[0, 0]], axis=0):
+            self.play(
+                h_tracker.animate.set_value(x),
+                k_tracker.animate.set_value(y),
+                run_time=3
+            )
+            self.slide_pause()
+
+        ligning = MathTex("f(x) = (x", "-h", ")^2", "+k").set_color_by_tex_to_color_map(
+            {"h": hcol, "k": kcol}
+        ).scale(2).set_z_index(forskrift.get_z_index() + 10)
+        lrec = get_background_rect(ligning, stroke_colour=color_gradient([kcol, hcol], 2), stroke_width=2)
+        self.play(
+            # TransformMatchingShapes(
+            #     forskrift.copy(), ligning, transform_mismatches=True
+            # ),
+            # TransformFromCopy(
+            #     frec, lrec
+            # ),
+            Transform(forskrift.copy(), ligning),
+            Transform(frec.copy(), lrec),
+            run_time=2
+        )
+        self.remove(ligning, lrec)
+        self.add(ligning, lrec)
+        # self.slide_pause()
+
+        self.play(
+            *[FadeOut(m) for m in self.mobjects if m not in [ligning, lrec]],
+            run_time=0.5
+        )
 
 
 class KonstantersBetydning(Slide if slides else Scene):
