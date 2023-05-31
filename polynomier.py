@@ -641,14 +641,14 @@ class ParallelForskydning(Slide if slides else Scene):
             )
         )
         self.add(plane, graph)
-        self.slide_pause()
+        # self.slide_pause()
 
         h_slider.set_z_index(plane.get_z_index() + 5).to_edge(DL)
         slider_rect = get_background_rect(
             h_slider,
             stroke_colour=hcol,
         )
-        label = MathTex("h", color=kcol).next_to(slider_rect, UP, buff=0.25, aligned_edge=LEFT)
+        label = MathTex("h", color=hcol).next_to(slider_rect, UP, buff=0.25, aligned_edge=LEFT)
         self.play(
             DrawBorderThenFill(slider_rect, run_time=1),
             LaggedStart(
@@ -723,7 +723,7 @@ class ParallelForskydning(Slide if slides else Scene):
             )
         )
         self.add(plane, graph)
-        self.slide_pause()
+        # self.slide_pause()
 
         self.play(
             *[DrawBorderThenFill(rec, run_time=1) for rec in [krec, hrec]],
@@ -806,6 +806,13 @@ class ParallelForskydning(Slide if slides else Scene):
 
         self.play(
             *[FadeOut(m) for m in self.mobjects if m not in [ligning, lrec]],
+            run_time=0.5
+        )
+        sluttekst = Tex("Giver toppunktet koordinaterne (", "$h$", ", ", "$k$", ")").next_to(lrec, DOWN)
+        sluttekst[1].set_color(hcol)
+        sluttekst[3].set_color(kcol)
+        self.play(
+            Write(sluttekst),
             run_time=0.5
         )
 
