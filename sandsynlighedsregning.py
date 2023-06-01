@@ -1184,6 +1184,9 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
     def additionsprincip(self):
         bcol = BLUE_C
         rcol = invert_color(bcol)
+        # squarecolors = ["#003f5c", "#ffe2ff", "#ffa600"]
+        # squarecolors = ["#003f5c", "#ffa600", "#003f5c"]
+        squarecolors = [PURE_BLUE, PURE_GREEN, PURE_RED]
         nullius = Square(1, stroke_width=0).to_edge(UL, buff=0.5).scale(0.5)
         blue_dice = VGroup(*[
             DieFace(
@@ -1225,9 +1228,10 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
         self.slide_pause(0)
 
         sum_of_dice = VGroup()
-        i = 0
-        for b in blue_dice:
-            for r in red_dice:
+        numdice = {str(i): VGroup() for i in np.arange(11)+2}
+        k = 0
+        for i, b in enumerate(blue_dice):
+            for j, r in enumerate(red_dice):
                 bcopy = b.copy().scale(0.75).move_to([
                     b.get_center()[0] + 0.2,
                     r.get_center()[1],
@@ -1239,29 +1243,39 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
                     0
                 ])
                 sum_of_dice.add(VGroup(bcopy, rcopy))
+                numdice[str(i + j + 2)].add(
+                    VGroup(bcopy.copy(), rcopy.copy())
+                )
                 self.play(
                     TransformFromCopy(b, bcopy),
                     TransformFromCopy(r, rcopy),
-                    run_time=1.25 - np.exp(-0.003*(i - 18)**2)
+                    run_time=1.25 - np.exp(-0.003*(k - 18)**2)
                 )
-                i += 1
+                k += 1
                 # self.add(bcopy, rcopy)
         self.slide_pause()
+        # print(numdice)
 
         squares = VGroup()
+        squaresdict = {str(i): VGroup() for i in np.arange(11)+2}
         for i in range(6):
             temp = VGroup()
             for j in range(6):
-                temp.add(Square(
+                # print(f"{i}\t{j}\t{sum_of_dice[i]}")
+                s = Square(
                     1,
                     stroke_width=0.1,
                     fill_color=interpolate_color(
-                        interpolate_color(PURE_GREEN, PURE_BLUE, (i+j)/10),
-                        interpolate_color(PURE_BLUE, PURE_RED, (i+j)/10),
+                        # interpolate_color(PURE_GREEN, PURE_BLUE, (i+j)/10),
+                        # interpolate_color(PURE_BLUE, PURE_RED, (i+j)/10),
+                        interpolate_color(squarecolors[0], squarecolors[1], min((i+j), 5)/5),
+                        interpolate_color(squarecolors[1], squarecolors[2], (max((i+j), 5)-5)/5),
                         (i+j)/10
                     ),
                     fill_opacity=0.15
-                ).set_z_index(1))
+                ).set_z_index(1)
+                temp.add(s)
+                squaresdict[str(i + j + 2)].add(s.set_style(fill_opacity=0.75))
             temp.arrange(RIGHT, buff=0)
             squares.add(temp)
         squares.arrange(DOWN, buff=0).move_to([
@@ -1269,14 +1283,15 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
             between_mobjects(*red_dice[2:4])[1],
             0
         ])
-        # self.add(squares)
-        self.play(
-            LaggedStart(
-                *[FadeIn(m) for m in squares],
-                lag_ratio=0.2
-            ),
-            run_time=2
-        )
+        for s in squaresdict.keys():
+            self.play(
+                FadeIn(squaresdict[s]),
+                run_time=1
+            )
+            self.play(
+                squaresdict[s].animate.set_style(fill_opacity=0.15),
+                run_time=0.5
+            )
         self.slide_pause()
 
         numsquares = {str(i): VGroup() for i in np.arange(11)+2}
@@ -1297,18 +1312,18 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
             ) for i in range(11)
         ])
         axis = VGroup(
-            Arrow(start=nullii.get_left()+0.4*LEFT, end=nullii.get_right()+0.8*RIGHT),
+            Arrow(start=nullii.get_left()+0.4*LEFT, end=nullii.get_right()+0.8*RIGHT, stroke_width=1),
             *[
                 Line(
-                    start=nullii[i].get_center()-0.125*UP, end=nullii[i].get_center()+0.125*UP
+                    start=nullii[i].get_center()-0.125*UP, end=nullii[i].get_center()+0.125*UP, stroke_width=1
                 ) for i in range(len(nullii))
             ],
             *[
                 DecimalNumber(
                     i+2, num_decimal_places=0
-                ).move_to(nullii[i].get_center()-0.35*UP) for i in range(len(nullii))
+                ).scale(0.75).move_to(nullii[i].get_center()-0.35*UP) for i in range(len(nullii))
             ]
-        ).shift(0.275*DOWN)
+        ).shift(0.25*DOWN)
         self.play(
             DrawBorderThenFill(axis),
             run_time=1
@@ -1319,13 +1334,38 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
                     DOWN, buff=0.00
                 ).move_to(nullii[i]).shift(
                     0.25*(snum.get_value() - 1) * UP
-                ).set_style(fill_opacity=0.75),
+                ).set_style(fill_opacity=0.75).set_z_index(0),
+                numdice[str(i+2)].animate.scale(0.5).arrange(
+                    UP, buff=0.325
+                ).move_to(nullii[i]).shift(
+                    0.25*(snum.get_value() - 1) * UP
+                ).set_z_index(0),
                 run_time=2.5 - 2*np.exp(-0.05 * (snum.get_value() - 6)**2)
             )
             self.play(
                 Write(snum.next_to(numsquares[str(i+2)], UP)),
                 run_time=0.25
             )
+        self.slide_pause()
+
+        self.camera.frame.save_state()
+        self.play(
+            self.camera.frame.animate.set(
+                width=axis.width * 1.35
+            ).move_to(axis.get_center() + 1.55 * UP),
+            run_time=4
+        )
+        self.slide_pause()
+
+        for k in np.random.randint(2, 12, 2):
+            self.play(
+                Circumscribe(
+                    VGroup(squarenums[k-2], *numsquares[str(k)]),
+                    fade_out=True, time_width=4
+                ),
+                run_time=5
+            )
+            self.slide_pause()
 
 
 # subprocess.call([r"manim .\sandsynlighedsregning.py FairDie -pql"])
