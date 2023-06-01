@@ -897,9 +897,10 @@ class FairDie(Slide, MovingCameraScene if slides else MovingCameraScene):
         self.slide_pause()
 
 
-class MultiOgAddiPrincip(Slide if slides else MovingCameraScene):
+class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraScene):
     def construct(self):
         self.counting_tree()
+        self.additionsprincip()
 
         self.slide_pause(5)
 
@@ -1080,6 +1081,251 @@ class MultiOgAddiPrincip(Slide if slides else MovingCameraScene):
         self.play(
             Write(question)
         )
+        self.slide_pause()
+
+        choices = VGroup()
+        frames = VGroup()
+        for ilevel, level in enumerate([first_level, second_level, third_level]):
+            while isinstance(level, list):
+                level = level[-1]
+            frames.add(
+                Rectangle(
+                    width=1.25*level["labels"].width, height=1.25*level["labels"].height
+                ).set_style(
+                    stroke_width=1,
+                    stroke_color=node_colors[ilevel][1]
+                ).move_to(level["labels"])
+            )
+            choices.add(
+                DecimalNumber(
+                    len(labels[ilevel]),
+                    num_decimal_places=0,
+                    color=node_colors[ilevel][1]
+                ).move_to(
+                    [srec.get_right()[0], level["labels"].get_center()[1], 0]
+                ).shift(RIGHT)
+            )
+        self.play(
+            DrawBorderThenFill(frames[0]),
+            Write(choices[0])
+        )
+        # self.slide_pause()
+        for i in range(len(frames)):
+            if i > 0:
+                self.play(
+                    Transform(frames[i-1], frames[i]),
+                    TransformFromCopy(choices[i-1], choices[i]),
+                    run_time=2
+                )
+                self.remove(frames[i-1], frames[i])
+                self.add(frames[i])
+                # self.slide_pause()
+        self.play(FadeOut(frames[i]))
+        self.slide_pause()
+
+        udregning = MathTex(
+            f"{choices[0].get_value():.0f}", r"\cdot", f"{choices[1].get_value():.0f}",
+            r"\cdot", f"{choices[2].get_value():.0f}", "=",
+            f"{choices[0].get_value()*choices[1].get_value()*choices[2].get_value():.0f}"
+        ).next_to(question, DOWN)
+        udregning[0].set_color(choices[0].get_color())
+        udregning[2].set_color(choices[1].get_color())
+        udregning[4].set_color(choices[2].get_color())
+        udregning[-1].set_color(color_gradient(colors[1:], 3))
+        self.play(
+            TransformMatchingShapes(
+                choices.copy(), udregning, path_arc=-PI/2
+            ),
+            run_time=2
+        )
+        self.slide_pause()
+
+        counting = VGroup()
+        i = 1
+        for branch in third_level:
+            for arm in branch:
+                for lab in arm["labels"]:
+                    counting.add(
+                        DecimalNumber(
+                            i, num_decimal_places=0, color=node_colors[-1][-1]
+                        ).scale(0.75).move_to([lab.get_center()[0], srec.get_bottom()[1] + 0.15, 0])
+                    )
+                    i += 1
+
+        # self.play(
+        #     Write(counting),
+        #     run_time=3
+        # )
+        self.play(
+            Write(counting[0])
+        )
+        for i in range(len(counting)):
+            if i == 0:
+                continue
+            self.play(
+                Transform(
+                    counting[i-1], counting[i]
+                ),
+                run_time=1
+            )
+            self.remove(counting[i-1], counting[i])
+            self.add(counting[i])
+        self.slide_pause()
+        self.play(
+            *[FadeOut(m) for m in self.mobjects],
+            run_time=2
+        )
+        self.play(
+            Restore(
+                self.camera.frame
+            ),
+        )
+
+    def additionsprincip(self):
+        bcol = BLUE_C
+        rcol = invert_color(bcol)
+        nullius = Square(1, stroke_width=0).to_edge(UL, buff=0.5).scale(0.5)
+        blue_dice = VGroup(*[
+            DieFace(
+                i+1, fill_color=bcol, dot_color=BLACK
+            ).set_z_index(2).scale(0.5) for i in range(6)
+        ]).arrange(RIGHT, buff=0.5).next_to(nullius, RIGHT, buff=0.5)
+        red_dice = VGroup(*[
+            DieFace(
+                i+1, fill_color=rcol, dot_color=WHITE
+            ).set_z_index(2).scale(0.5) for i in range(6)
+        ]).arrange(DOWN, buff=0.5).next_to(nullius, DOWN, buff=0.5)
+        self.play(
+            *[DrawBorderThenFill(b) for b in blue_dice],
+            *[DrawBorderThenFill(r) for r in red_dice],
+        )
+        # self.add(blue_dice, red_dice)
+
+        grid = VGroup(
+            *[
+                Line(
+                    start=b.get_left() + 0.25*LEFT + 0.5*UP,
+                    end=b.get_left() + 0.25*LEFT + 6.5*DOWN,
+                    stroke_width=2 if b == blue_dice[0] else 0.5
+                ) for b in blue_dice
+            ],
+            *[
+                Line(
+                    start=r.get_top() + 0.25*UP + 0.5*LEFT,
+                    end=r.get_top() + 0.25*UP + 6.5*RIGHT,
+                    stroke_width=2 if r == red_dice[0] else 0.5
+                ) for r in red_dice
+            ]
+        )
+        self.play(
+            DrawBorderThenFill(grid),
+            run_time=1
+        )
+        # self.add(grid)
+        self.slide_pause(0)
+
+        sum_of_dice = VGroup()
+        i = 0
+        for b in blue_dice:
+            for r in red_dice:
+                bcopy = b.copy().scale(0.75).move_to([
+                    b.get_center()[0] + 0.2,
+                    r.get_center()[1],
+                    0
+                ])
+                rcopy = r.copy().scale(0.75).move_to([
+                    b.get_center()[0] - 0.2,
+                    r.get_center()[1],
+                    0
+                ])
+                sum_of_dice.add(VGroup(bcopy, rcopy))
+                self.play(
+                    TransformFromCopy(b, bcopy),
+                    TransformFromCopy(r, rcopy),
+                    run_time=1.25 - np.exp(-0.003*(i - 18)**2)
+                )
+                i += 1
+                # self.add(bcopy, rcopy)
+        self.slide_pause()
+
+        squares = VGroup()
+        for i in range(6):
+            temp = VGroup()
+            for j in range(6):
+                temp.add(Square(
+                    1,
+                    stroke_width=0.1,
+                    fill_color=interpolate_color(
+                        interpolate_color(PURE_GREEN, PURE_BLUE, (i+j)/10),
+                        interpolate_color(PURE_BLUE, PURE_RED, (i+j)/10),
+                        (i+j)/10
+                    ),
+                    fill_opacity=0.15
+                ).set_z_index(1))
+            temp.arrange(RIGHT, buff=0)
+            squares.add(temp)
+        squares.arrange(DOWN, buff=0).move_to([
+            between_mobjects(*blue_dice[2:4])[0],
+            between_mobjects(*red_dice[2:4])[1],
+            0
+        ])
+        # self.add(squares)
+        self.play(
+            LaggedStart(
+                *[FadeIn(m) for m in squares],
+                lag_ratio=0.2
+            ),
+            run_time=2
+        )
+        self.slide_pause()
+
+        numsquares = {str(i): VGroup() for i in np.arange(11)+2}
+        for i in range(6):
+            for j in range(6):
+                numsquares[str(i + j + 2)].add(
+                    squares[i][j].copy()
+                )
+        nullii = VGroup(
+            *[Square(0.5, stroke_width=1) for _ in range(11)]
+        ).arrange(RIGHT, buff=0.00).to_edge(DR, buff=0.75)
+
+        squarenums = VGroup(*[
+            DecimalNumber(
+                len(numsquares[str(i+2)]),
+                num_decimal_places=0,
+                color=numsquares[str(i+2)][0].get_color()
+            ) for i in range(11)
+        ])
+        axis = VGroup(
+            Arrow(start=nullii.get_left()+0.4*LEFT, end=nullii.get_right()+0.8*RIGHT),
+            *[
+                Line(
+                    start=nullii[i].get_center()-0.125*UP, end=nullii[i].get_center()+0.125*UP
+                ) for i in range(len(nullii))
+            ],
+            *[
+                DecimalNumber(
+                    i+2, num_decimal_places=0
+                ).move_to(nullii[i].get_center()-0.35*UP) for i in range(len(nullii))
+            ]
+        ).shift(0.275*DOWN)
+        self.play(
+            DrawBorderThenFill(axis),
+            run_time=1
+        )
+        for i, snum in enumerate(squarenums):
+            self.play(
+                numsquares[str(i+2)].animate.scale(0.5).arrange(
+                    DOWN, buff=0.00
+                ).move_to(nullii[i]).shift(
+                    0.25*(snum.get_value() - 1) * UP
+                ).set_style(fill_opacity=0.75),
+                run_time=2.5 - 2*np.exp(-0.05 * (snum.get_value() - 6)**2)
+            )
+            self.play(
+                Write(snum.next_to(numsquares[str(i+2)], UP)),
+                run_time=0.25
+            )
 
 
 # subprocess.call([r"manim .\sandsynlighedsregning.py FairDie -pql"])
