@@ -346,6 +346,7 @@ class DrejeKnap(VGroup):
                  range_min=0,
                  range_max=5,
                  range_step=1,
+                 start_value=0,
                  radius=1,
                  label=None,
                  show_value=False
@@ -386,14 +387,16 @@ class DrejeKnap(VGroup):
         )
         circ += marks
         # angle_tracker = ValueTracker(range_min)
-        angle_tracker = ValueTracker(0)
+        angle_tracker = ValueTracker(start_value)
         circ += always_redraw(lambda:
             Line(
                 start=circ[2].point_at_angle(
-                    (angle_offset - angle_step * (angle_tracker.get_value()-range_min)) * DEGREES
+                    # (angle_offset - angle_step * (angle_tracker.get_value()-range_min)) * DEGREES
+                    (angle_offset - angle_step * (angle_tracker.get_value() - range_min + range_max) / (range_max - range_min)) * DEGREES
                 ),
                 end=circ[0].point_at_angle(
-                    (angle_offset - angle_step * (angle_tracker.get_value()-range_min)) * DEGREES
+                    # (angle_offset - angle_step * (angle_tracker.get_value()-range_min)) * DEGREES
+                    (angle_offset - angle_step * (angle_tracker.get_value() - range_min + range_max) / (range_max - range_min)) * DEGREES
                 ),
                 color=accent_color,
                 stroke_width=6
