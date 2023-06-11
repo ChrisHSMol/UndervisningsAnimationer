@@ -522,4 +522,3 @@ class Slider(VGroup):
         self.accent_color = accent_color
         self.label = label
         self.direction = direction
-
