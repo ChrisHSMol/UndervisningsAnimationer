@@ -525,3 +525,12 @@ class Slider(VGroup):
         self.accent_color = accent_color
         self.label = label
         self.direction = direction
+
+
+def three_way_interpolate(c1, c2, c3, alpha, alpha_max):
+    c = interpolate_color(
+        interpolate_color(c1, c2, min(alpha, 0.5*alpha_max) / (0.5*alpha_max)),
+        interpolate_color(c2, c3, (max(alpha, 0.5*alpha_max) - 0.5*alpha_max) / (0.5*alpha_max)),
+        alpha / alpha_max
+    )
+    return c
