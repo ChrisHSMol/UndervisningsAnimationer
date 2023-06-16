@@ -43,44 +43,30 @@ class BezierSplineExample(Scene):
 
 class ShineTester(Scene):
     def construct(self):
-        line = Line(LEFT, UP, stroke_width=2, color=YELLOW)
-
-        # line_shine = VGroup(
-        #     *[
-        #         Line(
-        #             start=line.get_left(),
-        #             end=line.get_right(),
-        #             stroke_width=(2*(i + 1))**2
-        #         ).set_opacity(np.exp(-(i+1)**2)) for i in np.linspace(2, 0, 10)
-        #     ]
+        # line = Line(LEFT, UP, stroke_width=2, color=YELLOW)
+        # line = VGroup(line, *add_shine(line, 10))
+        # self.play(
+        #     *[Create(shine) for shine in line],
+        #     run_time=4
         # )
-        # for shine in line_shine:
-        #     self.add(shine)
-        #     self.wait(1)
-        # self.add(line)
-        line = add_shine(line, 10)
-        self.play(
-            *[Create(shine) for shine in line],
-            run_time=4
-        )
-
-        circ = Circle(radius=2, color=BLUE, stroke_width=2).shift(DOWN).set_style(fill_opacity=0)
-        circ = add_shine(circ, 10)
-        self.play(
-            *[Create(shine) for shine in circ],
-            run_time=4
-        )
-
-        self.wait(1)
-        fade_out_all(self)
+        #
+        # circ = Circle(radius=2, color=BLUE, stroke_width=2).shift(DOWN).set_style(fill_opacity=0)
+        # circ = VGroup(circ, *add_shine(circ, 10))
+        # self.play(
+        #     *[Create(shine) for shine in circ],
+        #     run_time=4
+        # )
+        #
+        # self.wait(1)
+        # fade_out_all(self)
 
         plane = NumberPlane()
         graph = plane.plot(lambda x: x**2)
         self.add(plane)
-        graph = add_shine(graph)
+        graph = VGroup(graph, *add_shine(graph, nlines=10))
         self.play(
-            # *[Create(g) for g in graph],
-            Create(graph),
+            # Create(graph),
+            DrawBorderThenFill(graph),
             run_time=2
         )
         self.wait(2)

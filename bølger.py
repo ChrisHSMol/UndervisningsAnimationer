@@ -3,7 +3,7 @@ from helpers import *
 import numpy as np
 import math
 
-slides = False
+slides = True
 if slides:
     from manim_slides import Slide
 
@@ -34,6 +34,9 @@ class Egenskaber(Slide if slides else Scene):
             }
         )
         self.play(DrawBorderThenFill(plane))
+        subtitle = Tex("Bølgelængde", color=RED, font_size=48).set_z_index(plane.get_z_index()+2).to_edge(DL, buff=0.1)
+        subrect = get_background_rect(subtitle)
+        self.play(Write(subtitle), FadeIn(subrect))
         self.slide_pause()
 
         # sup_title = MarkupText("Bølgelængde, \lambda", color=RED).arrange(RIGHT).to_edge(UL)
@@ -180,6 +183,9 @@ class Egenskaber(Slide if slides else Scene):
             color=BLUE
         ))
         self.add(plane, wave)
+        subtitle = Tex("Amplitude", color=GREEN, font_size=48).set_z_index(plane.get_z_index()+2).to_edge(DL, buff=0.1)
+        subrect = get_background_rect(subtitle)
+        self.play(Write(subtitle), FadeIn(subrect))
         self.slide_pause()
 
         # sup_title = VGroup(
@@ -297,6 +303,9 @@ class Egenskaber(Slide if slides else Scene):
             color=BLUE
         ))
         self.add(plane, wave)
+        subtitle = Tex("Frekvens", color=YELLOW, font_size=48).set_z_index(plane.get_z_index()+2).to_edge(DL, buff=0.1)
+        subrect = get_background_rect(subtitle)
+        self.play(Write(subtitle), FadeIn(subrect))
         self.slide_pause()
 
         # sup_title = VGroup(

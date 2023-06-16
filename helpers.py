@@ -268,37 +268,21 @@ class DieFace(VGroup):
 def add_shine(mob, nlines=10, ends=False):
     # shines = VGroup(
     #     *[
-    #         Line(
-    #             # start=line.get_left(),
-    #             # end=line.get_right(),
-    #             start=line.get_start(),
-    #             end=line.get_end(),
+    #         mob.copy().set_style(
     #             stroke_width=(2 * (i + 1)) ** 2,
-    #             color=line.get_color()
+    #             # fill_opacity=np.exp(-(i + 1) ** 2)
     #         ).set_opacity(np.exp(-(i + 1) ** 2)) for i in np.linspace(2, 0, nlines)
+    #         # ) for i in np.linspace(2, 0, nlines)
     #     ]
     # )
-    shines = VGroup(
-        *[
-            mob.copy().set_style(
-                stroke_width=(2 * (i + 1)) ** 2,
-                # fill_opacity=np.exp(-(i + 1) ** 2)
-            ).set_opacity(np.exp(-(i + 1) ** 2)) for i in np.linspace(2, 0, nlines)
-            # ) for i in np.linspace(2, 0, nlines)
-        ]
-    )
-    # if ends:
-    #     for ex in [line.get_start(), line.get_end()]:
-    #         shines.add(
-    #             *[
-    #                 Dot(
-    #                     ex,
-    #                     color=line.get_color(),
-    #                     radius=(0.145*(i + 1)) ** 2
-    #                 ).set_opacity(np.exp(-(i + 1) ** 2)) for i in np.linspace(2, 0, nlines)
-    #             ]
-    #         )
-    shines.add(mob)
+    # shines.add(mob)
+    shines = always_redraw(lambda: VGroup(*[
+        mob.copy().set_style(
+            # stroke_width=(mob.get_stroke_width() * (i + 1)) ** 2,
+            stroke_width=(5 * (i + 1)) ** 2,
+            fill_opacity=0
+        ).set_opacity(np.exp(-(i + 1) ** 2)) for i in np.linspace(1, 0, nlines)
+    ]))
     return shines
 
 
