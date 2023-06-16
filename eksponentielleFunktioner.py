@@ -1,14 +1,14 @@
 from manim import *
+from helpers import *
 slides = True
 if slides:
     from manim_slides import Slide
-from helpers import *
 
 
 class ToPunktExp(Slide if slides else Scene):
     def construct(self):
         def p2p_anim(mob1, mob2, tex1, tex2=None, index=0):
-            if tex2 == None:
+            if tex2 is None:
                 tex2 = tex1
             return ReplacementTransform(
                 mob1.get_parts_by_tex(tex1)[index],
@@ -16,7 +16,7 @@ class ToPunktExp(Slide if slides else Scene):
             )
 
         def p2p_anim_copy(mob1, mob2, tex1, tex2=None, index=0):
-            if tex2 == None:
+            if tex2 is None:
                 tex2 = tex1
             return TransformFromCopy(
                 mob1.get_parts_by_tex(tex1)[index],

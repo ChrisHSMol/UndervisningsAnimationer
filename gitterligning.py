@@ -9,8 +9,8 @@ if slides:
 
 class GitterLigning(Slide if slides else Scene):
     def construct(self):
-        # self.slide_pause()
-        # self.udstyr()
+        self.slide_pause()
+        self.udstyr()
         self.gitter_ligning()
         self.slide_pause(5)
 
@@ -72,6 +72,7 @@ class GitterLigning(Slide if slides else Scene):
             ),
             run_time=2
         )
+        self.slide_pause()
         self.play(
             linjer.animate.set_value(200),
             run_time=5
@@ -227,29 +228,46 @@ class GitterLigning(Slide if slides else Scene):
         wall_name = Tex("Væg").next_to(wall, RIGHT).shift(3.5 * UP)
         self.add(laser_gun, laser_name, wall, wall_name, gitter_top, gitter_name)
 
+        ligning = MathTex(
+            r"\sin(\theta_n)", "=", r"{n \cdot \lambda \over d}"
+        ).to_edge(UL)
+        ligning[0][5].set_color(YELLOW)
+        ligning[2][0].set_color(YELLOW)
+        ligning[2][2].set_color(color_gradient([BLUE, GREEN, RED], 3))
+        ligning[2][-1].set_color(LIGHT_PINK)
+        konstant = MathTex("; ", "d", "=", r"{1\over", "ridser}").set_color_by_tex_to_color_map(
+            {"d": LIGHT_PINK, "ridser": gitter_top.get_color()}
+        ).next_to(ligning, RIGHT, buff=1)
+        self.play(
+            Write(ligning),
+            Write(konstant),
+            run_time=2
+        )
+
         wavelengths = [400, 532, 680]
         colors = [BLUE, GREEN, RED]
         wc = {str(w): c for w, c in zip(wavelengths, colors)}
-        self.remove(gitter_name)
-        for i, linjer in enumerate([200, 400, 600]):
+        lines = [200, 400, 600]
+        for i, linjer in enumerate(lines):
             linjer = ValueTracker(linjer)
             gitter_name = Tex(
                 f"{linjer.get_value():.0f} ridser",
                 color=gitter_top.get_color()
             ).next_to(gitter_top, UL)
-            self.play(
-                Write(gitter_name),
-                run_time=0.5
-            )
+            if i > 0:
+                self.play(
+                    Write(gitter_name),
+                    run_time=0.5
+                )
 
             laser_lines = VGroup(
                 *[
-                    add_shine(Line(
+                    Line(
                         start=laser_gun.get_right() + 0.25*UP,
                         end=gitter_top.get_left(),
                         stroke_width=laser_thickness,
                         color=color
-                    )) for color in colors
+                    ) for color in colors
                 ]
             )
             laser_lambdas = VGroup(
@@ -263,43 +281,27 @@ class GitterLigning(Slide if slides else Scene):
                 *[
                     VGroup(
                         *[
-                            add_shine(Line(
+                            Line(
                                 start=gitter_top.get_right(),
                                 end=wall.get_left() + dist_gw.get_value() * np.tan(
                                     np.arcsin(
                                         n * wavelength * 10 ** (-9) * linjer.get_value() * 10 ** 3
                                     )
                                 ) * UP,
-                                # stroke_width=laser_thickness * np.exp(-0.25 * np.abs(n)),
                                 stroke_width=laser_thickness * np.exp(
                                     -3 * np.abs(np.arcsin(n * wavelength * 10 ** (-9) * linjer.get_value() * 10 ** 3))
                                 ),
-                                # color=line.get_color()
                                 color=wc[str(wavelength)]
-                            # ) for n in np.arange(-3, 3.1, 1)
-                            )) for n in np.arange(
+                            ) for n in np.arange(
                                 -np.floor(1/(wavelength * 10 ** (-9) * linjer.get_value() * 10 ** 3)),
                                 np.floor(1/(wavelength * 10 ** (-9) * linjer.get_value() * 10 ** 3)) + 0.1,
                                 1
                             )
                         ]
-                    ) for line, wavelength in zip(laser_lines[0], wavelengths)
+                    ) for line, wavelength in zip(laser_lines, wavelengths)
                 ]
             )
-            # colordots = VGroup(
-            #     *[
-            #         VGroup(
-            #             *[
-            #                 Dot(
-            #                     dline.get_end(),
-            #                     color=dline.get_color()
-            #                 ) for dline in diff_lines
-            #             ]
-            #         ) for diff_lines in difflines
-            #     ]
-            # )
 
-            # for laser, diffs, text, dots in zip(laser_lines, difflines, laser_lambdas, colordots):
             for laser, diffs, text in zip(laser_lines, difflines, laser_lambdas):
                 self.play(
                     *[Create(l) for l in laser],
@@ -317,55 +319,57 @@ class GitterLigning(Slide if slides else Scene):
                             ) for d in dline
                         ]
                     ) for dline in diffs],
-                    # rate_func=rate_functions.linear,
-                    # run_time=dist_gw.get_value()/(i+1)
                 )
                 self.slide_pause()
-                # self.play(
-                #     Create(dots),
-                #     run_time=0.5
-                # )
-                # self.slide_pause()
-                # self.play(
-                #     # FadeOut(laser, diffs, text),
-                #     FadeOut(text),
-                #     laser.animate.set_opacity(0.05),
-                #     diffs.animate.set_opacity(0.05),
-                #     # dots.animate.set_opacity(0.1),
-                #     run_time=0.25
-                # )
                 self.play(
                     *[FadeOut(m) for m in [laser, diffs, text]],
                     run_time=0.25
                 )
 
-            # for laser, diffs, dots in zip(laser_lines, difflines, colordots):
+            # self.slide_pause()
             for laser, diffs in zip(laser_lines, difflines):
-                # self.play(
-                #     laser.animate.set_opacity(1),
-                #     diffs.animate.set_opacity(1),
-                #     # dots.animate.set_opacity(1),
-                #     run_time=0.5
-                # )
                 self.play(
                     *[FadeIn(m) for m in [laser, diffs]],
                     run_time=0.5
                 )
-                self.slide_pause()
-                # self.play(
-                #     laser.animate.set_opacity(0.05),
-                #     diffs.animate.set_opacity(0.05),
-                #     # dots.animate.set_opacity(0.1),
-                #     run_time=0.5
-                # )
                 self.play(
                     *[FadeOut(m) for m in [laser, diffs]],
                     run_time=0.5
                 )
 
-            self.play(FadeOut(gitter_name), run_time=0.25)
-            # self.remove(laser_lines, difflines, colordots, gitter_name)
+            if i < len(lines) - 1:
+                self.play(FadeOut(gitter_name), run_time=0.25)
             self.remove(
-                *[m for m in self.mobjects if m not in [laser_gun, laser_name, gitter_top, wall, wall_name]]
+                *[m for m in self.mobjects if m not in [
+                    laser_gun, laser_name, gitter_top, wall, wall_name, ligning, konstant, gitter_name
+                ]]
             )
 
+        self.slide_pause()
+        self.play(
+            *[FadeOut(m, run_time=0.25) for m in self.mobjects if m not in [ligning]],
+            ligning.animate.scale(3).move_to(ORIGIN).shift(2*UP),
+            run_time=2
+        )
+        forklaring = VGroup(
+            VGroup(
+                MathTex(r"\lambda", font_size=48).set_color(color_gradient([BLUE, GREEN, RED], 3)),
+                Tex(": Bølgelængde af laserens lys", font_size=30)
+            ).arrange(RIGHT),
+            VGroup(
+                MathTex("d", font_size=48, color=LIGHT_PINK),
+                Tex(": Gitterkonstanten. Afstanden mellem to ridser", font_size=30)
+            ).arrange(RIGHT),
+            VGroup(
+                MathTex("n", color=YELLOW, font_size=48),
+                Tex(": Den n.'te ordens prik", font_size=30)
+            ).arrange(RIGHT),
+            VGroup(
+                MathTex(r"\theta", "_n", font_size=48).set_color_by_tex_to_color_map({"n": YELLOW}),
+                Tex(": Vinklen mellem 0. ordens prik og n.'te ordens prik", font_size=30)
+            ).arrange(RIGHT, aligned_edge=UP)
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.5).next_to(ligning, DOWN, aligned_edge=LEFT)
+
+        self.play(
+            Write(forklaring)
+        )

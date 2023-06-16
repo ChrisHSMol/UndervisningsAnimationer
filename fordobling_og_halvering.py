@@ -1,6 +1,9 @@
 from manim import *
 from helpers import *
 import numpy as np
+slides = True
+if slides:
+    from manim_slides import Slide
 
 graph_col = YELLOW
 a_col = PINK
@@ -25,7 +28,7 @@ plane = NumberPlane(
 )
 
 
-class FordoblingsKonstant(MovingCameraScene):
+class FordoblingsKonstant(MovingCameraScene if not slides else MovingCameraScene, Slide):
     def construct(self):
         play_title(self, "Fordoblingskonstant")
         self.fordobling()
@@ -40,6 +43,9 @@ class FordoblingsKonstant(MovingCameraScene):
         self.play(FadeOut(srec), run_time=0.5)
         self.halvering()
         play_title_reverse(self, "Fordoblings- og halveringskonstanter")
+
+    def slide_pause(self, t=1.0, slides_bool=slides):
+        return slides_pause(self, t, slides_bool)
 
     def table_test(self):
         data_points = []
@@ -103,7 +109,8 @@ class FordoblingsKonstant(MovingCameraScene):
             ),
             run_time=1
         )
-        m_pause(self)
+        # m_pause(self)
+        self.slide_pause()
 
         graph = plane.plot(
             lambda x: b * a**x,
@@ -129,7 +136,8 @@ class FordoblingsKonstant(MovingCameraScene):
             ),
             run_time=1
         )
-        m_pause(self)
+        # m_pause(self)
+        self.slide_pause()
 
         ylines = self.get_ylines(b)
 
@@ -149,7 +157,8 @@ class FordoblingsKonstant(MovingCameraScene):
                 Write(ytext, run_time=0.5),
                 run_time=1
             )
-            m_pause(self)
+            # m_pause(self)
+            self.slide_pause()
             self.play(
                 yline.animate.shift(UP * yline.get_height()),
                 ytext.animate.shift(UP * yline.get_height()),
@@ -163,7 +172,8 @@ class FordoblingsKonstant(MovingCameraScene):
                 ),
                 run_time=1
             )
-            s_pause(self)
+            # s_pause(self)
+            self.slide_pause()
             self.play(
                 Create(
                     lineh
@@ -184,7 +194,7 @@ class FordoblingsKonstant(MovingCameraScene):
                     xmark
                 )
             )
-            m_pause(self)
+            self.slide_pause()
 
         braces = VGroup(
             *[
@@ -218,7 +228,7 @@ class FordoblingsKonstant(MovingCameraScene):
                 ),
                 run_time=1
             )
-            m_pause(self)
+            self.slide_pause()
 
         forklaring = VGroup(
             Text(f"Hver gang man går {t2:.0f}"),
@@ -246,7 +256,8 @@ class FordoblingsKonstant(MovingCameraScene):
             ),
             run_time=1
         )
-        l_pause(self)
+        # l_pause(self)
+        self.slide_pause()
         fordobling = VGroup(
             Tex("Dette kalder vi ", "fordobling", "skonstanten, ", "$T_2$"),
             Tex("og vi kan beregne den sådan:"),
@@ -266,7 +277,8 @@ class FordoblingsKonstant(MovingCameraScene):
             ),
             run_time=1
         )
-        xl_pause(self)
+        # xl_pause(self)
+        self.slide_pause()
         # self.play(
         #     FadeOut(
         #         *[
@@ -287,7 +299,8 @@ class FordoblingsKonstant(MovingCameraScene):
             ),
             run_time=1
         )
-        m_pause(self)
+        # m_pause(self)
+        self.slide_pause()
 
         graph = plane.plot(
             lambda x: b * a**x,
@@ -313,7 +326,8 @@ class FordoblingsKonstant(MovingCameraScene):
             ),
             run_time=1
         )
-        m_pause(self)
+        # m_pause(self)
+        self.slide_pause()
 
         ylines = self.get_ylines(b, exp=-1)
 
@@ -334,7 +348,7 @@ class FordoblingsKonstant(MovingCameraScene):
                 Write(ytext, run_time=0.5),
                 run_time=1
             )
-            m_pause(self)
+            self.slide_pause()
             self.play(
                 yline.animate.shift(DOWN * 0.25*yline.get_height()).scale(0.5),
                 ytext.animate.shift(DOWN * 0.5*yline.get_height()),
@@ -349,7 +363,8 @@ class FordoblingsKonstant(MovingCameraScene):
                 ),
                 run_time=1
             )
-            s_pause(self)
+            # s_pause(self)
+            self.slide_pause()
             self.play(
                 Create(
                     lineh
@@ -370,7 +385,7 @@ class FordoblingsKonstant(MovingCameraScene):
                     xmark
                 )
             )
-            m_pause(self)
+            self.slide_pause()
 
         braces = VGroup(
             *[
@@ -405,7 +420,7 @@ class FordoblingsKonstant(MovingCameraScene):
                 ),
                 run_time=1
             )
-            m_pause(self)
+            self.slide_pause()
 
         forklaring = VGroup(
             Text(f"Hver gang man går {thalv:.0f}"),
@@ -432,7 +447,7 @@ class FordoblingsKonstant(MovingCameraScene):
             ),
             run_time=1
         )
-        l_pause(self)
+        self.slide_pause()
         halvering = VGroup(
             Tex("Dette kalder vi ", "halvering", "skonstanten, ", "$T_{1\\over2}$"),
             Tex("og vi kan beregne den sådan:"),
@@ -452,7 +467,6 @@ class FordoblingsKonstant(MovingCameraScene):
             ),
             run_time=1
         )
-        xl_pause(self)
+        self.slide_pause()
         fade_out_all(self)
-        m_pause(self)
 
