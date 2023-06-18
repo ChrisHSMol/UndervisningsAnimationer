@@ -546,7 +546,7 @@ class Egenskaber(Slide if slides else Scene):
         # # self.slide_pause()
 
 
-class Interferens(Slide if slides else Scene):
+class _Interferens(Slide if slides else Scene):
     def construct(self):
         self.konstr_destr()
         self.slide_pause(5)
@@ -601,6 +601,99 @@ class Interferens(Slide if slides else Scene):
         #     run_time=2
         # )
         # self.slide_pause()
+
+
+class Interferens(Slide if slides else Scene):
+    def construct(self):
+        self.konstr_destr()
+        self.slide_pause(5)
+
+    def slide_pause(self, t=1.0, slides_bool=slides):
+        return slides_pause(self, t, slides_bool)
+
+    def konstr_destr(self):
+        plane = NumberPlane(
+            x_range=[-16, 16, 1],
+            y_range=[-9, 9, 1],
+            x_length=16,
+            y_length=9,
+            background_line_style={
+                "stroke_color": TEAL,
+                "stroke_width": 1,
+                "stroke_opacity": 0.3
+            }
+        )
+        self.play(DrawBorderThenFill(plane))
+        self.slide_pause()
+
+        phase_tracker = ValueTracker(0.0)
+        amp_tracker = ValueTracker(1.0)
+        oA_tracker = ValueTracker(1.0)
+        oB_tracker = ValueTracker(1.0)
+        oAB_tracker = ValueTracker(1.0)
+
+        waveA = always_redraw(lambda:
+            plane.plot(
+                lambda x: np.cos(x),
+                color=BLUE,
+                stroke_opacity=oA_tracker.get_value()
+            )
+        )
+        waveB = always_redraw(lambda:
+            plane.plot(
+                lambda x: amp_tracker.get_value() * np.cos(x + phase_tracker.get_value()),
+                color=YELLOW,
+                stroke_opacity=oB_tracker.get_value()
+            )
+        )
+        eqA = always_redraw(lambda: MathTex(r"f(x)").set_color(waveA.get_color()).move_to(plane.c2p(-8, 4)))
+        eqB = always_redraw(lambda: MathTex(r"g(x)").set_color(waveB.get_color()).move_to(plane.c2p(8, 4)))
+        self.play(
+            LaggedStart(
+                LaggedStart(
+                    Create(waveA, run_time=2),
+                    Write(eqA),
+                    lag_ratio=0.5
+                ),
+                LaggedStart(
+                    Create(waveB, run_time=2),
+                    Write(eqB),
+                    lag_ratio=0.5
+                ),
+                lag_ratio=1
+            )
+        )
+        self.play(
+            phase_tracker.animate.set_value(-1.0)
+        )
+        self.slide_pause()
+
+        waveAB = always_redraw(lambda:
+            plane.plot(
+                lambda x: np.cos(x) + amp_tracker.get_value() * np.cos(x + phase_tracker.get_value()),
+                color=GREEN,
+                stroke_opacity=oAB_tracker.get_value()
+            )
+        )
+        self.play(
+            oA_tracker.animate.set_value(0.25),
+            oB_tracker.animate.set_value(0.25),
+            Create(waveAB, run_time=2)
+        )
+        self.slide_pause()
+
+        for amp in [2, 4, 1]:
+            for phi in [-20, 20, -1]:
+                self.play(
+                    phase_tracker.animate.set_value(phi),
+                    run_time=20
+                )
+            self.play(
+                amp_tracker.animate.set_value(amp)
+            )
+# TODO: et grafvindue pr bølge og en for den samlede? Evt. med fadede udgaver af hinanden i deres koordinatsystem
+
+
 
 
 class Doppler(Slide if slides else MovingCameraScene):

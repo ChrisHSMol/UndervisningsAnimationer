@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+<svg width="800px" height="800px" viewBox="0 0 24 24" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<style>.cls-1{fill:none;}.cls-2{clip-path:url(#clip-path);}</style>
+<clipPath id="clip-path">
+<rect class="cls-1" width="24" height="24"/>
+</clipPath>
+</defs>
+<title>lamp</title>
+<g class="cls-2">
+<path d="M19.06,22.88H4a1,1,0,0,1,0-2H19.06a1,1,0,0,1,0,2Z"/>
+<path d="M11.53,22.88a1,1,0,0,1-.71-.29L3.29,15.06a1,1,0,0,1,0-1.41L9.88,7.06a1,1,0,0,1,1.41,0,1,1,0,0,1,0,1.41L5.41,14.35l6.83,6.83a1,1,0,0,1,0,1.41A1,1,0,0,1,11.53,22.88Z"/>
+<path d="M14.35,11.59a4.3,4.3,0,0,1,0-8.59,1,1,0,0,1,1,1v6.59A1,1,0,0,1,14.35,11.59Zm-1-6.36a2.3,2.3,0,0,0,0,4.13Z"/>
+<path d="M20,13.47a1.12,1.12,0,0,1-.31-.05L14,11.54a1,1,0,1,1,.63-1.9L19,11.08V3.5L14.67,5a1,1,0,0,1-1.27-.64A1,1,0,0,1,14,3.05l5.65-1.88a1,1,0,0,1,1.31,1V12.47a1,1,0,0,1-.41.81A1,1,0,0,1,20,13.47Z"/>
+</g>
+</svg>

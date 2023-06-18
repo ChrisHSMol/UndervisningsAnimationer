@@ -7,11 +7,12 @@ if slides:
     from manim_slides import Slide
 
 
-class GitterLigning(Slide if slides else Scene):
+class GitterLigning(MovingCameraScene if not slides else MovingCameraScene, Slide):
     def construct(self):
         self.slide_pause()
         self.udstyr()
         self.gitter_ligning()
+        self.hvidt_lys()
         self.slide_pause(5)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
@@ -373,3 +374,122 @@ class GitterLigning(Slide if slides else Scene):
         self.play(
             Write(forklaring)
         )
+        self.slide_pause()
+        fade_out_all(self)
+
+    def hvidt_lys(self):
+        linjer = ValueTracker(600)  # mm^-1
+        dist_lg = ValueTracker(2)  # m
+        dist_gw = ValueTracker(5)  # m
+        laser_thickness = 4
+        # colors = [RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE]
+        # wavelengths = [700, 605, 580, 532, 472, 400]
+        wavelengths = np.linspace(400, 650, 26)
+        colors = [
+            "#8300b5", "#7e00db", "#6a00ff", "#3800ff", "#000bff", "#004cff", "#007fff",  # 400nm - 460nm
+            "#00aeff", "#00daff", "#00fff5", "#00ff87", "#09ff00", "#3aff00", "#5aff00",  # 470nm - 530nm
+            "#81ff00", "#a3ff00", "#c3ff00", "#e1ff00", "#ffff00", "#ffdf00", "#ffbe00",  # 540nm - 600nm
+            "#ff9b00", "#ff7700", "#ff4b00", "#ff1b00", "#ff0000"  # 610nm - 650nm
+        ]
+
+        lamp = SVGMobject("SVGs/lamp.svg").to_edge(LEFT).shift(0.5*DOWN)
+        lamp.set_color(invert_color(lamp.get_color()))
+        lamp_name = Tex("Lampe").set_color(color_gradient(colors, 5)).next_to(lamp, UP)
+        gitter_top = always_redraw(lambda:
+            Line(
+                DOWN, UP, color=PINK
+            ).next_to(lamp, RIGHT, buff=0).shift(0.5*UP + dist_lg.get_value()*RIGHT).set_z_index(10)
+        )
+        normal = Line(start=gitter_top.get_center(), end=gitter_top.get_center() + 2*LEFT)
+        n2 = Line(start=2*LEFT, end=2*RIGHT).shift(2*LEFT)
+        gitter_name = always_redraw(lambda:
+            Tex(
+                f"{int(linjer.get_value())} ridser",
+                color=gitter_top.get_color()
+            ).next_to(gitter_top, UL)
+        )
+        wall = Line(5*DOWN, 5*UP).shift(dist_gw.get_value() * RIGHT).set_z_index(10)
+        wall_name = Tex("Væg").next_to(wall, RIGHT).shift(3.5 * UP)
+        self.play(
+            *[FadeIn(m) for m in [lamp, lamp_name, wall, wall_name, gitter_top, gitter_name]],
+            run_time=0.25
+        )
+
+        lights = VGroup(
+            *[
+                Line(
+                    start=lamp.get_right() + 0.5*UP,
+                    end=gitter_top.get_left(),
+                    stroke_width=laser_thickness,
+                    # color=c,
+                    # stroke_opacity=1/len(colors),
+                    stroke_opacity=0.25
+                ) for c in colors
+            ]
+        )
+        wc = {str(w): c for w, c in zip(wavelengths, colors)}
+        difflines = VGroup(
+            *[
+                VGroup(
+                    *[
+                        Line(
+                            start=gitter_top.get_right(),
+                            end=wall.get_left() + dist_gw.get_value() * np.tan(
+                                np.arcsin(
+                                    n * wavelength * 10 ** (-9) * linjer.get_value() * 10 ** 3
+                                )
+                            ) * UP,
+                            stroke_width=laser_thickness * np.exp(
+                                # -3 * np.abs(np.arcsin(n * wavelength * 10 ** (-9) * linjer.get_value() * 10 ** 3))
+                                -1 * np.abs(np.arcsin(n * wavelength * 10 ** (-9) * linjer.get_value() * 10 ** 3))
+                            ),
+                            # stroke_opacity=1/len(colors),
+                            stroke_opacity=0.25,
+                            color=wc[str(wavelength)]
+                        ) for n in np.arange(
+                            -np.floor(1/(wavelength * 10 ** (-9) * linjer.get_value() * 10 ** 3)),
+                            np.floor(1/(wavelength * 10 ** (-9) * linjer.get_value() * 10 ** 3)) + 0.1,
+                            1
+                        )
+                    ]
+                ) for line, wavelength in zip(lights, wavelengths)
+            ]
+        )
+
+        self.play(
+            *[Create(light, rate_func=rate_functions.linear) for light in lights]
+        )
+        self.play(
+            *[AnimationGroup(
+                *[
+                    Create(
+                        d,
+                        rate_func=rate_functions.linear,
+                        run_time=dist_gw.get_value()
+                    ) for d in dline
+                ]
+            ) for dline in difflines],
+        )
+        self.slide_pause()
+
+        self.camera.frame.save_state()
+        self.play(
+            self.camera.frame.animate.set(
+                height=0.75*gitter_top.height
+            )
+            .move_to(
+                gitter_top
+            ),
+            run_time=2
+        )
+        self.play(
+            self.camera.frame.animate.move_to(
+                wall.get_left() + 1.75*UP + 0.25*LEFT
+            ),
+            run_time=5
+        )
+        self.play(
+            Restore(self.camera.frame),
+            run_time=5
+        )
+        fade_out_all(self)
