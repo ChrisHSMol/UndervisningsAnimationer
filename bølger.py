@@ -636,19 +636,40 @@ class Interferens(Slide if slides else Scene):
         brects = VGroup(
             *[
                 get_background_rect(
-                    plane, stroke_colour=color, buff=0, stroke_width=4
+                    plane, stroke_colour=color, buff=0.01, stroke_width=4
                 ) for plane, color in zip(planes, colors)
             ]
         )
 
+        freq_A = ValueTracker(1.0)
         waves_A = always_redraw(lambda: VGroup(*[
             plane.plot(
-                lambda x: amp_trackers[0].get_value() * np.cos(x + phase_trackers[0].get_value()),
+                lambda x: amp_trackers[0].get_value() * np.cos(freq_A.get_value() * x + phase_trackers[0].get_value()),
                 color=colors[0],
                 stroke_opacity=opa_tracker.get_value()
-            # ) for plane, opa_tracker in zip(planes, opa_trackers["A"])
             ) for plane, opa_tracker in zip(planes, opA_trackers)
         ]))
+
+        self.play(
+            LaggedStart(
+                Create(brects),
+                DrawBorderThenFill(planes),
+                lag_ratio=0.5
+            ),
+            run_time=2
+        )
+        self.slide_pause()
+        self.play(
+            Create(waves_A)
+        )
+        self.play(
+            phase_trackers[0].animate.set_value(-PI/2)
+        )
+        self.play(
+            *[tracker.animate.set_value(0.1) for tracker in opA_trackers[1:]]
+        )
+        self.slide_pause()
+
         waves_B = always_redraw(lambda: VGroup(*[
             plane.plot(
                 lambda x: amp_trackers[1].get_value() * np.cos(x + phase_trackers[1].get_value()),
@@ -657,107 +678,77 @@ class Interferens(Slide if slides else Scene):
             # ) for plane, opa_tracker in zip(planes, opa_trackers["B"])
             ) for plane, opa_tracker in zip(planes, opB_trackers)
         ]))
+        self.play(
+            Create(waves_B)
+        )
+        self.play(
+            phase_trackers[1].animate.set_value(PI/2)
+        )
+        self.play(
+            *[tracker.animate.set_value(0.1) for tracker in [opB_trackers[0], opB_trackers[-1]]]
+        )
+        self.slide_pause()
+
         waves_C = always_redraw(lambda: VGroup(*[
             plane.plot(
-                lambda x: amp_trackers[2].get_value() * np.cos(x + phase_trackers[2].get_value()),
+                # lambda x: amp_trackers[2].get_value() * np.cos(x + phase_trackers[2].get_value()),
+                lambda x: waveA.underlying_function(x) + waveB.underlying_function(x),
                 color=colors[2],
                 stroke_opacity=opa_tracker.get_value()
             # ) for plane, opa_tracker in zip(planes, opa_trackers["C"])
-            ) for plane, opa_tracker in zip(planes, opC_trackers)
+            ) for plane, opa_tracker, waveA, waveB in zip(planes, opC_trackers, waves_A, waves_B)
         ]))
+        self.play(
+            Create(waves_C)
+        )
+        self.play(
+            *[tracker.animate.set_value(0.1) for tracker in opC_trackers[:2]]
+        )
+        self.slide_pause()
 
-        # self.add(planes, waves_A, waves_C, waves_B, brects)
-        self.play(
-            *[
+        for i, phi in enumerate([25*PI/2, -PI/2]):
+            self.play(
+                phase_trackers[0].animate.set_value(phi),
+                run_time=10,
+                rate_func=rate_functions.linear
+            )
+            if i == 0:
+                text = VGroup(
+                    Tex("Når bølgetoppe fra de to bølger mødes,"),
+                    Tex("er der ", "konstruktiv", " interferens,"),
+                    Tex("og den resulterende bølge bliver større")
+                ).arrange(DOWN, aligned_edge=LEFT).to_edge(LEFT).set_z_index(4)
+            else:
+                text = VGroup(
+                    Tex("Når en bølgetop møder en andens bølgedal,"),
+                    Tex("er der ", "destruktiv", " interferens,"),
+                    Tex("og den resulterende bølge bliver mindre")
+                ).arrange(DOWN, aligned_edge=LEFT).to_edge(LEFT).set_z_index(4)
+            text[1][1].set_color(RED)
+            trec = get_background_rect(text, stroke_width=3, stroke_colour=RED, buff=0.5)
+            self.play(
                 LaggedStart(
-                    DrawBorderThenFill(plane),
-                    Create(brect),
-                    lag_ratio=0.5
-                ) for plane, brect in zip(planes, brects)
-            ]
-            # LaggedStart(*[
-            #     LaggedStart(
-            #         DrawBorderThenFill(plane),
-            #         FadeIn(brect),
-            #         lag_ratio=0.1
-            #     ) for plane, brect in zip(planes, brects)],
-            #     lag_ratio=0.3
-            # )
-        )
+                    FadeIn(trec),
+                    Write(text),
+                    lag_ratio=0.25
+                )
+            )
+            self.slide_pause()
+            self.play(FadeOut(trec), FadeOut(text), run_time=0.25)
         self.slide_pause()
-        self.play(
-            *[Create(wave) for wave in waves_A]
-        )
-        self.play(
-            phase_trackers[0].animate.set_value(-PI/2)
-        )
-        print(*[tracker.get_value() for tracker in opA_trackers])
-        self.play(
-            *[tracker.animate.set_value(0.25) for tracker in opA_trackers[:]]
-        )
-        print(*[tracker.get_value() for tracker in opA_trackers])
-        self.slide_pause()
-        #
-        # waveA = always_redraw(lambda:
-        #     plane.plot(
-        #         lambda x: np.cos(x),
-        #         color=BLUE,
-        #         stroke_opacity=oA_tracker.get_value()
-        #     )
-        # )
-        # waveB = always_redraw(lambda:
-        #     plane.plot(
-        #         lambda x: amp_tracker.get_value() * np.cos(x + phase_tracker.get_value()),
-        #         color=YELLOW,
-        #         stroke_opacity=oB_tracker.get_value()
-        #     )
-        # )
-        # eqA = always_redraw(lambda: MathTex(r"f(x)").set_color(waveA.get_color()).move_to(plane.c2p(-8, 4)))
-        # eqB = always_redraw(lambda: MathTex(r"g(x)").set_color(waveB.get_color()).move_to(plane.c2p(8, 4)))
-        # self.play(
-        #     LaggedStart(
-        #         LaggedStart(
-        #             Create(waveA, run_time=2),
-        #             Write(eqA),
-        #             lag_ratio=0.5
-        #         ),
-        #         LaggedStart(
-        #             Create(waveB, run_time=2),
-        #             Write(eqB),
-        #             lag_ratio=0.5
-        #         ),
-        #         lag_ratio=1
-        #     )
-        # )
-        # self.play(
-        #     phase_tracker.animate.set_value(-1.0)
-        # )
-        # self.slide_pause()
-        #
-        # waveAB = always_redraw(lambda:
-        #     plane.plot(
-        #         lambda x: np.cos(x) + amp_tracker.get_value() * np.cos(x + phase_tracker.get_value()),
-        #         color=GREEN,
-        #         stroke_opacity=oAB_tracker.get_value()
-        #     )
-        # )
-        # self.play(
-        #     oA_tracker.animate.set_value(0.25),
-        #     oB_tracker.animate.set_value(0.25),
-        #     Create(waveAB, run_time=2)
-        # )
-        # self.slide_pause()
-        #
-        # for amp in [2, 4, 1]:
-        #     for phi in [-20, 20, -1]:
-        #         self.play(
-        #             phase_tracker.animate.set_value(phi),
-        #             run_time=20
-        #         )
-        #     self.play(
-        #         amp_tracker.animate.set_value(amp)
-        #     )
-# TODO: et grafvindue pr bølge og en for den samlede? Evt. med fadede udgaver af hinanden i deres koordinatsystem
+
+        for fA in [2, 0.9]:
+            self.play(
+                freq_A.animate.set_value(fA)
+            )
+            for i, phi in enumerate([25*PI/2, -PI/2]):
+                self.play(
+                    phase_trackers[0].animate.set_value(phi),
+                    run_time=10,
+                    rate_func=rate_functions.linear
+                )
+            self.slide_pause()
+
 
 
 

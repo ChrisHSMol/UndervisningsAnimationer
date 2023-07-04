@@ -208,14 +208,14 @@ def between_mobjects(left_mob, right_mob):
     return 0.5*(right_mob.get_edge_center(LEFT) + left_mob.get_edge_center(RIGHT))
 
 
-def get_background_rect(mobject, buff=0.5, stroke_colour=None, stroke_width=1, fill_opacity=0.85):
+def get_background_rect(mobject, buff=0.5, stroke_colour=None, stroke_width=1, fill_opacity=0.85, fill_color=BLACK):
     return Rectangle(
         width=mobject.width + buff,
         height=mobject.height + buff
     ).move_to(mobject).set_style(
         fill_opacity=fill_opacity,
         stroke_width=0 if stroke_colour is None else stroke_width,
-        fill_color=BLACK,
+        fill_color=fill_color,
         stroke_color=stroke_colour
     ).set_z_index(mobject.get_z_index()-1)
 
@@ -518,3 +518,18 @@ def three_way_interpolate(c1, c2, c3, alpha, alpha_max):
         alpha / alpha_max
     )
     return c
+
+
+def boxes_of_content(self, list_of_contents, list_of_colors):
+    boxes = VGroup()
+    for text, color in zip(list_of_contents, list_of_colors):
+        if not isinstance(text, Tex):
+            text = Tex(text)
+        boxes.add(
+            VGroup(
+                text,
+                get_background_rect(text, stroke_colour=color)
+            )
+        )
+    return boxes
+

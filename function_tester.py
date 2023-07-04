@@ -114,3 +114,27 @@ class DrejeKnapTest(Scene):
                 bb_tracker.animate.set_value(b_knap.get_min())
             )
 
+
+class BoxesTester(Scene):
+    def construct(self):
+        boxes = boxes_of_content(
+            self,
+            ["Titel", "Undertitel 1", "Ekstra"],
+            [RED, BLUE, YELLOW]
+        )
+        for i, box in enumerate(boxes):
+            if i == 0:
+                self.play(Create(box))
+            else:
+                box.set_z_index(box.get_z_index() - 2)
+                self.add(box)
+                self.play(
+                    box.animate.next_to(boxes[0], [LEFT, RIGHT][i%2])
+                    # FadeIn(
+                    #     box.next_to(boxes[0], [LEFT, RIGHT][i%2]), direction=[RIGHT, LEFT][i%2]
+                    # )
+                )
+        self.wait(6)
+
+
+
