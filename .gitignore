@@ -3,3 +3,5 @@ __pycache__/
 .idea/
 slides/
 misc_files/
+*/slides/
+*/media/
