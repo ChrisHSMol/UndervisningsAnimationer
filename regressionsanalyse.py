@@ -1,4 +1,6 @@
 from manim import *
+import sys
+sys.path.append("../")
 from helpers import *
 import numpy as np
 from scipy.optimize import curve_fit

@@ -1,5 +1,7 @@
 from manim import *
 from helpers import *
+import sys
+sys.path.append("../")
 import numpy as np
 
 slides = True
