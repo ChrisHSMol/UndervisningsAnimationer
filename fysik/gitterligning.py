@@ -21,7 +21,7 @@ class GitterLigning(MovingCameraScene if not slides else MovingCameraScene, Slid
         return slides_pause(self, t=t, slides_bool=slides_bool)
 
     def udstyr(self):
-        laser_gun = SVGMobject("SVGs/laser_gun.svg").to_edge(LEFT).shift(0.25*DOWN)
+        laser_gun = SVGMobject("../SVGs/laser_gun.svg").to_edge(LEFT).shift(0.25*DOWN)
         laser_gun.set_color(invert_color(laser_gun.get_color()))
         laser_name = Tex("Laser").set_color(color_gradient([BLUE, GREEN, RED], 3)).next_to(laser_gun, UP)
         self.play(
@@ -106,7 +106,7 @@ class GitterLigning(MovingCameraScene if not slides else MovingCameraScene, Slid
         dist_lg = ValueTracker(2)  # m
         dist_gw = ValueTracker(5)  # m
 
-        laser_gun = SVGMobject("SVGs/laser_gun.svg").to_edge(LEFT).shift(0.25*DOWN)
+        laser_gun = SVGMobject("../SVGs/laser_gun.svg").to_edge(LEFT).shift(0.25*DOWN)
         laser_gun.set_color(invert_color(laser_gun.get_color()))
         laser_name = Tex("Laser").set_color(color_gradient([BLUE, GREEN, RED], 3)).next_to(laser_gun, UP)
         gitter_top = always_redraw(lambda:
@@ -213,7 +213,7 @@ class GitterLigning(MovingCameraScene if not slides else MovingCameraScene, Slid
         dist_gw = ValueTracker(5)  # m
         laser_thickness = 4
 
-        laser_gun = SVGMobject("SVGs/laser_gun.svg").to_edge(LEFT).shift(0.25*DOWN)
+        laser_gun = SVGMobject("../SVGs/laser_gun.svg").to_edge(LEFT).shift(0.25*DOWN)
         laser_gun.set_color(invert_color(laser_gun.get_color()))
         laser_name = Tex("Laser").set_color(color_gradient([BLUE, GREEN, RED], 3)).next_to(laser_gun, UP)
         gitter_top = always_redraw(lambda:
@@ -394,7 +394,7 @@ class GitterLigning(MovingCameraScene if not slides else MovingCameraScene, Slid
             "#ff9b00", "#ff7700", "#ff4b00", "#ff1b00", "#ff0000"  # 610nm - 650nm
         ]
 
-        lamp = SVGMobject("SVGs/lamp.svg").to_edge(LEFT).shift(0.5*DOWN)
+        lamp = SVGMobject("../SVGs/lamp.svg").to_edge(LEFT).shift(0.5*DOWN)
         lamp.set_color(invert_color(lamp.get_color()))
         lamp_name = Tex("Lampe").set_color(color_gradient(colors, 5)).next_to(lamp, UP)
         gitter_top = always_redraw(lambda:
@@ -447,7 +447,7 @@ class GitterLigning(MovingCameraScene if not slides else MovingCameraScene, Slid
                             ),
                             # stroke_opacity=1/len(colors),
                             stroke_opacity=0.25,
-                            color=wc[str(wavelength)]
+                            color=wc[str(wavelength)] if n != 0 else WHITE
                         ) for n in np.arange(
                             -np.floor(1/(wavelength * 10 ** (-9) * linjer.get_value() * 10 ** 3)),
                             np.floor(1/(wavelength * 10 ** (-9) * linjer.get_value() * 10 ** 3)) + 0.1,

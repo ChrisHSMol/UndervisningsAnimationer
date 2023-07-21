@@ -137,4 +137,10 @@ class BoxesTester(Scene):
         self.wait(6)
 
 
+class SheenDice(Scene):
+    def construct(self):
+        die = DieFace(5).set_sheen(-0.5, direction=DR)
+        self.add(die)
+
+
 

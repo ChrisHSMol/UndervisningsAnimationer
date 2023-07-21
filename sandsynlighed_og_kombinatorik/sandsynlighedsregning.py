@@ -1370,4 +1370,7 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
             self.slide_pause()
 
 
+
+
+
 # subprocess.call([r"manim .\sandsynlighedsregning.py FairDie -pql"])
