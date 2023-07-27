@@ -97,7 +97,6 @@ class BohrDiagram(Scene):
             self.absorption(moving_electron, morb, color)
             self.excitation(moving_electron, orbitals[1], color)
 
-
     def absorption(self, electron, to_orbital, photon_color=YELLOW):
         target_dot = electron.copy().move_to(
             to_orbital.point_at_angle(np.arctan(electron.get_center()[1]/electron.get_center()[0]))

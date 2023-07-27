@@ -9,6 +9,42 @@ import numpy as np
 #         self.xstep = xstep
 #
 #     def
+# wavelengths = np.linspace(400, 650, 26)
+# colors = [
+#     "#8300b5", "#7e00db", "#6a00ff", "#3800ff", "#000bff", "#004cff", "#007fff",  # 400nm - 460nm
+#     "#00aeff", "#00daff", "#00fff5", "#00ff87", "#09ff00", "#3aff00", "#5aff00",  # 470nm - 530nm
+#     "#81ff00", "#a3ff00", "#c3ff00", "#e1ff00", "#ffff00", "#ffdf00", "#ffbe00",  # 540nm - 600nm
+#     "#ff9b00", "#ff7700", "#ff4b00", "#ff1b00", "#ff0000"  # 610nm - 650nm
+# ]
+VISIBLE_LIGHT = {
+    int(w): c for w, c in zip(
+        np.linspace(400, 650, 26), [
+            "#8300b5", "#7e00db", "#6a00ff", "#3800ff", "#000bff", "#004cff", "#007fff",  # 400nm - 460nm
+            "#00aeff", "#00daff", "#00fff5", "#00ff87", "#09ff00", "#3aff00", "#5aff00",  # 470nm - 530nm
+            "#81ff00", "#a3ff00", "#c3ff00", "#e1ff00", "#ffff00", "#ffdf00", "#ffbe00",  # 540nm - 600nm
+            "#ff9b00", "#ff7700", "#ff4b00", "#ff1b00", "#ff0000"  # 610nm - 650nm
+        ]
+    )
+}
+
+
+def interpolate_visible_light(delta, light_dict=VISIBLE_LIGHT):
+    if delta <= 0:
+        raise Exception(f"delta value needs to be strictly larger than 0")
+    lowest_wavelength = min(light_dict.keys())
+    interpolated_light_dict = {lowest_wavelength: light_dict[lowest_wavelength]}
+    previous_wavelength = lowest_wavelength
+    for w, c in light_dict.items():
+        if w != lowest_wavelength:
+            # interpolated_wavelengths = np.linspace(previous_wavelength, w, (w - previous_wavelength)/delta)
+            interpolated_wavelengths = np.arange(previous_wavelength, w, delta)
+            interpolated_colors = [
+                interpolate_color(light_dict[w], light_dict[previous_wavelength], (w - int_w)/w) for int_w in interpolated_wavelengths
+            ]
+            for int_w, int_c in zip(interpolated_wavelengths, interpolated_colors):
+                interpolated_light_dict[int_w] = int_c
+            previous_wavelength = w
+    return interpolated_light_dict
 
 
 def _prep_title(title, close=False):

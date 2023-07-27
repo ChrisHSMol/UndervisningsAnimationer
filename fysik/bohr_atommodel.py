@@ -12,7 +12,8 @@ if slides:
 
 class BohrAtomModel(Slide if slides else Scene):
     def construct(self):
-        self.opbygning()
+        # self.opbygning()
+        self.grundstoffer()
         self.slide_pause(5)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
@@ -30,7 +31,8 @@ class BohrAtomModel(Slide if slides else Scene):
             electron_color=ECOL,
             proton_color=PCOL,
             neutron_color=NCOL,
-            sheen_factor=-0.25
+            sheen_factor=-0.25,
+            separate_nuclei=True
         )
         electrons = atom.get_electrons()
         orbitals = atom.get_orbitals().set_style(stroke_width=1.5)
@@ -108,6 +110,7 @@ class BohrAtomModel(Slide if slides else Scene):
 
         self.play(
             *[FadeOut(m) for m in [*labels, *copied_particles]],
+            atom.animate.shift(DOWN)
             # atom.animate.move_to(ORIGIN)
         )
         self.slide_pause()
@@ -142,3 +145,90 @@ class BohrAtomModel(Slide if slides else Scene):
             Write(neutralt_atom)
         )
         self.slide_pause()
+
+        self.play(
+            ReplacementTransform(neutrons.copy(), neutron_copies)
+        )
+        antal_neutroner = Tex(
+            "Antallet af ", "neutroner", " kan variere"
+        ).set_color_by_tex_to_color_map(lcmap).scale(0.825).next_to(neutralt_atom, DOWN, aligned_edge=RIGHT, buff=0.2)
+        self.play(
+            Write(antal_neutroner)
+        )
+        self.slide_pause()
+
+        ptable = PeriodicTable("../Elements_DK.csv").to_edge(DR)
+        self.play(
+            FadeIn(ptable)
+        )
+        self.slide_pause()
+
+        fade_out_all(self)
+
+    def grundstoffer(self):
+        ECOL = GOLD_A
+        PCOL = RED
+        NCOL = GRAY
+        OCOL = LIGHT_GRAY
+        lcmap = {
+            "Proton": PCOL, "proton": PCOL,
+            "Neutron": NCOL, "neutron": NCOL,
+            "Elektron": ECOL, "elektron": ECOL,
+            "Skal": OCOL
+        }
+
+        protoner = np.arange(10) + 1
+        elektroner = protoner
+        neutroner = [0, 2, 4, 5, 6, 6, 7, 8, 10, 10]
+
+        text_protoner = VGroup(*[
+            Tex("Protoner", f": {p}").set_color_by_tex_to_color_map(lcmap).to_edge(UR) for p in protoner
+        ])
+        text_elektroner = VGroup(*[
+            Tex("Elektroner", f": {e}").set_color_by_tex_to_color_map(lcmap).next_to(
+                text_protoner, DOWN, aligned_edge=RIGHT
+            ) for e in elektroner
+        ])
+        text_neutroner = VGroup(*[
+            Tex("Neutroner", f": {n}").set_color_by_tex_to_color_map(lcmap).next_to(
+                text_elektroner, DOWN, aligned_edge=RIGHT
+            ) for n in neutroner
+        ])
+
+        atomer = VGroup(*[
+            BohrAtom(
+                p=p, e=e, n=n,
+                orbit_color=OCOL,
+                electron_color=ECOL,
+                proton_color=PCOL,
+                neutron_color=NCOL,
+                sheen_factor=-0.25,
+            ) for p, e, n in zip(protoner, elektroner, neutroner)
+        ]).shift(UP)
+        grundstoffer = VGroup(*[
+            MElementObject.from_csv_file_data(filename="../Elements_DK.csv", atomic_number=i+1) for i in range(10)
+        ]).next_to(atomer, DOWN)
+        self.play(
+            FadeIn(atomer[0]),
+            DrawBorderThenFill(grundstoffer[0]),
+            Write(text_protoner[0]),
+            Write(text_elektroner[0]),
+            Write(text_neutroner[0])
+        )
+        prevs = [atomer[0], grundstoffer[0], text_protoner[0], text_elektroner[0], text_neutroner[0]]
+        # prev_atom, prev_grun = atomer[0], grundstoffer[0]
+        for atom, grun, tp, te, tn in zip(
+                atomer[1:], grundstoffer[1:], text_protoner[1:], text_elektroner[1:], text_neutroner[1:]
+        ):
+            self.play(
+                ReplacementTransform(prevs[0], atom),
+                ReplacementTransform(prevs[1], grun),
+                ReplacementTransform(prevs[2], tp),
+                ReplacementTransform(prevs[3], te),
+                ReplacementTransform(prevs[4], tn)
+            )
+            # prev_atom, prev_grun = atom, grun
+            prevs = [atom, grun, tp, te, tn]
+
+
+
