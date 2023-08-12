@@ -571,3 +571,14 @@ def boxes_of_content(self, list_of_contents, list_of_colors):
         )
     return boxes
 
+
+def sunset_color_scheme(n):
+    uneven = ["#003f5c", "#374c80", "#7a5195", "#bc5090", "#ef5675", "#ff764a", "#ffa600"]
+    even = ["#003f5c", "#2f4b7c", "#665191", "#a05195", "#d45087", "#f95d6a", "#ff7c43", "#ffa600"]
+    list = even if n % 2 == 0 else uneven
+    returnlist = []
+    for i in np.arange(0, len(list), n):
+        returnlist.append(list[i])
+    # return color_gradient(["#003f5c", "#ffa600"], n)
+    return returnlist
+
