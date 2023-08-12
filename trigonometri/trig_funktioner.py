@@ -49,7 +49,7 @@ class TrigFunktioner(Slide if slides else Scene):
                 color=GREEN
             ).set_z_index(3)
         )
-        dashed_lines = always_redraw(lambda:
+        lines = always_redraw(lambda:
             VGroup(
                 Line(
                     start=moving_dot.get_center(),
@@ -77,11 +77,24 @@ class TrigFunktioner(Slide if slides else Scene):
                 x_range=[0, min(6*PI, time_tracker.get_value())]
             )
         )
-        self.add(moving_dot, dashed_lines, sin_plot, cos_plot)
+        self.add(moving_dot, lines, sin_plot, cos_plot)
         target_time = 10*PI
         self.play(
             time_tracker.animate.set_value(target_time),
             run_time=target_time,
             rate_func=rate_functions.linear
+        )
+        self.slide_pause()
+
+        self.play(
+            FadeOut(lines, unit_circle, moving_dot)
+        )
+        self.play(
+            LaggedStart(
+                VGroup(sin_plane, sin_plot).animate.scale(2).move_to(ORIGIN),
+                VGroup(cos_plot, cos_plane).animate.rotate(PI/2).scale(2).move_to(ORIGIN),
+                lag_ratio=0.95
+            ),
+            run_time=4
         )
 

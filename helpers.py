@@ -413,10 +413,12 @@ class DrejeKnap(VGroup):
                 start=circ[2].point_at_angle(
                     # (angle_offset - angle_step * (angle_tracker.get_value()-range_min)) * DEGREES
                     (angle_offset - angle_step * (angle_tracker.get_value() - range_min + range_max) / (range_max - range_min)) * DEGREES
+                    # (angle_offset - angle_step * (angle_tracker.get_value() - range_min + range_max) / (range_max - range_min))
                 ),
                 end=circ[0].point_at_angle(
                     # (angle_offset - angle_step * (angle_tracker.get_value()-range_min)) * DEGREES
                     (angle_offset - angle_step * (angle_tracker.get_value() - range_min + range_max) / (range_max - range_min)) * DEGREES
+                    # (angle_offset - angle_step * (angle_tracker.get_value() - range_min + range_max) / (range_max - range_min))
                 ),
                 color=accent_color,
                 stroke_width=6
