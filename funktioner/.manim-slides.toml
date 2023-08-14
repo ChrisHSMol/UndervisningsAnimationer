@@ -1,0 +1,27 @@
+[keys.QUIT]
+name = 'QUIT'
+ids = [81]
+
+[keys.CONTINUE]
+name = 'CONTINUE / NEXT'
+ids = [16777236]
+
+[keys.BACK]
+name = 'BACK'
+ids = [16777234]
+
+[keys.REVERSE]
+name = 'REVERSE'
+ids = [86]
+
+[keys.REWIND]
+name = 'REWIND'
+ids = [82]
+
+[keys.PLAY_PAUSE]
+name = 'PLAY / PAUSE'
+ids = [32]
+
+[keys.HIDE_MOUSE]
+name = 'HIDE / SHOW MOUSE'
+ids = [72]

@@ -648,7 +648,7 @@ class _LeastSquares(MovingCameraScene if not slides else Slide, MovingCameraScen
         play_title_reverse(self, title=title)
 
 
-class LeastSquares(MovingCameraScene if not slides else Slide, MovingCameraScene):
+class LeastSquares(MovingCameraScene, Slide if slides else None):
     def construct(self):
         title = "Mindste kvadraters metode"
         play_title(self, title)
@@ -821,8 +821,8 @@ class LeastSquares(MovingCameraScene if not slides else Slide, MovingCameraScene
         question = VGroup(
             Tex("Hvordan finder vi ud af,"),
             Tex("hvordan linjen skal placeres?")
-        ).arrange(DOWN, aligned_edge=LEFT).set_z_index(5)
-        srec = get_background_rect(question)
+        ).scale(2).arrange(DOWN, aligned_edge=LEFT).set_z_index(5)
+        srec = get_background_rect(question, stroke_colour=YELLOW)
         self.play(
             LaggedStart(
                 FadeIn(srec, run_time=0.25),
@@ -995,8 +995,8 @@ class LeastSquares(MovingCameraScene if not slides else Slide, MovingCameraScene
         question = VGroup(
             Tex("Det fungerer ikke helt."),
             Tex("Kan vi gøre det bedre?")
-        ).arrange(DOWN, aligned_edge=LEFT).set_z_index(5)
-        srec = get_background_rect(question)
+        ).scale(2).arrange(DOWN, aligned_edge=LEFT).set_z_index(5)
+        srec = get_background_rect(question, stroke_colour=YELLOW)
         self.play(
             LaggedStart(
                 FadeIn(srec, run_time=0.25),
