@@ -104,7 +104,7 @@ if slides:
     from manim_slides import Slide
 
 
-class _LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide):
+class _LeastSquares(MovingCameraScene if not slides else Slide, MovingCameraScene):
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t=t, slides_bool=slides_bool)
 
@@ -648,13 +648,15 @@ class _LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slid
         play_title_reverse(self, title=title)
 
 
-class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide):
+class LeastSquares(MovingCameraScene if not slides else Slide, MovingCameraScene):
     def construct(self):
         title = "Mindste kvadraters metode"
         play_title(self, title)
 
-        plane, points = self.plot_points_on_plane(animation=False)
+        plane, points = self.plot_points_on_plane(animation=True)
         self.try_simple_deviation(plane, points)
+
+        play_title_reverse(title)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t=t, slides_bool=slides_bool)
@@ -662,7 +664,7 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
     def distribute_colors(self):
         point_col = BLUE_C
         graph_col = BLUE_A
-        dev_cols = [RED, GREEN]
+        dev_cols = [GREEN, RED]
         acol = YELLOW
         bcol = PURPLE
         return [point_col, graph_col, dev_cols, acol, bcol]
@@ -720,15 +722,17 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
         return plane, points
 
     def try_simple_deviation(self, plane, points):
-        self.add(plane, points)
+        # self.add(plane, points)
         xmin, xmax, xstep = -1, 11.5, 1
         point_col, graph_col, dev_cols, acol, bcol = self.distribute_colors()
 
-        a_knap = DrejeKnap(range_min=0, range_max=20, range_step=2, label="a", start_value=5, accent_color=acol)
-        b_knap = DrejeKnap(range_min=0, range_max=100, range_step=10, label="b", start_value=40, accent_color=bcol)
-        knapper = VGroup(a_knap, b_knap).arrange(DOWN).scale(0.5).next_to(plane, RIGHT, aligned_edge=DOWN)
-        a = a_knap.tracker
-        b = b_knap.tracker
+        # a_knap = DrejeKnap(range_min=0, range_max=20, range_step=2, label="a", start_value=5, accent_color=acol)
+        # b_knap = DrejeKnap(range_min=0, range_max=100, range_step=10, label="b", start_value=40, accent_color=bcol)
+        # knapper = VGroup(a_knap, b_knap).arrange(DOWN).scale(0.5).next_to(plane, RIGHT, aligned_edge=DOWN)
+        # a = a_knap.tracker
+        # b = b_knap.tracker
+        a = ValueTracker(5.0)
+        b = ValueTracker(40.0)
         graph = always_redraw(lambda:
             plane.plot(
                 lambda x: a.get_value() * x + b.get_value(),
@@ -750,10 +754,15 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
             ).arrange(RIGHT).next_to(plane, UP, aligned_edge=LEFT)
         )
         _points = always_redraw(lambda: VGroup(*[
-            Dot(plane.c2p(
-                point.get_center()[0],
-                a.get_value() * point.get_center()[0] + b.get_value()
-            ), color=None).scale(0.01) for point in points
+            Dot(
+                plane.c2p(
+                    plane.p2c(point.get_center())[0],
+                    graph.underlying_function(plane.p2c(point.get_center())[0]),
+                    0
+                ),
+                color=None
+            ).scale(0.01) for point in points
+            # ), color=None).scale(0.01) for point in points
         ]))
         self.add(_points)
         self.play(
@@ -764,10 +773,10 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
             ),
             run_time=2
         )
-        self.play(
-            DrawBorderThenFill(knapper),
-            run_time=1
-        )
+        # self.play(
+        #     DrawBorderThenFill(knapper),
+        #     run_time=1
+        # )
         self.slide_pause()
 
         # srec = SurroundingRectangle(
@@ -808,29 +817,26 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
         # self.wait(1)
         self.slide_pause()
 
-    def blabla(self):
-        # =====================================================================
-        # =====================================================================
-        # =====================================================================
-
         question = VGroup(
             Tex("Hvordan finder vi ud af,"),
             Tex("hvordan linjen skal placeres?")
         ).arrange(DOWN, aligned_edge=LEFT)
-        srec = SurroundingRectangle(
-            plane,
-            color=BLACK,
-            fill_color=BLACK,
-            fill_opacity=0.90
-        ).scale(3)
-        self.play(FadeIn(srec), run_time=1)
-        self.wait(1)
-        self.play(Write(question), run_time=2)
-        self.wait(1)
-        self.play(Unwrite(question, reverse=False), run_time=1)
-        self.play(FadeOut(srec))
-        # self.wait(1)
+        srec = get_background_rect(question)
+        self.play(
+            LaggedStart(
+                FadeIn(srec, run_time=0.25),
+                Write(question, run_time=1),
+                lag_ratio=1
+            )
+        )
         self.slide_pause()
+        self.play(FadeOut(VGroup(question, srec), run_time=0.25))
+
+        # --------------------------------------------------------------------
+        # --------------------------------------------------------------------
+        # --------------------------------------------------------------------
+        # --------------------------------------------------------------------
+        # --------------------------------------------------------------------
 
         dotlines = always_redraw(
             lambda: VGroup(
@@ -838,7 +844,7 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
                     Line(
                         start=point.get_center(),
                         end=gpoint.get_center(),
-                        color=squar_col,
+                        color=dev_cols[0] if gpoint.get_y() - point.get_y() < 0 else dev_cols[1],
                         stroke_width=2.5
                     ) for point, gpoint in zip(points, _points)
                 ]
@@ -864,14 +870,13 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
             ).move_to(points[0]).shift(0.5 * UP),
             run_time=2
         )
-        # self.wait(1)
         self.slide_pause()
         self.play(
             ShowPassingFlash(
                 Line(
-                    start=plane.c2p(data_points[0][0],
-                                    graph.underlying_function(data_points[0][0])),
-                    end=plane.c2p(*data_points[0]),
+                    start=plane.c2p(plane.p2c(points[0].get_center())[0],
+                                    graph.underlying_function(plane.p2c(points[0].get_center())[0])),
+                    end=plane.c2p(*plane.p2c(points[0].get_center())),
                     stroke_width=3,
                     color=YELLOW
                 ),
@@ -881,24 +886,23 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
         )
 
         dotlines_text = always_redraw(lambda:
-                                      VGroup(*[
-                                          DecimalNumber(
-                                              point[1] - (a.get_value() * point[0] + b.get_value()),
-                                              num_decimal_places=1,
-                                              include_sign=True,
-                                              color=squar_col
-                                          ).scale(0.5).next_to(dotline, LEFT).shift(
-                                              0.2 * RIGHT
-                                          ) for point, dotline in zip(data_points, dotlines)
-                                      ])
-                                      )
+            VGroup(*[
+                DecimalNumber(
+                    plane.p2c(gpoint.get_center())[1] - plane.p2c(point.get_center())[1],
+                    num_decimal_places=1,
+                    include_sign=True,
+                    color=dev_cols[0] if plane.p2c(gpoint.get_center())[1] - plane.p2c(point.get_center())[1] < 0 else dev_cols[1]
+                ).scale(0.5).next_to(dotline, LEFT).shift(
+                    0.2 * RIGHT
+                ) for point, gpoint, dotline in zip(points, _points, dotlines)
+            ])
+        )
         self.play(
             Write(
                 dotlines_text[0]
             ),
             run_time=0.5
         )
-        # self.wait(1)
         self.slide_pause()
         self.play(
             LaggedStart(
@@ -912,19 +916,18 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
             ),
             run_time=4
         )
-        # self.wait(1)
         self.add(dotlines_text)
         self.slide_pause()
+
         dotlines_text_copy = always_redraw(lambda:
-                                           VGroup(
-                                               *[
-                                                   text.copy().scale(1.5).next_to(
-                                                       graph_text, UP, aligned_edge=LEFT
-                                                   ).shift(
-                                                       0.9 * UP + 1.00 * i * RIGHT
-                                                   ) for i, text in enumerate(dotlines_text)
-                                               ])
-                                           )
+            VGroup(*[
+                text.copy().scale(1.5).next_to(
+                    graph_text, UP, aligned_edge=LEFT
+                ).shift(
+                    0.9 * UP + 1.10 * i * RIGHT
+                ) for i, text in enumerate(dotlines_text)
+            ])
+        )
         self.play(
             ReplacementTransform(
                 dotlines_text.copy(),
@@ -932,7 +935,6 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
             ),
             run_time=2
         )
-        # self.wait(1)
         self.slide_pause()
 
         brace = Brace(
@@ -945,15 +947,20 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
             "Sum af afvigelser fra grafen = "
         ).next_to(brace, DOWN).shift(0.2 * UP)
         dev_sum = always_redraw(lambda:
-                                DecimalNumber(
-                                    sum([
-                                        point[1] - (a.get_value() * point[0] + b.get_value()) for point in data_points
-                                    ]),
-                                    num_decimal_places=1,
-                                    include_sign=True,
-                                    color=squar_col
-                                ).next_to(brace_text, RIGHT)
-                                )
+            DecimalNumber(
+                sum([
+                    plane.p2c(gpoint.get_center())[1] - plane.p2c(point.get_center())[1] for point, gpoint in zip(points, _points)
+                ]),
+                num_decimal_places=1,
+                include_sign=True,
+                color=dev_cols[
+                    sum([
+                        plane.p2c(gpoint.get_center())[1] - plane.p2c(point.get_center())[1] for point, gpoint in
+                        zip(points, _points)
+                    ]) >= 0
+                ]
+            ).next_to(brace_text, RIGHT)
+        )
         self.play(
             GrowFromCenter(brace),
             run_time=1
@@ -966,7 +973,6 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
             )),
             run_time=1
         )
-        # self.wait(1)
         self.slide_pause()
 
         self.play(
@@ -983,25 +989,26 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
             b.animate.set_value(20),
             run_time=1.5
         )
-        # self.wait(1)
         self.slide_pause()
 
-        # =====================================================================
-        # =====================================================================
-        # =====================================================================
-
         question = VGroup(
-            Tex("Det fungerer ikke helt."),
-            Tex("Kan vi gøre det bedre?")
+            Tex("Hvordan finder vi ud af,"),
+            Tex("hvordan linjen skal placeres?")
         ).arrange(DOWN, aligned_edge=LEFT)
-        self.play(FadeIn(srec), run_time=1)
-        self.wait(1)
-        self.play(Write(question), run_time=2)
-        self.wait(1)
-        self.play(Unwrite(question, reverse=False), run_time=1)
+        srec = get_background_rect(question)
+        self.play(
+            LaggedStart(
+                FadeIn(srec, run_time=0.25),
+                Write(question, run_time=1),
+                lag_ratio=1
+            )
+        )
+        self.slide_pause()
+
         self.play(
             FadeOut(
                 VGroup(
+                    question,
                     srec,
                     dotlines,
                     dotlines_text,
@@ -1013,24 +1020,21 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
             ),
             run_time=1
         )
-        # self.wait(1)
-        self.slide_pause()
+        # self.slide_pause()
 
         dotsquares = always_redraw(lambda:
-                                   VGroup(
-                                       *[
-                                           Square(
-                                               side_length=np.abs(point.get_y() - gpoint.get_y()),
-                                               color=squar_col,
-                                               stroke_width=2.5
-                                           ).next_to(
-                                               ftp(point.get_center(), gpoint.get_center()),
-                                               DL,
-                                               buff=0
-                                           ) for point, gpoint in zip(points, _points)
-                                       ]
-                                   )
-                                   )
+            VGroup(*[
+                Square(
+                    side_length=np.abs(point.get_y() - gpoint.get_y()),
+                    color=dev_cols[0],
+                    stroke_width=2.5
+                ).next_to(
+                    ftp(point.get_center(), gpoint.get_center()),
+                    DL,
+                    buff=0
+                ) for point, gpoint in zip(points, _points)
+            ])
+        )
 
         self.camera.frame.save_state()
         self.play(
@@ -1039,8 +1043,8 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
             ).move_to(points[0]).shift(0.5 * UP),
             run_time=2
         )
-        # self.wait(1)
         self.slide_pause()
+
         self.play(
             ShowPassingFlash(
                 Square(
@@ -1061,29 +1065,27 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
                         ),
             run_time=1.5
         )
-        # self.wait(1)
         self.add(dotsquares)
         self.slide_pause()
 
         dotsquares_text = always_redraw(lambda:
-                                        VGroup(*[
-                                            DecimalNumber(
-                                                (point[1] - (a.get_value() * point[0] + b.get_value())) ** 2,
-                                                num_decimal_places=1,
-                                                include_sign=True,
-                                                color=squar_col
-                                            ).scale(0.45).move_to(sq) for sq, point in zip(dotsquares, data_points)
-                                        ]
-                                               )
-                                        )
+            VGroup(*[
+                DecimalNumber(
+                    (plane.p2c(gpoint.get_center())[1] - plane.p2c(point.get_center())[1]) ** 2,
+                    num_decimal_places=1,
+                    include_sign=True,
+                    color=dev_cols[0]
+                ).scale(0.45).move_to(sq) for sq, point, gpoint in zip(dotsquares, points, _points)
+            ])
+        )
         self.play(
             Write(
                 dotsquares_text[0]
             ),
             run_time=0.5
         )
-        # self.wait(1)
         self.slide_pause()
+
         self.play(
             LaggedStart(
                 Restore(self.camera.frame),
@@ -1096,21 +1098,18 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
             ),
             run_time=4
         )
-        # self.wait(1)
         self.add(dotsquares_text)
         self.slide_pause()
 
         dotsquares_text_copy = always_redraw(lambda:
-                                             VGroup(
-                                                 *[
-                                                     text.copy().scale(1.1).next_to(
-                                                         graph_text, UP, aligned_edge=LEFT
-                                                     ).shift(
-                                                         0.9 * UP + 1.00 * i * RIGHT
-                                                     ) for i, text in enumerate(dotsquares_text)
-                                                 ]
-                                             )
-                                             )
+            VGroup(*[
+                text.copy().scale(1.1).next_to(
+                graph_text, UP, aligned_edge=LEFT
+                ).shift(
+                    0.9 * UP + 1.10 * i * RIGHT
+                ) for i, text in enumerate(dotsquares_text)
+            ])
+        )
         self.play(
             ReplacementTransform(
                 dotsquares_text.copy(),
@@ -1118,7 +1117,6 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
             ),
             run_time=2
         )
-        # self.wait(1)
         self.slide_pause()
 
         brace = Brace(
@@ -1131,16 +1129,17 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
             "Sum af firkanternes areal = "
         ).next_to(brace, DOWN).shift(0.2 * UP)
         sq_sum = always_redraw(lambda:
-                               DecimalNumber(
-                                   sum([
-                                       (point[1] - (a.get_value() * point[0] + b.get_value())) ** 2 for point in
-                                       data_points
-                                   ]),
-                                   num_decimal_places=1,
-                                   include_sign=True,
-                                   color=squar_col
-                               ).next_to(brace_text, RIGHT)
-                               )
+            DecimalNumber(
+                sum([
+                    (
+                            plane.p2c(gpoint.get_center())[1] - plane.p2c(point.get_center())[1]
+                    ) ** 2 for point, gpoint in zip(points, _points)
+                ]),
+                num_decimal_places=1,
+                include_sign=True,
+                color=dev_cols[0]
+            ).next_to(brace_text, RIGHT)
+        )
         self.play(
             GrowFromCenter(brace),
             run_time=1
@@ -1153,7 +1152,6 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
             )),
             run_time=1
         )
-        # self.wait(1)
         self.slide_pause()
 
         for i in [60, 0, 20]:
@@ -1162,7 +1160,6 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
                 run_time=2
             )
             self.wait(0.5)
-        # self.wait(1)
         self.slide_pause()
 
         for i in [15, 10, 12]:
@@ -1176,9 +1173,49 @@ class LeastSquares(MovingCameraScene if not slides else MovingCameraScene, Slide
             b.animate.set_value(10),
             run_time=2
         )
-        # self.play(FadeOut(dotsquares_text), run_time=0.5)
+        self.slide_pause()
+
+    def blabla(self):
+        # =====================================================================
+        # =====================================================================
+        # =====================================================================
+
+        question = VGroup(
+            Tex("Hvordan finder vi ud af,"),
+            Tex("hvordan linjen skal placeres?")
+        ).arrange(DOWN, aligned_edge=LEFT)
+        srec = SurroundingRectangle(
+            plane,
+            color=BLACK,
+            fill_color=BLACK,
+            fill_opacity=0.90
+        ).scale(3)
+        self.play(FadeIn(srec), run_time=1)
+        self.wait(1)
+        self.play(Write(question), run_time=2)
+        self.wait(1)
+        self.play(Unwrite(question, reverse=False), run_time=1)
+        self.play(FadeOut(srec))
         # self.wait(1)
         self.slide_pause()
+
+
+
+        # =====================================================================
+        # =====================================================================
+        # =====================================================================
+
+        question = VGroup(
+            Tex("Det fungerer ikke helt."),
+            Tex("Kan vi gøre det bedre?")
+        ).arrange(DOWN, aligned_edge=LEFT)
+        self.play(FadeIn(srec), run_time=1)
+        self.wait(1)
+        self.play(Write(question), run_time=2)
+        self.wait(1)
+        self.play(Unwrite(question, reverse=False), run_time=1)
+
+
 
         fade_out_all(self)
         play_title_reverse(self, title=title)
