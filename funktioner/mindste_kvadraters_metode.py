@@ -656,7 +656,8 @@ class LeastSquares(MovingCameraScene if not slides else Slide, MovingCameraScene
         plane, points = self.plot_points_on_plane(animation=True)
         self.try_simple_deviation(plane, points)
 
-        play_title_reverse(title)
+        fade_out_all(self)
+        play_title_reverse(self, title)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t=t, slides_bool=slides_bool)
@@ -722,7 +723,7 @@ class LeastSquares(MovingCameraScene if not slides else Slide, MovingCameraScene
         return plane, points
 
     def try_simple_deviation(self, plane, points):
-        # self.add(plane, points)
+        self.add(plane, points)
         xmin, xmax, xstep = -1, 11.5, 1
         point_col, graph_col, dev_cols, acol, bcol = self.distribute_colors()
 
@@ -820,7 +821,7 @@ class LeastSquares(MovingCameraScene if not slides else Slide, MovingCameraScene
         question = VGroup(
             Tex("Hvordan finder vi ud af,"),
             Tex("hvordan linjen skal placeres?")
-        ).arrange(DOWN, aligned_edge=LEFT)
+        ).arrange(DOWN, aligned_edge=LEFT).set_z_index(5)
         srec = get_background_rect(question)
         self.play(
             LaggedStart(
@@ -992,9 +993,9 @@ class LeastSquares(MovingCameraScene if not slides else Slide, MovingCameraScene
         self.slide_pause()
 
         question = VGroup(
-            Tex("Hvordan finder vi ud af,"),
-            Tex("hvordan linjen skal placeres?")
-        ).arrange(DOWN, aligned_edge=LEFT)
+            Tex("Det fungerer ikke helt."),
+            Tex("Kan vi gøre det bedre?")
+        ).arrange(DOWN, aligned_edge=LEFT).set_z_index(5)
         srec = get_background_rect(question)
         self.play(
             LaggedStart(
