@@ -86,15 +86,31 @@ class TrigFunktioner(Slide if slides else Scene):
         )
         self.slide_pause()
 
-        self.play(
-            FadeOut(lines, unit_circle, moving_dot)
-        )
+        # self.play(
+        #     FadeOut(lines, unit_circle, moving_dot)
+        # )
+        sin_plane_copy = always_redraw(lambda: sin_plane.copy().scale(2).move_to(ORIGIN).shift(DR))
+        cos_plane_copy = always_redraw(lambda: cos_plane.copy().rotate(PI/2).scale(2).move_to(ORIGIN).shift(DR))
+        sin_plot_copy = always_redraw(lambda: sin_plot.copy().scale(2).move_to(ORIGIN).shift(DR))
+        cos_plot_copy = always_redraw(lambda: cos_plot.copy().rotate(PI/2).scale(2).move_to(ORIGIN).shift(DR))
         self.play(
             LaggedStart(
-                VGroup(sin_plane, sin_plot).animate.scale(2).move_to(ORIGIN),
-                VGroup(cos_plot, cos_plane).animate.rotate(PI/2).scale(2).move_to(ORIGIN),
+                # VGroup(sin_plane.copy(), sin_plot.copy()).animate.scale(2).move_to(ORIGIN).shift(DR),
+                # VGroup(cos_plot.copy(), cos_plane.copy()).animate.rotate(PI/2).scale(2).move_to(ORIGIN).shift(DR),
+                AnimationGroup(
+                    ReplacementTransform(sin_plane.copy(), sin_plane_copy),
+                    ReplacementTransform(sin_plot.copy(), sin_plot_copy),
+                ),
+                AnimationGroup(
+                    ReplacementTransform(cos_plane.copy(), cos_plane_copy),
+                    ReplacementTransform(cos_plot.copy(), cos_plot_copy),
+                ),
                 lag_ratio=0.95
             ),
             run_time=4
+        )
+        self.play(
+            time_tracker.animate.set_value(14*PI),
+            run_time=4*PI
         )
 
