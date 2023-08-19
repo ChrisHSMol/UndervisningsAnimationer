@@ -104,7 +104,7 @@ if slides:
     from manim_slides import Slide
 
 
-class _LeastSquares(MovingCameraScene if not slides else Slide, MovingCameraScene):
+class _LeastSquares(MovingCameraScene, Slide if slides else None):
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t=t, slides_bool=slides_bool)
 
