@@ -229,6 +229,7 @@ def slides_pause(self, t=1.0, slides_bool=slides):
         self.play(FadeIn(indicator), run_time=0.25)
         xs_pause(self)
         self.pause()
+        # self.next_slide()
         self.play(FadeOut(indicator), run_time=0.25)
     else:
         self.wait(t)

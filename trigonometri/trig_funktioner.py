@@ -3,18 +3,126 @@ sys.path.append("../")
 from manim import *
 from helpers import *
 
-slides = False
+slides = True
 if slides:
     from manim_slides import Slide
 
 
-class TrigFunktioner(Slide if slides else Scene):
+class TrigFunktioner(MovingCameraScene, Slide if slides else None):
     def construct(self):
-        self.trig_funktioner()
-        self.slide_pause(5)
+        self.enhedscirkel()
+        # self.trig_funktioner()
+        self.wait(5)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t, slides_bool)
+
+    def enhedscirkel(self):
+        self.camera.frame.save_state()
+        ac = RED
+        plane = NumberPlane(
+            x_range=[-1.5, 1.5, 0.25],
+            y_range=[-1.5, 1.5, 0.25],
+            x_length=3,
+            y_length=3,
+            background_line_style={
+                "stroke_color": TEAL,
+                "stroke_width": 0.5,
+                # "stroke_opacity": 0.4,
+                "stroke_opacity": 0.1
+            },
+            # axis_config={"include_numbers": True, "numbers_to_include": [-1, -0.5, 0, 0.5, 1]}
+        ).set_z_index(2)
+        plane_rec = get_background_rect(plane, stroke_colour=ac, buff=0)
+        # unit_circle = Circle(radius=1, color=WHITE).move_to(plane.c2p(0, 0))
+        unit_circle = Circle().from_three_points(
+            plane.c2p(1, 0), plane.c2p(0, 1), plane.c2p(-1, 0)
+        ).set_color(WHITE).set_stroke(width=0.5).set_z_index(3)
+        tickmarks = {
+            "x": VGroup(*[Line(
+                start=plane.c2p(x, 0.05), end=plane.c2p(x, -0.05), color=WHITE, stroke_width=0.75
+            ) for x in np.arange(-1, 1.1, 0.5)]).set_z_index(4),
+            "y": VGroup(*[Line(
+                start=plane.c2p(0.05, y), end=plane.c2p(-0.05, y), color=WHITE, stroke_width=0.75
+            ) for y in np.arange(-1, 1.1, 0.5)]).set_z_index(4),
+        }
+        ticks = {
+            "x": VGroup(*[DecimalNumber(
+                number=x, num_decimal_places=1, include_sign=x < 0, color=WHITE, font_size=8 if x != 0 else 0.01
+            ).next_to(
+                tm.get_center(), DL if x < 0 else DR, buff=0.05
+            ) for x, tm in zip(np.arange(-1, 1.1, 0.5), tickmarks["x"])]).set_z_index(4),
+            "y": VGroup(*[DecimalNumber(
+                number=y, num_decimal_places=1, include_sign=y < 0, color=WHITE, font_size=8
+            ).next_to(
+                tm.get_center(), DL, buff=0.05
+            ) for y, tm in zip(np.arange(-1, 1.1, 0.5), tickmarks["y"])]).set_z_index(4)
+        }
+
+        self.play(
+            LaggedStart(
+                Create(plane_rec),
+                DrawBorderThenFill(plane, lag_ratio=0.0),
+                Create(unit_circle),
+                self.camera.frame.animate.set(height=1.1 * plane.height),
+                *[Create(tickmarks[d], lag_ratio=0.5) for d in tickmarks.keys()],
+                lag_ratio=0.25
+            ),
+            run_time=2
+        )
+        self.slide_pause()
+
+        self.play(
+            *[Write(ticks[d], lag_ratio=0.1) for d in ticks.keys()],
+            run_time=0.5
+        )
+        self.slide_pause()
+
+        theta = ValueTracker(0)  # Rad
+        radius_line = always_redraw(lambda: Line(
+            start=plane.c2p(0, 0), end=unit_circle.point_at_angle(theta.get_value()), color=ac, stroke_width=1.5
+        ).set_z_index(5))
+        radius_text = Tex(f"radius = 1", font_size=12).next_to(plane_rec, RIGHT, buff=0.05, aligned_edge=UP)
+        edge_point = always_redraw(lambda:
+            Dot(radius=0.02, point=unit_circle.point_at_angle(theta.get_value()), color=GREEN).set_z_index(5)
+        )
+        hline = always_redraw(lambda: Line(
+            start=plane.c2p(0, edge_point.get_y()), end=edge_point.get_center(), color=BLUE, stroke_width=1
+        ).set_z_index(radius_line.get_z_index() - 1))
+        vline = always_redraw(lambda: Line(
+            start=plane.c2p(edge_point.get_x(), 0), end=edge_point.get_center(), color=YELLOW, stroke_width=1
+        ).set_z_index(radius_line.get_z_index() - 1))
+        self.play(
+            GrowFromPoint(radius_line, plane.c2p(0, 0))
+        )
+        self.play(
+            theta.animate.set_value(TAU),
+            run_time=2,
+        )
+        self.play(
+            ReplacementTransform(radius_line.copy(), radius_text),
+            radius_line.copy().animate.scale(0.5).next_to(radius_text, DOWN, aligned_edge=LEFT, buff=0.05),
+        )
+        self.slide_pause()
+
+        self.play(
+            plane[2].animate.set_color(YELLOW).set(stroke_width=0.75),
+            plane[3].animate.set_color(BLUE).set(stroke_width=0.75),
+            DrawBorderThenFill(edge_point)
+        )
+        self.add(hline, vline)
+        self.play(
+            self.camera.frame.animate.move_to(plane.c2p(1, 0)),
+            run_time=2
+        )
+        self.slide_pause()
+
+        self.play(
+            theta.animate.set_value(2*TAU),
+            run_time=TAU
+        )
+        theta.set_value(0)
+        self.slide_pause()
 
     def trig_funktioner(self):
         unit_circle = Circle(radius=1, color=WHITE).to_edge(UL).set_z_index(2)
