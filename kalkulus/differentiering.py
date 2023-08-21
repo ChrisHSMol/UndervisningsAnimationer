@@ -3,12 +3,12 @@ import sys
 sys.path.append("../")
 from helpers import *
 
-slides = False
+slides = True
 if slides:
     from manim_slides import Slide
 
 
-class IntroTilDiff(Slide if slides else MovingCameraScene):
+class IntroTilDiff(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
         self.udledning_af_forskrift()
         self.slide_pause(5)
