@@ -495,3 +495,116 @@ class GitterLigning(MovingCameraScene if not slides else MovingCameraScene, Slid
             run_time=5
         )
         fade_out_all(self)
+
+
+class SpalteInterferens(MovingCameraScene, Slide if slides else None):
+    def construct(self):
+        udstyr = self.udstyr(banimationer=False)
+        self.interferens(udstyr)
+        self.wait(5)
+
+    def slide_pause(self, t=1.0, slides_bool=slides):
+        return slides_pause(self, t=t, slides_bool=slides_bool)
+
+    def udstyr(self, banimationer=True):
+        laser_gun = SVGMobject("../SVGs/laser_gun.svg").to_edge(LEFT).shift(0.25*DOWN)
+        laser_gun.set_color(invert_color(laser_gun.get_color()))
+        laser_name = Tex("Laser").set_color(color_gradient([BLUE, GREEN, RED], 3)).next_to(laser_gun, UP)
+
+        linjer = ValueTracker(5)
+        dist_lg = ValueTracker(2)
+        dist_gw = ValueTracker(5)
+
+        gitter_top = Line(
+            DOWN, UP, color=LIGHT_PINK
+        ).next_to(laser_gun, RIGHT, buff=0).shift(0.25*UP + dist_lg.get_value()*RIGHT)
+        gitter_huller = always_redraw(lambda: VGroup(*[
+            Rectangle(
+                # height=0.25*gitter_top.width, width=gitter_top.width, color=YELLOW
+                height=0.025, width=0.05, color=BLACK, stroke_width=0.01, fill_opacity=1
+            ).set_z_index(2) for _ in range(int(linjer.get_value()))
+        ]).arrange(DOWN, buff=0.1/int(linjer.get_value())).move_to(gitter_top.get_center()))
+        # ]).arrange(DOWN, buff=1/int(linjer.get_value())).move_to(gitter_top.get_center()))
+
+        # wall = Line(5*DOWN, 5*UP).shift(dist_gw.get_value() * RIGHT)
+        wall = Rectangle(
+            height=10, width=2, stroke_color=WHITE, fill_color=BLACK, fill_opacity=1
+        ).shift((dist_gw.get_value() + 1.5) * RIGHT).set_z_index(3)
+        wall_tekst = Tex("Væg").set_z_index(4).next_to(wall, LEFT, buff=-1).shift(3.5*UP)
+
+        if banimationer:
+            self.play(
+                LaggedStart(
+                    DrawBorderThenFill(laser_gun),
+                    Write(laser_name),
+                    lag_ratio=0.5
+                ),
+                run_time=1
+            )
+            self.slide_pause()
+
+            self.camera.frame.save_state()
+            self.play(
+                self.camera.frame.animate.set(height=0.5).move_to(gitter_top.get_center())
+            )
+            self.play(
+                linjer.animate.set_value(10),
+                run_time=5,
+                rate_func=rate_functions.linear
+            )
+            self.slide_pause()
+
+            self.play(
+                Restore(self.camera.frame),
+                linjer.animate.set_value(1)
+            )
+
+            self.play(
+                Create(wall),
+                Create(wall_tekst),
+            )
+            self.slide_pause()
+        else:
+            self.add(laser_gun, laser_name, gitter_top, gitter_huller, wall, wall_tekst)
+        return linjer, dist_lg, dist_gw, laser_gun, laser_name, gitter_top, gitter_huller, wall, wall_tekst
+
+    def interferens(self, udstyr):
+        linjer, dist_lg, dist_gw, laser_gun, laser_name, gitter_top, gitter_huller, wall, wall_tekst = udstyr
+
+        col = VISIBLE_LIGHT[530]
+        time_tracker = ValueTracker(0)
+
+        laser_line = Line(
+            start=[laser_gun.get_right()[0], gitter_top.get_center()[1], 0],
+            end=gitter_top.get_center(),
+            color=col
+        )
+        self.play(
+            Create(laser_line),
+            rate_func=rate_functions.linear,
+            run_time=dist_lg.get_value()
+        )
+
+        laser_waves = always_redraw(lambda:
+            VGroup(*[
+                VGroup(*[
+                    Arc(
+                        radius=max(time_tracker.get_value() - i, 0),
+                        start_angle=-PI/2,
+                        angle=PI,
+                        # arc_center=gitter_top.get_center(),
+                        arc_center=gitterlinje.get_center(),
+                        color=col,
+                        stroke_opacity=1/int(linjer.get_value()),
+                        # sheen_factor=0.5,
+                        # sheen_direction=RIGHT
+                    ) for i in range(10)
+                ]) for gitterlinje in gitter_huller
+            ])
+        )
+        self.add(laser_waves)
+        self.play(
+            time_tracker.animate.set_value(0.75),
+            rate_func=rate_functions.linear,
+            run_time=0.75
+        )
