@@ -33,11 +33,17 @@ class SpejledeFunktioner(ThreeDScene, Slide if slides else Scene):
             x_range=[-5.5, 5.5, 1],
             y_range=[-5.5, 5.5, 1],
             z_range=[-0.01, 0.01, 0.01],
-            x_length=10,
-            y_length=10,
+            x_length=7,
+            y_length=7,
             z_length=0.01,
             z_axis_config={"include_tip": False}
         )
+        plabels = plane.get_axis_labels()
+        plane[0].set_color(interpolate_color(BLUE, WHITE, 0.25))
+        plane[1].set_color(interpolate_color(BLUE, WHITE, 0.75))
+        plabels[0].set_color(plane[0].get_color())
+        plabels[1].set_color(plane[1].get_color())
+        # print(*plane)
         # plane_rect = get_background_rect(plane, buff=0, stroke_colour=RED, fill_opacity=0)
         # _screen_rect = VGroup(*[
         #     get_background_rect(
@@ -75,20 +81,21 @@ class SpejledeFunktioner(ThreeDScene, Slide if slides else Scene):
             ),
             VGroup(
                 MathTex("f(x)=x^2", color=pcol).move_to(plane.c2p(-4, 4)),
-                MathTex(r"g(x)=\sqrt{x}", color=picol).move_to(plane.c2p(4, -4))
+                MathTex(r"g(x)=\pm\sqrt{x}", color=picol).move_to(plane.c2p(4, -4))
             ),
             VGroup(
                 MathTex("f(x)=2^x", color=pcol).move_to(plane.c2p(-4, 4)),
                 MathTex(r"g(x)=\log_2(x)", color=picol).move_to(plane.c2p(4, -4))
             ),
         )
-        mirror_line = plane.plot(lambda x: x, color=WHITE)
+        mirror_line = plane.plot(lambda x: x, color=WHITE, x_range=[-11, 11])
 
         self.play(
             LaggedStart(
                 DrawBorderThenFill(plane),
+                Write(plabels),
                 Create(mirror_line),
-                lag_ratio=0.5
+                lag_ratio=0.33
             )
         )
         self.move_camera(phi=60*DEGREES)
@@ -117,7 +124,7 @@ class SpejledeFunktioner(ThreeDScene, Slide if slides else Scene):
             self.slide_pause()
 
             # self.play(*[FadeOut(m) for m in self.mobjects if m not in [plane, plane_rect, _screen_rect]])
-            self.play(*[FadeOut(m) for m in self.mobjects if m not in [plane, mirror_line]])
+            self.play(*[FadeOut(m) for m in self.mobjects if m not in [plane, mirror_line, plabels]])
             # self.stop_ambient_camera_rotation()
             # self.move_camera(phi=60*DEGREES)
             # break
@@ -125,4 +132,5 @@ class SpejledeFunktioner(ThreeDScene, Slide if slides else Scene):
         self.play(
             Uncreate(plane, lag_ratio=0.33),
             Uncreate(mirror_line),
+            Unwrite(plabels)
         )

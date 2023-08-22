@@ -1,7 +1,7 @@
 from manim import *
-from helpers import *
 import sys
 sys.path.append("../")
+from helpers import *
 
 slides = True
 if slides:
