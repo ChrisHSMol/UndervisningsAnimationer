@@ -356,3 +356,79 @@ class HoppendeBold(Slide if slides else MovingCameraScene):
             run_time=2
         )
 
+
+class HoppendeBoldThumbnail(HoppendeBold):
+    def construct(self):
+        pot_col = BLUE
+        kin_col = GREEN
+        mek_col = YELLOW
+        t = ValueTracker(0)
+
+        def d(time, a=9.82, h0=5):  # Displacement
+            return h0 - 0.5 * a * time**2 if time <= 1 else h0 - 0.5 * a * (2 - time)**2
+
+        def epot(time, mass=1, a=9.82):
+            return d(time) * mass * a
+
+        ground = VGroup(
+            Line().scale(2).to_edge(DL, buff=1)
+        )
+        ground.add(*self.get_ground_lines(ground[0]))
+        svg_path = r"..\SVGs\basketball.svg"
+        ball = SVGMobject(svg_path).scale(0.5).next_to(ground, UP, buff=0).shift(5*UP)
+        ball_ref = ball.copy().next_to(ground, UP, buff=0)
+
+        plane = Axes(
+            x_range=(-0.05, 2.15, 0.1),
+            y_range=(-5, 65, 10),
+            x_length=7,
+            y_length=7
+        ).to_edge(DR, buff=0.55)
+
+        t.set_value(1.15)
+
+        graph_mek = always_redraw(lambda: plane.plot(
+            lambda x: epot(0),
+            x_range=[0, t.get_value()],
+            color=mek_col,
+            z_index=plane.get_z_index()-2
+        ))
+        graph_pot = always_redraw(lambda: plane.plot(
+            lambda x: max(epot(x), epot(2 - x)),
+            x_range=[0, t.get_value()],
+            color=pot_col,
+            z_index=plane.get_z_index()-2
+        ))
+        graph_kin = always_redraw(lambda: plane.plot(
+            lambda x: graph_mek.underlying_function(x) - graph_pot.underlying_function(x),
+            x_range=[0, t.get_value()],
+            color=kin_col,
+            z_index=plane.get_z_index()-2
+        ))
+        mek_text = MathTex(
+            r"E_{mek}", "=",
+            r"E_{kin}", "+", r"E_{pot}"
+        ).move_to(plane.c2p(1, epot(0)*1.125))
+        mek_text[0].set_color(mek_col)
+        mek_text[2].set_color(kin_col)
+        mek_text[4].set_color(pot_col)
+
+        ball.move_to(ball_ref.get_center() + d(t.get_value()) * UP)
+        h_brace = BraceBetweenPoints(
+            point_1=ball_ref.get_center() + 0.5*ball_ref.get_height()*DL,
+            point_2=ball.get_center() + 0.5*ball_ref.get_height()*DL,
+            direction=LEFT,
+            color=pot_col
+        )
+        h_text = DecimalNumber(
+            ball.get_center()[1] - ball_ref.get_center()[1],
+            num_decimal_places=2,
+            include_sign=False,
+            color=pot_col
+        ).next_to(h_brace, UL)
+        title = VGroup(
+            Tex("Mekanisk energi", color=YELLOW), Tex(" af en hoppende bold")
+        ).arrange(RIGHT).to_edge(UP)
+        VGroup(graph_pot, graph_kin, graph_mek, mek_text, plane, ball, ground, h_text, h_brace).scale(0.8)
+        # VGroup(graph_pot, graph_kin, graph_mek, mek_text, plane, ball, ground, h_text, h_brace, title).scale(1.25)
+        self.add(graph_pot, graph_kin, graph_mek, mek_text, plane, ball, ground, h_text, h_brace, title)
