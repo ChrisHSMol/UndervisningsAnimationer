@@ -225,6 +225,9 @@ def slides_pause(self, t=1.0, slides_bool=slides):
         pass
     if slides_bool:
         indicator = Dot(fill_opacity=0.5, fill_color=GREEN).scale(0.5).to_edge(DR, buff=0.1)
+        # indicator = Dot(fill_opacity=0.5, fill_color=GREEN).scale(0.5).move_to(
+        #     0.45 * (ManimFrame().frame_width * RIGHT + ManimFrame().frame_height * DOWN)
+        # )
         # indicator = Arrow(start=LEFT, end=RIGHT, fill_opacity=0.15, fill_color=GREEN, buff=20).to_edge(DR, buff=0.1)
         self.play(FadeIn(indicator), run_time=0.25)
         xs_pause(self)

@@ -3,14 +3,14 @@ import sys
 sys.path.append("../")
 from helpers import *
 
-slides = False
+slides = True
 if slides:
     from manim_slides import Slide
 
 
 class Kontinuitet(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
-        self.kontinuitet()
+        # self.kontinuitet()
         self.slide_pause(5)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
