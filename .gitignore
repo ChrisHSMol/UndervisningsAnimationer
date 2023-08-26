@@ -5,5 +5,6 @@ slides/
 misc_files/
 */slides/
 */media/
-!funktioner/media/images/to_punkt_lin
-!funktioner/media/images/stykvise_funktioner
+#!funktioner/media/images/to_punkt_lin
+#!funktioner/media/images/stykvise_funktioner
+!funktioner/media/images/*
