@@ -4,5 +4,6 @@ __pycache__/
 slides/
 misc_files/
 */slides/
-*/media/Tex/
-*/media/videos/
+*/media/
+!funktioner/media/images/to_punkt_lin
+!funktioner/media/images/stykvise_funktioner
