@@ -707,3 +707,32 @@ class StykFunk(MovingCameraScene if not slides else MovingCameraScene, Slide):
         return slides_pause(self, t, slides_bool)
 
 
+class StykFunkThumbnail(Scene):
+    def construct(self):
+        cs = [
+            BLUE, *sunset_color_scheme(3)[1:]
+        ]
+        eq = VGroup(
+            VGroup(
+                MathTex(r"0.2 \cdot x", color=cs[0]),
+                MathTex(r"0.4 \cdot x - 0.5", color=cs[1]),
+                MathTex(r"0.55 \cdot x - 1.25", color=cs[2]),
+            ).arrange(DOWN, aligned_edge=LEFT),
+            VGroup(
+                MathTex(r", 0 \leq x < ", "2.5"),
+                MathTex(r", ", "2.5", r"\leq x < ", "5.0"),
+                MathTex(r", ", "5.0", r"\leq x < ", "8.5"),
+            ).arrange(DOWN, aligned_edge=LEFT)
+        ).arrange(RIGHT)
+        eq[1][0][-1].set_color(RED)
+        eq[1][1][1].set_color(RED)
+        eq[1][1][-1].set_color(RED)
+        eq[1][2][1].set_color(RED)
+        eq[1][2][-1].set_color(RED)
+        brace = Brace(eq, LEFT).next_to(eq, LEFT)
+        fx = MathTex("f(x)=").next_to(brace, LEFT)
+        title = VGroup(
+            Tex("Stykvist definerede", color=YELLOW), Tex(" funktioner")
+        ).arrange(RIGHT).next_to(VGroup(fx, brace, eq), UP, aligned_edge=LEFT, buff=1)
+        VGroup(eq, brace, fx, title).scale(1.5).to_edge(UL)
+        self.add(eq, brace, fx, title)

@@ -533,5 +533,51 @@ class ToPunktLin(Slide if slides else Scene):
         return slides_pause(self, t, slides_bool)
 
 
+class ToPunktLinThumbnail(Scene):
+    def construct(self):
+        plane = NumberPlane(
+            x_range=[-2, 16.5, 1],
+            y_range=[-2, 12.5, 1],
+            x_length=4.5,
+            y_length=3.5,
+            background_line_style={
+                "stroke_color": TEAL,
+                "stroke_width": 2,
+                "stroke_opacity": 0.2
+            },
+        ).to_edge(UL)
+        x1, x2 = 4, 12
+        y1, y2 = 3, 7
+        graph = plane.plot(
+            lambda x: (y1-(y2-y1)/(x2-x1)*x1) + (y2-y1)/(x2-x1) * x,
+            x_range=[-2, 16.5, 1],
+            color=YELLOW,
+            stroke_width=3
+        )
 
-
+        title = VGroup(
+            Tex("To-Punkt-Formel for"), Tex("Lineære Funktioner", color=YELLOW)
+        ).scale(0.8).arrange(RIGHT).next_to(plane, UP, aligned_edge=LEFT)
+        p1_col = RED
+        p2_col = BLUE
+        eq_color_map = {
+            "x_1": p1_col,
+            "y_1": p1_col,
+            "x_2": p2_col,
+            "y_2": p2_col,
+        }
+        p1 = Dot().move_to(plane.c2p(x1, y1)).set_color(p1_col)
+        p2 = Dot().move_to(plane.c2p(x2, y2)).set_color(p2_col)
+        eq_a = VGroup(
+            MathTex("a", "="),
+            MathTex(
+                "{y_2", "-", "y_1}", r"\over",
+                "{x_2", "-", "x_1}"
+            ).set_color_by_tex_to_color_map(eq_color_map)
+        ).arrange(RIGHT).next_to(plane, RIGHT, aligned_edge=UP).shift(0.5*DOWN)
+        eq_b = MathTex(
+            "b", " = ", "y_1", "-", "a", r"\cdot", "x_1"
+        ).set_color_by_tex_to_color_map(eq_color_map).next_to(eq_a, DOWN, aligned_edge=LEFT)
+        # VGroup(title, eq_b, eq_a).next_to(plane, RIGHT)
+        self.add(title, plane, eq_b, eq_a, graph, p1, p2)
+        VGroup(title, plane, eq_b, eq_a, graph, p1, p2).scale(1.75).move_to(ORIGIN)
