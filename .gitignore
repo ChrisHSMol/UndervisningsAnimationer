@@ -7,4 +7,5 @@ misc_files/
 */media/
 #!funktioner/media/images/to_punkt_lin
 #!funktioner/media/images/stykvise_funktioner
-!*/media/images/*
+!funktioner/media/images/*
+!fysik/media/images/*
