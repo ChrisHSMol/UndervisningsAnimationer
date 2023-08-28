@@ -26,8 +26,8 @@ class HoppendeBold(Slide if slides else MovingCameraScene):
     def construct(self):
         title = Tex("Mekanisk energi af en", "hoppende bold").arrange(DOWN, aligned_edge=LEFT)
         title[1].set_color(YELLOW)
-        play_title(self, title)
         self.slide_pause(0.5)
+        play_title(self, title)
         self.basketbold()
         # self.slide_pause()
         self.dampening()
@@ -82,7 +82,7 @@ class HoppendeBold(Slide if slides else MovingCameraScene):
             self.play(
                 DrawBorderThenFill(ground)
             )
-            self.slide_pause()
+            # self.slide_pause()
             self.play(
                 ball.animate.scale(0.5).next_to(ground, UP, buff=0)
             )
@@ -326,7 +326,7 @@ class HoppendeBold(Slide if slides else MovingCameraScene):
 
         self.add(ball, plane, ground, h_text, h_brace, graph_pot, graph_kin, graph_mek)
         self.wait()
-        self.play(Write(mek_text), Write(damp_fact))
+        self.play(FadeIn(mek_text), Write(damp_fact))
         self.slide_pause()
 
         for i in range(t_max//2):
@@ -349,7 +349,7 @@ class HoppendeBold(Slide if slides else MovingCameraScene):
 
         self.play(
             LaggedStart(
-                *[Uncreate(m) for m in [ball, h_brace, ground, plane, graph_mek, graph_pot, graph_kin, *meklines]],
+                *[Uncreate(m) for m in [*meklines, ball, h_brace, ground, plane, graph_mek, graph_pot, graph_kin]],
                 *[Unwrite(m) for m in [mek_text, damp_fact, h_text]],
                 lag_ratio=0.1
             ),
@@ -428,7 +428,7 @@ class HoppendeBoldThumbnail(HoppendeBold):
         ).next_to(h_brace, UL)
         title = VGroup(
             Tex("Mekanisk energi", color=YELLOW), Tex(" af en hoppende bold")
-        ).arrange(RIGHT).to_edge(UP)
+        ).scale(1.4).arrange(RIGHT).to_edge(UL)
         VGroup(graph_pot, graph_kin, graph_mek, mek_text, plane, ball, ground, h_text, h_brace).scale(0.8)
         # VGroup(graph_pot, graph_kin, graph_mek, mek_text, plane, ball, ground, h_text, h_brace, title).scale(1.25)
         self.add(graph_pot, graph_kin, graph_mek, mek_text, plane, ball, ground, h_text, h_brace, title)

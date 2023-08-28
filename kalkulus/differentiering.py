@@ -221,7 +221,7 @@ class IntroTilDiff(MovingCameraScene, Slide if slides else Scene):
         self.slide_pause()
 
 
-class TreTrinsRegel(Slide if slides else MovingCameraScene):
+class TreTrinsRegel(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
         self.tretrin()
         self.slide_pause(5)
@@ -249,10 +249,12 @@ class TreTrinsRegel(Slide if slides else MovingCameraScene):
                 "stroke_opacity": 0.3
             }
         )
-        graph = plane.plot(
+        graph_stroke = ValueTracker(2)
+        graph = always_redraw(lambda: plane.plot(
             lambda x: -10 * (x - 1) * (x - 4) * (x - 5) + 50,
-            color=YELLOW
-        )
+            color=YELLOW,
+            stroke_width=graph_stroke.get_value()
+        ))
         self.play(
             LaggedStart(
                 DrawBorderThenFill(plane),
@@ -264,14 +266,17 @@ class TreTrinsRegel(Slide if slides else MovingCameraScene):
 
         x_tracker = ValueTracker(3)
         dx_tracker = ValueTracker(0.0)
+        lines_tracker = ValueTracker(1.0)
         xlines = always_redraw(lambda:
             VGroup(
                 DashedLine(
                     start=plane.c2p(x_tracker.get_value(), 0),
                     end=plane.c2p(
                         x_tracker.get_value(),
-                        graph.underlying_function(x_tracker.get_value())
+                        graph.underlying_function(x_tracker.get_value()),
                     ),
+                    stroke_width=graph_stroke.get_value(),
+                    stroke_opacity=lines_tracker.get_value()
                 ),
                 DashedLine(
                     start=plane.c2p(x_tracker.get_value() + dx_tracker.get_value(), 0),
@@ -279,7 +284,8 @@ class TreTrinsRegel(Slide if slides else MovingCameraScene):
                         x_tracker.get_value() + dx_tracker.get_value(),
                         graph.underlying_function(x_tracker.get_value() + dx_tracker.get_value())
                     ),
-                    stroke_width=4 if np.abs(dx_tracker.get_value()) > 1 else np.exp(dx_tracker.get_value())
+                    stroke_width=4 if np.abs(dx_tracker.get_value()) > 1 else np.exp(0.5*dx_tracker.get_value()),
+                    stroke_opacity=lines_tracker.get_value()
                 )
             )
         )
@@ -290,7 +296,9 @@ class TreTrinsRegel(Slide if slides else MovingCameraScene):
                     end=plane.c2p(
                         x_tracker.get_value(),
                         graph.underlying_function(x_tracker.get_value())
-                    )
+                    ),
+                    stroke_width=graph_stroke.get_value(),
+                    stroke_opacity=lines_tracker.get_value()
                 ),
                 DashedLine(
                     start=plane.c2p(0, graph.underlying_function(x_tracker.get_value() + dx_tracker.get_value())),
@@ -298,7 +306,8 @@ class TreTrinsRegel(Slide if slides else MovingCameraScene):
                         x_tracker.get_value() + dx_tracker.get_value(),
                         graph.underlying_function(x_tracker.get_value() + dx_tracker.get_value()),
                     ),
-                    stroke_width=4 if np.abs(dx_tracker.get_value()) > 1 else np.exp(dx_tracker.get_value())
+                    stroke_width=4 if np.abs(dx_tracker.get_value()) > 1 else np.exp(0.5*dx_tracker.get_value()),
+                    stroke_opacity=lines_tracker.get_value()
                 )
             )
         )
@@ -310,14 +319,14 @@ class TreTrinsRegel(Slide if slides else MovingCameraScene):
             )
         )
         dx_label = always_redraw(lambda:
-            MathTex(r"\Delta x").next_to(dx_brace, DOWN)
+            MathTex(r"h").next_to(dx_brace, DOWN)
         )
         labels = always_redraw(lambda:
             VGroup(
                 MathTex("x_0", font_size=34).next_to(xlines[0], DOWN),
-                MathTex(r"x_0 + \Delta x", font_size=min(17*dx_tracker.get_value() + 1, 34)).next_to(xlines[1], DOWN),
+                MathTex(r"x_0 + h", font_size=min(17*dx_tracker.get_value() + 1, 34)).next_to(xlines[1], DOWN),
                 MathTex("f(x_0)", font_size=34).next_to(ylines[0], LEFT),
-                MathTex(r"f(x_0 + \Delta x)", font_size=min(17*dx_tracker.get_value() + 1, 34)).next_to(ylines[1], LEFT),
+                MathTex(r"f(x_0 + h)", font_size=min(17*dx_tracker.get_value() + 1, 34)).next_to(ylines[1], LEFT),
             )
         )
 
@@ -353,19 +362,20 @@ class TreTrinsRegel(Slide if slides else MovingCameraScene):
                 x=x_tracker.get_value(),
                 graph=graph,
                 dx=dx_tracker.get_value(),
-                secant_line_color=RED if np.abs(dx_tracker.get_value()) > 0.01 else GREEN,
+                secant_line_color=RED if np.abs(dx_tracker.get_value()) > 1E-4 else GREEN,
                 secant_line_length=5,
                 include_dx_line=False,
-                include_dy_line=False
-            )
+                include_dy_line=False,
+            ).set_style(stroke_width=graph_stroke.get_value())
         )
         self.play(
             Create(secant_line)
         ),
         self.play(
-            dx_tracker.animate.set_value(0.001),
+            dx_tracker.animate.set_value(0.0001),
             run_time=10
         )
+        self.slide_pause()
 
         tretrinsregel_trin = VGroup(
             Text("Trin 1: Find funktionstilvæksten", t2c={"Trin 1": RED, "funktionstilvæksten": BLUE_A}).set_z_index(plane.get_z_index() + 2),
@@ -374,18 +384,18 @@ class TreTrinsRegel(Slide if slides else MovingCameraScene):
         ).scale(0.5).arrange(DOWN, aligned_edge=LEFT, buff=1.25).to_edge(UR)
         tretrinsregel_ligninger = VGroup(
             MathTex(
-                r"\Delta y", "=", f"f(x_0 + \Delta x)", "-", "f(x_0)"
+                r"\Delta y", "=", rf"f(x_0 + h)", "-", "f(x_0)"
             ).set_color_by_tex_to_color_map(
                 {r"\Delta y": BLUE_A}
             ).set_z_index(plane.get_z_index() + 2).scale(0.5).next_to(tretrinsregel_trin[0], DOWN, aligned_edge=LEFT),
             MathTex(
-                r"\frac{\Delta y}{\Delta x}", "=", r"\frac{f(x_0 + \Delta x) - f(x_0)}{\Delta x}"
+                r"\frac{\Delta y}{h}", "=", r"\frac{f(x_0 + h) - f(x_0)}{h}"
             ).set_color_by_tex_to_color_map(
                 {r"\Delta y": BLUE_B}
             ).set_z_index(plane.get_z_index() + 2).scale(0.5).next_to(tretrinsregel_trin[1], DOWN, aligned_edge=LEFT),
             MathTex(
-                r"f'(x_0)", "=" r"\lim_{\Delta x \rightarrow 0}",
-                r"\left(\frac{f(x_0 + \Delta x) - f(x_0)}{\Delta x}\right)"
+                r"f'(x_0)", "=" r"\lim_{h \rightarrow 0}",
+                r"\left(\frac{f(x_0 + h) - f(x_0)}{h}\right)"
             ).set_color_by_tex_to_color_map(
                 {r"'": BLUE_C}
             ).set_z_index(plane.get_z_index() + 2).scale(0.5).next_to(tretrinsregel_trin[2], DOWN, aligned_edge=LEFT)
@@ -422,11 +432,11 @@ class TreTrinsRegel(Slide if slides else MovingCameraScene):
                 x=x_tracker.get_value(),
                 graph=graph,
                 dx=dx_tracker.get_value(),
-                secant_line_color=RED if np.abs(dx_tracker.get_value()) > 0.01 else GREEN,
+                secant_line_color=RED if np.abs(dx_tracker.get_value()) > 1E-4 else GREEN,
                 secant_line_length=5,
                 include_dx_line=False,
                 include_dy_line=False
-            ).set_z_index(2)
+            ).set_z_index(2).set_style(stroke_width=graph_stroke.get_value())
         )
         self.play(
             LaggedStart(
@@ -446,16 +456,17 @@ class TreTrinsRegel(Slide if slides else MovingCameraScene):
                 lag_ratio=0.5
             )
         )
+        self.slide_pause()
         self.remove(dots)
         dots = always_redraw(lambda: VGroup(
             Dot(
                 plane.c2p(
                     x_tracker.get_value(), graph.underlying_function(x_tracker.get_value())
                 ),
-                stroke_width=0.1,
+                stroke_width=0.01,
                 stroke_color=WHITE,
                 color=RED,
-                radius=min(0.08, 0.04*np.exp(dx_tracker.get_value()))
+                radius=min(0.08, 0.001*np.exp(0.1*dx_tracker.get_value()))
             ).set_z_index(3),
             Dot(
                 plane.c2p(
@@ -463,9 +474,9 @@ class TreTrinsRegel(Slide if slides else MovingCameraScene):
                     graph.underlying_function(x_tracker.get_value() + dx_tracker.get_value())
                 ),
                 color=RED,
-                stroke_width=0.1,
+                stroke_width=0.01,
                 stroke_color=WHITE,
-                radius=min(0.08, 0.04*np.exp(dx_tracker.get_value()))
+                radius=min(0.08, 0.001*np.exp(0.1*dx_tracker.get_value()))
             ).set_z_index(3)
         ))
         self.add(dots)
@@ -475,11 +486,14 @@ class TreTrinsRegel(Slide if slides else MovingCameraScene):
             ).set(width=2.5*dx_tracker.get_value()),
             run_time=4
         )
+        self.slide_pause()
         self.play(
-            dx_tracker.animate.set_value(0.001),
+            dx_tracker.animate.set_value(1E-5),
             self.camera.frame.animate.move_to(
                 plane.c2p(x_tracker.get_value(), graph.underlying_function(x_tracker.get_value()))
-            ).set(width=1),
+            ).set(width=0.01),
+            graph_stroke.animate.set_value(0.1),
+            lines_tracker.animate.set_value(0),
             run_time=10
         )
         self.slide_pause()
@@ -539,5 +553,57 @@ class TreTrinsRegel(Slide if slides else MovingCameraScene):
         )
         self.slide_pause()
 
+        self.play(
+            LaggedStart(
+                *[Uncreate(m) for m in [plane, graph, xlines, ylines, secant_line]],
+                Unwrite(labels),
+                VGroup(tretrinsregel_trin, tretrinsregel_ligninger, brect).animate.scale(1.25).move_to(ORIGIN),
+                lag_ratio=0.1
+            ),
+            run_time=2
+        )
+        self.slide_pause()
+        self.play(
+            LaggedStart(
+                *[Unwrite(m) for m in [tretrinsregel_trin, tretrinsregel_ligninger]],
+                Uncreate(brect),
+                lag_ratio=0.2
+            ),
+            run_time=2
+        )
 
 
+class TreTrinThumbnail(TreTrinsRegel):
+    def construct(self):
+        title = VGroup(
+            Tex("Tretrinsreglen", color=YELLOW), Tex(" for differentiering")
+        ).arrange(RIGHT).scale(1.25).to_edge(UL)
+        tretrinsregel_trin = VGroup(
+            Text("Trin 1: Find funktionstilvæksten", t2c={"Trin 1": RED, "funktionstilvæksten": BLUE_A}),
+            Text("Trin 2: Find differenskvotienten", t2c={"Trin 2": RED, "differenskvotienten": BLUE_B}),
+            Text("Trin 3: Find differentialkvotienten", t2c={"Trin 3": RED, "differentialkvotienten": BLUE_C}),
+        ).scale(0.5).arrange(DOWN, aligned_edge=LEFT, buff=1.25).to_edge(UR)
+        tretrinsregel_ligninger = VGroup(
+            MathTex(
+                r"\Delta y", "=", rf"f(x_0 + h)", "-", "f(x_0)"
+            ).set_color_by_tex_to_color_map(
+                {r"\Delta y": BLUE_A}
+            ).scale(0.5).next_to(tretrinsregel_trin[0], DOWN, aligned_edge=LEFT),
+            MathTex(
+                r"\frac{\Delta y}{h}", "=", r"\frac{f(x_0 + h) - f(x_0)}{h}"
+            ).set_color_by_tex_to_color_map(
+                {r"\Delta y": BLUE_B}
+            ).scale(0.5).next_to(tretrinsregel_trin[1], DOWN, aligned_edge=LEFT),
+            MathTex(
+                r"f'(x_0)", "=" r"\lim_{h \rightarrow 0}",
+                r"\left(\frac{f(x_0 + h) - f(x_0)}{h}\right)"
+            ).set_color_by_tex_to_color_map(
+                {r"'": BLUE_C}
+            ).scale(0.5).next_to(tretrinsregel_trin[2], DOWN, aligned_edge=LEFT)
+        )
+        VGroup(tretrinsregel_trin, tretrinsregel_ligninger).scale(1.25).move_to(ORIGIN)
+        brect = get_background_rect(
+            VGroup(*tretrinsregel_trin, *tretrinsregel_ligninger),
+            stroke_colour=color_gradient([RED, BLUE_A, BLUE_B, BLUE_C], 4)
+        )
+        self.add(title, tretrinsregel_trin, tretrinsregel_ligninger, brect)
