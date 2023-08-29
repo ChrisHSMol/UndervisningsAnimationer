@@ -732,7 +732,7 @@ class StykFunkThumbnail(Scene):
         brace = Brace(eq, LEFT).next_to(eq, LEFT)
         fx = MathTex("f(x)=").next_to(brace, LEFT)
         title = VGroup(
-            Tex("Stykvist definerede", color=YELLOW), Tex(" funktioner")
+            Tex("Stykkevist definerede", color=YELLOW), Tex(" funktioner")
         ).arrange(RIGHT).next_to(VGroup(fx, brace, eq), UP, aligned_edge=LEFT, buff=1)
         VGroup(eq, brace, fx, title).scale(1.5).to_edge(UL)
         self.add(eq, brace, fx, title)
