@@ -239,9 +239,9 @@ def slides_pause(self, t=1.0, slides_bool=slides):
 
 
 def scene_marker(scene_name):
-    print("-" * 20)
+    print("-" * max(20, len(scene_name)))
     print(scene_name)
-    print("-" * 20)
+    print("-" * max(20, len(scene_name)))
 
 
 def between_mobjects(left_mob, right_mob):

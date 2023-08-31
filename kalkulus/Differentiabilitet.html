@@ -1,0 +1,291 @@
+<!doctype html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Manim Slides</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.4.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.4.0/theme/black.min.css">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <!-- <link rel="stylesheet" href="lib/css/zenburn.css"> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/zenburn.min.css">
+
+    <!-- <link rel="stylesheet" href="index.css"> -->
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section data-background-size='contain' data-background-video="Differentiabilitet_assets\149e6f773ff5f496d6e6a860c37bea310b067ee800110ee7eb0f8a686ae8f9b5.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\08fd1b748f21fc7952c1ab9d8b0fc9d3f10b59f72e5b3bb2f6d11ec4d5db3f92.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\126698899d54c3da1148fa482218034404684cd9fcae8c31067dfe193475a365.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\e83bd4504b21d66d0a918754067169d7ad637c93db4c297b5e4c15b8ca2eb998.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\3d3aa6fc0a818a2bb508cc4dfdf6dc1c5bb5de010046455189327efbad90ddef.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\898970ff446703a008b8bc185420583cbdabb53067e18054e8a2b0b610f4f40f.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\8c91ec56b47bca2e9979f83974a38fbec41f021060ca2b333d6c935e82790221.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\4fcb4b535d463d7335a66282330f336df02f6e47bbf1ebcc632d656a8472b1b7.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\c1b079d2a4b07b7101737ff5185471490d4ef6b071d84e56c98c69606779e485.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\6a6a639734cbf4b49b2ce4ad3ce6a7a59b8116484bd6919902b44dfd6b08eb04.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\18df7f2f60ed5f3afe020f920d594c877af6ca126fa6700a326fbe12aacd9db5.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\190c8d78ad70e6fcea4f36262ecc9d4f883c3e2bc24decc79912864fda9e6fe6.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\8db52b222760c89eaf7b3b99a5e89bf9ffe6e639c5f31cc18eeedd48eb30eb92.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\da7228e4b9114bc4ea3d92066ae15515b87f1379b4a3305e181396273423d7c6.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\8dbf3aeaeb0f1b1a7eba39044b30d1ce8e6f300051a5f071b2e43be840b3c697.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\e1daea34e52d79781aa1351d7f38641531322b458b134244692fc6d65b1aae2b.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\e1aac1870eba7507f46e2a50554249f3365880854ca8caaa24599a03ceb7bfda.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\70417572693cdad77bdabb68175853f5c6ccf1fdb49d18cb98d4c4ef8f257eb6.mp4" data-background-video-muted></section><section data-background-size='contain' data-background-video="Differentiabilitet_assets\038eb6f4df3541618bd4137e541b99bb6d87df970ec1d044aa63ba9ed8734636.mp4" data-background-video-muted></section>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.4.0/reveal.min.js"></script>
+
+    <!-- To include plugins, see: https://revealjs.com/plugins/ -->
+
+    <!-- <script src="index.js"></script> -->
+    <script>
+      Reveal.initialize({
+
+                // The "normal" size of the presentation, aspect ratio will
+                // be preserved when the presentation is scaled to fit different
+                // resolutions. Can be specified using percentage units.
+                width: '100%',
+                height: '100%',
+
+                // Factor of the display size that should remain empty around
+                // the content
+                margin: 0.04,
+
+                // Bounds for smallest/largest possible scale to apply to content
+                minScale: 0.2,
+                maxScale: 2.0,
+
+                // Display presentation control arrows
+                controls: false,
+
+                // Help the user learn the controls by providing hints, for example by
+                // bouncing the down arrow when they first encounter a vertical slide
+                controlsTutorial: true,
+
+                // Determines where controls appear, "edges" or "bottom-right"
+                controlsLayout: 'bottom-right',
+
+                // Visibility rule for backwards navigation arrows; "faded", "hidden"
+                // or "visible"
+                controlsBackArrows: 'faded',
+
+                // Display a presentation progress bar
+                progress: false,
+
+                // Display the page number of the current slide
+                // - true:    Show slide number
+                // - false:   Hide slide number
+                //
+                // Can optionally be set as a string that specifies the number formatting:
+                // - "h.v":   Horizontal . vertical slide number (default)
+                // - "h/v":   Horizontal / vertical slide number
+                // - "c":   Flattened slide number
+                // - "c/t":   Flattened slide number / total slides
+                //
+                // Alternatively, you can provide a function that returns the slide
+                // number for the current slide. The function should take in a slide
+                // object and return an array with one string [slideNumber] or
+                // three strings [n1,delimiter,n2]. See #formatSlideNumber().
+                slideNumber: false,
+
+                // Can be used to limit the contexts in which the slide number appears
+                // - "all":      Always show the slide number
+                // - "print":    Only when printing to PDF
+                // - "speaker":  Only in the speaker view
+                showSlideNumber: 'all',
+
+                // Use 1 based indexing for # links to match slide number (default is zero
+                // based)
+                hashOneBasedIndex: false,
+
+                // Add the current slide number to the URL hash so that reloading the
+                // page/copying the URL will return you to the same slide
+                hash: false,
+
+                // Flags if we should monitor the hash and change slides accordingly
+                respondToHashChanges: false,
+
+                // Push each slide change to the browser history.  Implies `hash: true`
+                history: false,
+
+                // Enable keyboard shortcuts for navigation
+                keyboard: true,
+
+                // Optional function that blocks keyboard events when retuning false
+                //
+                // If you set this to 'focused', we will only capture keyboard events
+                // for embedded decks when they are in focus
+                keyboardCondition: null,
+
+                // Disables the default reveal.js slide layout (scaling and centering)
+                // so that you can use custom CSS layout
+                disableLayout: false,
+
+                // Enable the slide overview mode
+                overview: true,
+
+                // Vertical centering of slides
+                center: true,
+
+                // Enables touch navigation on devices with touch input
+                touch: true,
+
+                // Loop the presentation
+                loop: false,
+
+                // Change the presentation direction to be RTL
+                rtl: false,
+
+                // Changes the behavior of our navigation directions.
+                //
+                // "default"
+                // Left/right arrow keys step between horizontal slides, up/down
+                // arrow keys step between vertical slides. Space key steps through
+                // all slides (both horizontal and vertical).
+                //
+                // "linear"
+                // Removes the up/down arrows. Left/right arrows step through all
+                // slides (both horizontal and vertical).
+                //
+                // "grid"
+                // When this is enabled, stepping left/right from a vertical stack
+                // to an adjacent vertical stack will land you at the same vertical
+                // index.
+                //
+                // Consider a deck with six slides ordered in two vertical stacks:
+                // 1.1    2.1
+                // 1.2    2.2
+                // 1.3    2.3
+                //
+                // If you're on slide 1.3 and navigate right, you will normally move
+                // from 1.3 -> 2.1. If "grid" is used, the same navigation takes you
+                // from 1.3 -> 2.3.
+                navigationMode: 'default',
+
+                // Randomizes the order of slides each time the presentation loads
+                shuffle: false,
+
+                // Turns fragments on and off globally
+                fragments: true,
+
+                // Flags whether to include the current fragment in the URL,
+                // so that reloading brings you to the same fragment position
+                fragmentInURL: true,
+
+                // Flags if the presentation is running in an embedded mode,
+                // i.e. contained within a limited portion of the screen
+                embedded: false,
+
+                // Flags if we should show a help overlay when the question-mark
+                // key is pressed
+                help: true,
+
+                // Flags if it should be possible to pause the presentation (blackout)
+                pause: true,
+
+                // Flags if speaker notes should be visible to all viewers
+                showNotes: false,
+
+                // Global override for autolaying embedded media (video/audio/iframe)
+                // - null:   Media will only autoplay if data-autoplay is present
+                // - true:   All media will autoplay, regardless of individual setting
+                // - false:  No media will autoplay, regardless of individual setting
+                autoPlayMedia: null,
+
+                // Global override for preloading lazy-loaded iframes
+                // - null:   Iframes with data-src AND data-preload will be loaded when within
+                //           the viewDistance, iframes with only data-src will be loaded when visible
+                // - true:   All iframes with data-src will be loaded when within the viewDistance
+                // - false:  All iframes with data-src will be loaded only when visible
+                preloadIframes: null,
+
+                // Can be used to globally disable auto-animation
+                autoAnimate: true,
+
+                // Optionally provide a custom element matcher that will be
+                // used to dictate which elements we can animate between.
+                autoAnimateMatcher: null,
+
+                // Default settings for our auto-animate transitions, can be
+                // overridden per-slide or per-element via data arguments
+                autoAnimateEasing: 'ease',
+                autoAnimateDuration: 1.0,
+                autoAnimateUnmatched: true,
+
+                // CSS properties that can be auto-animated. Position & scale
+                // is matched separately so there's no need to include styles
+                // like top/right/bottom/left, width/height or margin.
+                autoAnimateStyles: ['opacity', 'color', 'background-color', 'padding', 'font-size', 'line-height', 'letter-spacing', 'border-width', 'border-color', 'border-radius', 'outline', 'outline-offset'],
+
+                // Controls automatic progression to the next slide
+                // - 0:      Auto-sliding only happens if the data-autoslide HTML attribute
+                //           is present on the current slide or fragment
+                // - 1+:     All slides will progress automatically at the given interval
+                // - false:  No auto-sliding, even if data-autoslide is present
+                autoSlide: 0,
+
+                // Stop auto-sliding after user input
+                autoSlideStoppable: true,
+
+                // Use this method for navigation when auto-sliding (defaults to navigateNext)
+                autoSlideMethod: null,
+
+                // Specify the average time in seconds that you think you will spend
+                // presenting each slide. This is used to show a pacing timer in the
+                // speaker view
+                defaultTiming: null,
+
+                // Enable slide navigation via mouse wheel
+                mouseWheel: false,
+
+                // Opens links in an iframe preview overlay
+                // Add `data-preview-link` and `data-preview-link="false"` to customise each link
+                // individually
+                previewLinks: false,
+
+                // Exposes the reveal.js API through window.postMessage
+                postMessage: true,
+
+                // Dispatches all reveal.js events to the parent window through postMessage
+                postMessageEvents: false,
+
+                // Focuses body when page changes visibility to ensure keyboard shortcuts work
+                focusBodyOnPageVisibilityChange: true,
+
+                // Transition style
+                transition: 'none', // none/fade/slide/convex/concave/zoom
+
+                // Transition speed
+                transitionSpeed: 'default', // default/fast/slow
+
+                // Transition style for full page slide backgrounds
+                backgroundTransition: 'none', // none/fade/slide/convex/concave/zoom
+
+                // The maximum number of pages a single slide can expand onto when printing
+                // to PDF, unlimited by default
+                pdfMaxPagesPerSlide: Number.POSITIVE_INFINITY,
+
+                // Prints each fragment on a separate slide
+                pdfSeparateFragments: true,
+
+                // Offset used to reduce the height of content within exported PDF pages.
+                // This exists to account for environment differences based on how you
+                // print to PDF. CLI printing options, like phantomjs and wkpdf, can end
+                // on precisely the total height of the document whereas in-browser
+                // printing has to end one pixel before.
+                pdfPageHeightOffset: -1,
+
+                // Number of slides away from the current that are visible
+                viewDistance: 3,
+
+                // Number of slides away from the current that are visible on mobile
+                // devices. It is advisable to set this to a lower number than
+                // viewDistance in order to save resources.
+                mobileViewDistance: 2,
+
+                // The display mode that will be used to show slides
+                display: 'block',
+
+                // Hide cursor if inactive
+                hideInactiveCursor: true,
+
+                // Time before the cursor is hidden (in ms)
+                hideCursorTime: 5000
+
+
+            });
+    </script>
+  </body>
+
+</html>

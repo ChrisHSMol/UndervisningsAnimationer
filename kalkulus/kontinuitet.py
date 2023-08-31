@@ -182,34 +182,55 @@ class Differentiabilitet(MovingCameraScene, Slide if slides else Scene):
         self.add(moving_tangent, moving_value)
         j_list = [1, 0.5, 0.125]
         for j in j_list:
-            # for i in [-2, -1, 0, 1, 2, 3]:
-            for i in np.arange(x0.get_value() + j, -x0.get_value() + 1E-4, j):
-                self.play(
-                    AnimationGroup(
-                        FadeOut(get_background_rect(moving_value, fill_color=GRAY, buff=0.05), run_time=0.1),
-                        FadeIn(moving_value.copy().set_color(BLUE_B), run_time=0.05),
-                        FadeIn(moving_tangent.copy().set_style(stroke_color=BLUE_B, stroke_opacity=0.5), run_time=0.05),
-                    ),
-                    x0.animate.set_value(i),
-                    run_time=2 * np.abs(x0.get_value() - i),
-                    rate_func=rate_functions.linear
-                )
+            # for i in np.arange(x0.get_value() + j, -x0.get_value() + 1E-4, j):
+            #     self.play(
+            #         AnimationGroup(
+            #             FadeOut(get_background_rect(moving_value, fill_color=GRAY, buff=0.05), run_time=0.1),
+            #             FadeIn(moving_value.copy().set_color(BLUE_B), run_time=0.05),
+            #             FadeIn(moving_tangent.copy().set_style(stroke_color=BLUE_B, stroke_opacity=0.5), run_time=0.05),
+            #         ),
+            #         x0.animate.set_value(i),
+            #         run_time=2 * np.abs(x0.get_value() - i),
+            #         rate_func=rate_functions.linear
+            #     )
+            # self.play(
+            #     AnimationGroup(
+            #         FadeOut(get_background_rect(moving_value, fill_color=GRAY, buff=0.05), run_time=0.1),
+            #         FadeIn(moving_value.copy().set_color(BLUE_B), run_time=0.05),
+            #         FadeIn(moving_tangent.copy().set_style(stroke_color=BLUE_B, stroke_opacity=0.5), run_time=0.05),
+            #     )
+            # )
+            text_copies = always_redraw(lambda: VGroup(*[
+                DecimalNumber(
+                    2*i,
+                    include_sign=True,
+                    num_decimal_places=2,
+                    color=moving_value.get_color(),
+                    stroke_opacity=0 if i > x0.get_value() else 0.75,
+                    fill_opacity=0 if i > x0.get_value() else 0.75
+                ).move_to(
+                    plane.c2p(1.25 * i, 1 * (graphs[0].underlying_function(i) - 1))
+                ) for i in np.arange(-3, 3 + 1E-4, j)
+            ]))
+            slope_copies = always_redraw(lambda: VGroup(*[
+                plane.get_secant_slope_group(
+                    x=i,
+                    graph=graphs[0],
+                    dx=1E-4,
+                    include_dy_line=False,
+                    include_dx_line=False,
+                    secant_line_color=BLUE,
+                    secant_line_length=3,
+                ).set_style(stroke_opacity=0 if i > x0.get_value() else 0.5) for i in np.arange(-3, 3 + 1E-4, j)
+            ]))
+            print(text_copies, slope_copies)
+            self.add(text_copies, slope_copies)
             self.play(
-                AnimationGroup(
-                    FadeOut(get_background_rect(moving_value, fill_color=GRAY, buff=0.05), run_time=0.1),
-                    FadeIn(moving_value.copy().set_color(BLUE_B), run_time=0.05),
-                    FadeIn(moving_tangent.copy().set_style(stroke_color=BLUE_B, stroke_opacity=0.5), run_time=0.05),
-                )
+                x0.animate.set_value(3),
+                run_time=6
             )
             self.slide_pause()
-            if j != j_list[-1]:
-                self.play(
-                    *[FadeOut(m) for m in self.mobjects if m not in [plane, graphs, moving_value, moving_tangent]],
-                    x0.animate.set_value(-3),
-                    run_time=1
-                )
-                self.slide_pause()
-            else:
+            if j == j_list[-1]:
                 tekst = VGroup(
                     Tex("Det bliver svært at overskue."),
                     Tex("I stedet for at skrive hældningerne,"),
@@ -224,11 +245,14 @@ class Differentiabilitet(MovingCameraScene, Slide if slides else Scene):
                     )
                 )
                 self.slide_pause()
-                self.play(
-                    FadeOut(trec),
-                    FadeOut(tekst),
-                    run_time=0.25
-                )
+
+            self.play(
+                *[FadeOut(m) for m in self.mobjects if m not in [plane, graphs, moving_value, moving_tangent]],
+                x0.animate.set_value(-3),
+                run_time=1
+            )
+            self.remove(text_copies, slope_copies)
+            self.slide_pause()
         self.remove(moving_value, moving_tangent, plane, graphs)
 
     def _slope_graph(self):
@@ -363,8 +387,11 @@ class Differentiabilitet(MovingCameraScene, Slide if slides else Scene):
             ).next_to(graph_texts[-1], DOWN, aligned_edge=RIGHT)
         )
         xmin, xmax = -4, 4
+        asdf = 0
 
         for graph, subgraph, graph_text, subgraph_text in zip(graphs, subgraphs, graph_texts, subgraph_texts):
+            asdf += 1
+            print(f"Ved graf {asdf}")
             x0 = ValueTracker(xmin)
             moving_tangent = always_redraw(lambda:
                 plane.get_secant_slope_group(
