@@ -305,6 +305,38 @@ class DieFace(VGroup):
         self.index = value
 
 
+class CoinFace(VGroup):
+    def __init__(self,
+                 value,  # 0: Tails, 1: Heads
+                 coin_radius=0.3,
+                 stroke_color=WHITE,
+                 stroke_width=1.0,
+                 fill_color=[RED_C, BLUE_C],
+                 coin_opacity=0.25,
+                 use_heads_tails=False
+                 ):
+        if value not in (0, 1):
+            raise Exception("CoinFace only accepts values of 0 (Plat, Tails) or 1 (Krone, Heads)")
+
+        coin = Circle(
+            radius=coin_radius, fill_color=fill_color[value], stroke_color=stroke_color, stroke_width=stroke_width,
+            fill_opacity=coin_opacity
+        )
+        label_text = ["T", "H"][value] if use_heads_tails else ["P", "K"][value]
+        label = Tex(
+            label_text,
+            # stroke_color=WHITE
+        ).set(color=WHITE)
+        # ).set_color_by_tex_to_color_map(
+            # {"T": fill_color[0], "P": fill_color[0], "H": fill_color[1], "K": fill_color[1]}
+            # {"T": stroke_color, "P": stroke_color, "H": stroke_color, "K": stroke_color}
+        # )
+
+        super().__init__(coin, label)
+        self.value = value
+        self.fill_color = fill_color[value]
+
+
 def add_shine(mob, nlines=10, ends=False):
     # shines = VGroup(
     #     *[
