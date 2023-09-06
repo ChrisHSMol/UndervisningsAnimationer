@@ -157,7 +157,16 @@ class Differentiabilitet(MovingCameraScene, Slide if slides else Scene):
         graphs = VGroup(
             plane.plot(lambda x: x**2, color=YELLOW)
         )
-        self.add(plane, graphs)
+        # self.add(plane, graphs)
+        self.play(
+            LaggedStart(
+                DrawBorderThenFill(plane),
+                Create(graphs),
+                lag_ratio=0.4
+            ),
+            run_time=1
+        )
+        # self.slide_pause()
 
         x0 = ValueTracker(-3)
         moving_tangent = always_redraw(lambda:
@@ -165,8 +174,10 @@ class Differentiabilitet(MovingCameraScene, Slide if slides else Scene):
                 x=x0.get_value(),
                 graph=graphs[0],
                 dx=1E-4,
-                include_dy_line=False,
-                include_dx_line=False,
+                # include_dy_line=False,
+                # include_dx_line=False,
+                dx_line_color=BLACK,
+                dy_line_color=BLACK,
                 secant_line_color=BLUE,
                 secant_line_length=3
             )
@@ -179,7 +190,13 @@ class Differentiabilitet(MovingCameraScene, Slide if slides else Scene):
                 color=BLUE
             ).move_to(plane.c2p(1.25*x0.get_value(), 1*(graphs[0].underlying_function(x0.get_value()) - 1)))
         )
-        self.add(moving_tangent, moving_value)
+        # self.add(moving_tangent, moving_value)
+        self.play(
+            FadeIn(moving_tangent),
+            FadeIn(moving_value),
+            run_time=0.25
+        )
+        self.slide_pause()
         j_list = [1, 0.5, 0.125]
         for j in j_list:
             # for i in np.arange(x0.get_value() + j, -x0.get_value() + 1E-4, j):
@@ -217,8 +234,10 @@ class Differentiabilitet(MovingCameraScene, Slide if slides else Scene):
                     x=i,
                     graph=graphs[0],
                     dx=1E-4,
-                    include_dy_line=False,
-                    include_dx_line=False,
+                    # include_dy_line=False,
+                    # include_dx_line=False,
+                    dx_line_color=BLACK,
+                    dy_line_color=BLACK,
                     secant_line_color=BLUE,
                     secant_line_length=3,
                 ).set_style(stroke_opacity=0 if i > x0.get_value() else 0.5) for i in np.arange(-3, 3 + 1E-4, j)
@@ -289,8 +308,10 @@ class Differentiabilitet(MovingCameraScene, Slide if slides else Scene):
                     x=x0.get_value(),
                     graph=graph,
                     dx=1E-4,
-                    include_dy_line=False,
-                    include_dx_line=False,
+                    # include_dy_line=False,
+                    # include_dx_line=False,
+                    dx_line_color=BLACK,
+                    dy_line_color=BLACK,
                     secant_line_color=BLUE,
                     secant_line_length=3
                 )
@@ -398,8 +419,10 @@ class Differentiabilitet(MovingCameraScene, Slide if slides else Scene):
                     x=x0.get_value(),
                     graph=graph,
                     dx=1E-4,
-                    include_dy_line=False,
-                    include_dx_line=False,
+                    # include_dy_line=False,
+                    # include_dx_line=False,
+                    dx_line_color=BLACK,
+                    dy_line_color=BLACK,
                     secant_line_color=BLUE,
                     secant_line_length=3
                 )
