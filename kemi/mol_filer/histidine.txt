@@ -1,0 +1,33 @@
+ATOMBASIS
+Histidine
+B3LYP/aug-cc-pVTZ-J coupling constants
+Atomtypes=9 Generators=0 Units=Angstrom
+Charge=6.0 Atoms=2 Basis=aug-cc-pVTZ-J
+C1    -2.538435  -0.160364  -0.072561
+C2    -1.095716   0.270038  -0.338552
+Charge=7.0 Atoms=1 Basis=aug-cc-pVTZ-J
+N1    -0.902961   1.712955  -0.178522
+Charge=8.0 Atoms=2 Basis=aug-cc-pVTZ-J
+O1    -2.801418  -1.386197  -0.578739
+O2    -3.353394   0.489307   0.533723
+Charge=1.0 Atoms=4 Basis=aug-cc-pVTZ-J
+H1    -0.848394   -0.00676  -1.366621
+H2    -1.342519   2.214893  -0.944283
+H3    -1.377761   2.022744   0.666869
+H4    -3.715522  -1.611853  -0.346602
+Charge=6.0 Atoms=3 Basis=aug-cc-pVTZ-J
+C3    -0.148194  -0.508446   0.611872
+C4     1.298379  -0.353175   0.269969
+C5     2.318684  -1.265259   0.137985
+Charge=7.0 Atoms=1 Basis=aug-cc-pVTZ-J
+N2      3.50475  -0.632998  -0.160789
+Charge=6.0 Atoms=1 Basis=aug-cc-pVTZ-J
+C6     3.211887   0.646811  -0.214256
+Charge=7.0 Atoms=1 Basis=aug-cc-pVTZ-J
+N3     1.891934   0.873313   0.048743
+Charge=1.0 Atoms=5 Basis=aug-cc-pVTZ-J
+H5    -0.346662  -0.164121   1.635831
+H6    -0.396012  -1.571162   0.581172
+H7     2.264037  -2.338005   0.247051
+H8     3.904126   1.444438  -0.437689
+H9     1.361511   1.734418   -0.00837
