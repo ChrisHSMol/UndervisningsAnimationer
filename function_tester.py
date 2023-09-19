@@ -143,4 +143,32 @@ class SheenDice(Scene):
         self.add(die)
 
 
+class GridBackAndMobDrawer(Scene):
+    def construct(self):
+        t = Tex("HEJ").scale(5).set_z_index(5)
+        brect = get_background_rect(t, stroke_colour=RED, stroke_width=2, fill_color=BLUE)
+        self.add(t, brect)
+        # draw_and_fade_in_mob(self, brect, run_time=1)
+        # self.wait()
+        # draw_and_fade_in_mob(self, t, run_time=1)
+        trace_dot = Dot(brect.get_corner(UR), radius=0.0001)
+        trace = TracedPath(trace_dot.get_center, stroke_color=brect.get_stroke_color(), dissipating_time=10)
+        self.add(trace)
+        self.play(
+            DrawBorderThenFill(brect),
+            run_time=0.5
+        )
+
+
+
+
+
+
+
+
+
+
+
+
+
 

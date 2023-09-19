@@ -260,6 +260,17 @@ def get_background_rect(mobject, buff=0.5, stroke_colour=None, stroke_width=1, f
     ).set_z_index(mobject.get_z_index()-1)
 
 
+def draw_and_fade_in_mob(self, mob, **kwargs):
+    self.play(
+        LaggedStart(
+            ShowPassingFlash(mob.copy(), time_width=2),
+            FadeIn(mob),
+            lag_ratio=0.5
+        ),
+        **kwargs
+    )
+
+
 class DieFace(VGroup):
     def __init__(self,
                  value,
