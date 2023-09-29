@@ -486,5 +486,61 @@ class RegneRegler(MovingCameraScene, Slide if slides else Scene):
         self.play(
             Create(h)
         )
+        self.slide_pause()
+
+        self.play(
+            *[FadeOut(m) for m in self.mobjects if m not in [f, g, h, *fg_planes, h_plane, prects]]
+        )
+
+        tracker = ValueTracker(xmin)
+        slopes = always_redraw(lambda:
+            VGroup(*[
+                plane.get_secant_slope_group(
+                    x=tracker.get_value(),
+                    graph=graph,
+                    dx=0.01,
+                    secant_line_color=RED,
+                    secant_line_length=2
+                ) for plane, graph in zip([*fg_planes, h_plane], [f, g, h])
+            ])
+        )
+        dgraphs = always_redraw(lambda:
+            VGroup(
+                fg_planes[0].plot(
+                    lambda x: 0.5,
+                    color=interpolate_color(c["f"], WHITE, 0.5),
+                    x_range=[xmin, tracker.get_value()]
+                ),
+                fg_planes[1].plot(
+                    lambda x: -0.7,
+                    color=interpolate_color(c["g"], WHITE, 0.5),
+                    x_range=[xmin, tracker.get_value()]
+                ),
+                h_plane.plot(
+                    lambda x: -0.7*x - 0.6,
+                    color=interpolate_color(c["h"], WHITE, 0.5),
+                    x_range=[xmin, tracker.get_value()]
+                )
+            )
+        )
+        moving_points = always_redraw(lambda: VGroup(
+            *[
+                Dot(
+                    plane.c2p(tracker.get_value(), graph.underlying_function(tracker.get_value())),
+                    color=RED
+                ) for plane, graph in zip([*fg_planes, h_plane], [f, g, h, *dgraphs])
+            ]
+        ))
+        self.add(dgraphs)
+        self.play(
+            Create(slopes),
+            DrawBorderThenFill(moving_points)
+        )
+        self.slide_pause()
+
+        self.play(
+            tracker.animate.set_value(xmax),
+            run_time=10
+        )
 
 
