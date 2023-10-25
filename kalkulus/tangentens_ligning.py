@@ -17,11 +17,11 @@ class TangentLigning(MovingCameraScene, Slide if slides else Scene):
         return slides_pause(self, t, slides_bool)
 
     def tangentens_ligning(self):
-        col = {"f": YELLOW, "t": RED}
+        col = {"f": YELLOW, "t": BLUE, "dot": RED}
         xmin, xmax = -8, 8
         plane = NumberPlane(
             x_range=[xmin, xmax, 1],
-            y_range=[-9, 9, 1],
+            y_range=[-27, 27, 3],
             x_length=self.camera.frame.get_width(),
             y_length=self.camera.frame.get_height(),
             background_line_style={
@@ -31,12 +31,14 @@ class TangentLigning(MovingCameraScene, Slide if slides else Scene):
             }
         )
 
-        a, b, c = 0.1, 0, 1
+        a0, a1, a2, a3 = 0.1, 0, -2, 0
         f = plane.plot(
-            lambda x: a * x**2 + b*x + c,
+            # lambda x: a * x**2 + b*x + c,
+            lambda x: a0 * x**3 + a1 * x**2 + a2 * x + a3,
             color=col["f"]
         )
-        df = plane.plot(lambda x: 2*a * x + b)
+        # df = plane.plot(lambda x: 2*a * x + b)
+        df = plane.plot(lambda x: 3 * a0 * x**2 + 2 * a1 * x + a2)
         self.add(plane, f)
 
         x0 = ValueTracker(0)
@@ -54,16 +56,24 @@ class TangentLigning(MovingCameraScene, Slide if slides else Scene):
         )
         flab = MathTex(
             "f(x) = ",
-            rf"{a} \cdot x^2" if a != 0 else "",
-            rf"{b} \cdot x" if b != 0 else "",
-            rf"{c}" if c != 0 else "",
+            rf"{a0} \cdot x^3" if a0 != 0 else "",
+            "+" if a1 > 0 else "",
+            rf"{a1} \cdot x^2" if a1 != 0 else "",
+            "+" if a2 > 0 else "",
+            rf"{a2} \cdot x" if a2 != 0 else "",
+            "+" if a3 > 0 else "",
+            rf"{a3}" if a3 != 0 else "",
             color=col["f"]
-        ).to_edge(UR)
+        ).to_edge(UL)
         dflab = always_redraw(lambda:
             MathTex(
-                "f'(x)=",
-                rf"{df.underlying_function(x0.get_value()):.2f} \cdot x" if a != 0 else "",
-                rf"{f.underlying_function(x0.get_value()) - 2*a*x0.get_value():.2f}",
+                # "f'(x)=",
+                "T(x)=",
+                # rf"{df.underlying_function(x0.get_value()):.2f} \cdot x" if a != 0 else "",
+                # rf"{f.underlying_function(x0.get_value()) - 2*a*x0.get_value():.2f}",
+                rf"{df.underlying_function(x0.get_value()):.2f} \cdot x" if a0 != 0 else "",
+                "+" if f.underlying_function(x0.get_value()) - df.underlying_function(x0.get_value())*x0.get_value() >= 0 else "",
+                rf"{f.underlying_function(x0.get_value()) - df.underlying_function(x0.get_value())*x0.get_value():.2f}",
                 color=col["t"]
             ).next_to(moving_point, UP)
         )
@@ -75,13 +85,16 @@ class TangentLigning(MovingCameraScene, Slide if slides else Scene):
             plane.plot(lambda x: slope_function(x, x0.get_value()), color=col["t"]),
         )
         intercept = always_redraw(lambda:
-            Dot(plane.c2p(0, slope_func.underlying_function(0)))
+            Dot(plane.c2p(0, slope_func.underlying_function(0)), color=col["dot"])
         )
-        self.add(slope_func, slope, flab, dflab, moving_point, intercept)
-        for x in (xmin, xmax, 0):
+        intercept_lab = always_redraw(lambda:
+            MathTex(rf"y={slope_func.underlying_function(0):.2f}", color=col["dot"]).next_to(intercept, RIGHT, buff=0.1)
+        )
+        self.add(slope_func, slope, flab, dflab, moving_point, intercept, intercept_lab)
+        for x in (-5, 5, 0):
             self.play(
                 x0.animate.set_value(0.9*x),
-                run_time=5
+                run_time=np.abs(x0.get_value() - x)
             )
             self.slide_pause()
         # self.play(
