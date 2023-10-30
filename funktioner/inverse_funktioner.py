@@ -89,12 +89,14 @@ class SpejledeFunktioner(ThreeDScene, Slide if slides else Scene):
             ),
         )
         mirror_line = plane.plot(lambda x: x, color=WHITE, x_range=[-11, 11])
+        mirror_line_label = MathTex("y=x").move_to(plane.c2p(4, 5)).rotate(45*DEGREES)
 
         self.play(
             LaggedStart(
                 DrawBorderThenFill(plane),
                 Write(plabels),
                 Create(mirror_line),
+                Write(mirror_line_label),
                 lag_ratio=0.33
             )
         )
@@ -124,7 +126,7 @@ class SpejledeFunktioner(ThreeDScene, Slide if slides else Scene):
             self.slide_pause()
 
             # self.play(*[FadeOut(m) for m in self.mobjects if m not in [plane, plane_rect, _screen_rect]])
-            self.play(*[FadeOut(m) for m in self.mobjects if m not in [plane, mirror_line, plabels]])
+            self.play(*[FadeOut(m) for m in self.mobjects if m not in [plane, mirror_line, plabels, mirror_line_label]])
             # self.stop_ambient_camera_rotation()
             # self.move_camera(phi=60*DEGREES)
             # break
@@ -132,5 +134,45 @@ class SpejledeFunktioner(ThreeDScene, Slide if slides else Scene):
         self.play(
             Uncreate(plane, lag_ratio=0.33),
             Uncreate(mirror_line),
-            Unwrite(plabels)
+            Unwrite(plabels),
+            Unwrite(mirror_line_label)
         )
+
+
+class SpejledeFunktionerThumbnail(Scene):
+    def construct(self):
+        plane = ThreeDAxes(
+            x_range=[-5.5, 5.5, 1],
+            y_range=[-5.5, 5.5, 1],
+            z_range=[-0.01, 0.01, 0.01],
+            x_length=7,
+            y_length=7,
+            z_length=0.01,
+            z_axis_config={"include_tip": False}
+        )
+        plabels = plane.get_axis_labels()
+        plane[0].set_color(interpolate_color(BLUE, WHITE, 0.25))
+        plane[1].set_color(interpolate_color(BLUE, WHITE, 0.75))
+        plabels[0].set_color(plane[0].get_color())
+        plabels[1].set_color(plane[1].get_color())
+
+        pcol = YELLOW
+        picol = interpolate_color(pcol, invert_color(pcol), 0.5)
+        sw = 2.0
+
+        functions = VGroup(
+            plane.plot(lambda x: 2 ** x, color=pcol, stroke_width=sw, x_range=[-11, 11]),
+            plane.plot(lambda x: np.log2(x), color=picol, stroke_width=sw, x_range=[1E-2, 11]),
+        )
+        function_names = VGroup(
+            MathTex("f(x)=2^x", color=pcol).move_to(plane.c2p(-4, 4)),
+            MathTex(r"g(x)=\log_2(x)", color=picol).move_to(plane.c2p(4, -4))
+        )
+        mirror_line = plane.plot(lambda x: x, color=WHITE, x_range=[-11, 11])
+        mirror_line_label = MathTex("y=x").move_to(plane.c2p(4, 5)).rotate(45*DEGREES)
+        for m in [plane, functions, function_names, mirror_line_label, mirror_line]:
+            m.shift(DOWN+RIGHT)
+        title = Tex("Spejlede", " funktioner").scale(2).to_edge(UL)
+        title[0].set_color(RED)
+        srec = get_background_rect(title, buff=0.2, stroke_colour=RED)
+        self.add(plane, functions, function_names, mirror_line_label, mirror_line, title, srec)

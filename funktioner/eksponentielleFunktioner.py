@@ -614,5 +614,63 @@ class ToPunktExp(Slide if slides else Scene):
             self.wait(t)
 
 
+class ToPunktExpThumbnail(Scene):
+    def construct(self):
+        x1, x2 = 4, 12
+        y1, y2 = 3, 7
+        p1_col = RED
+        p2_col = BLUE
+        b_col = GREEN
+        a_col = PURPLE
+        eq_color_map = {
+            "x_1": p1_col,
+            "y_1": p1_col,
+            "x_2": p2_col,
+            "y_2": p2_col,
+        }
+        plane = NumberPlane(
+            x_range=[-2, 16.5, 1],
+            y_range=[-2, 12.5, 1],
+            x_length=7.5,
+            y_length=5,
+            background_line_style={
+                "stroke_color": TEAL,
+                "stroke_width": 2,
+                "stroke_opacity": 0.3
+            },
+        ).to_edge(DL).scale(1.25)
+        points = VGroup(
+            Dot(radius=0.15).move_to(plane.c2p(x1, y1)).set_color(p1_col),
+            Dot(radius=0.15).move_to(plane.c2p(x2, y2)).set_color(p2_col)
+        ).set_z_index(3)
 
-
+        eqs = VGroup(
+            MathTex(
+                "a", "=", "\\sqrt", "[", "x_2", "-", "x_1", "]{", "y_2", "\\over", "y_1", "}"
+            ).set_color_by_tex_to_color_map(eq_color_map),
+            MathTex(
+                "b", "=", "{", "y_1", "\\over", "a", "^{x_1}", "}"
+            ).set_color_by_tex_to_color_map(eq_color_map)
+        ).arrange(DOWN, aligned_edge=LEFT).to_edge(RIGHT)
+        eqs[0][2].set_color(p2_col)
+        eqs[0][4].set_color(p1_col)
+        eqs[0][6:8].set_color(p2_col)
+        eqs[0][8:11].set_color(p1_col)
+        lines = VGroup(
+            Line(start=LEFT, end=1.5*RIGHT).scale(0.25).next_to(eqs[0], UR, buff=0).shift(0.6*LEFT)
+        )
+        lines.add(lines[0].copy().scale(0.75).shift(0.575*DOWN))
+        VGroup(eqs, lines).scale(1.5).next_to(plane, RIGHT, aligned_edge=UP)
+        diff = x2 - x1
+        frac = y2 / y1
+        a_ex = frac ** (1 / diff)
+        b_ex = y1 / (a_ex ** x1)
+        graph = plane.plot(
+            lambda x: b_ex * a_ex ** x,
+            x_range=[-2, 16.5, 1],
+            color=YELLOW,
+            stroke_width=2
+        )
+        title = Tex("To-Punkt-Formel for ", "Eksponentielle Funktioner").scale(1.25).to_edge(UL, buff=0.1)
+        title[1].set_color(YELLOW)
+        self.add(plane, points, eqs, lines, graph, title)

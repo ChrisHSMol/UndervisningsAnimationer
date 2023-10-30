@@ -608,3 +608,38 @@ class SpalteInterferens(MovingCameraScene, Slide if slides else None):
             rate_func=rate_functions.linear,
             run_time=0.75
         )
+
+
+class GitterLigningThumbnail(Scene):
+    def construct(self):
+        ligning = MathTex(
+            r"\sin(\theta_n)", "=", r"{n \cdot \lambda \over d}"
+        ).to_edge(UL)
+        ligning[0][5].set_color(YELLOW)
+        ligning[2][0].set_color(YELLOW)
+        ligning[2][2].set_color(color_gradient([BLUE, GREEN, RED], 3))
+        ligning[2][-1].set_color(LIGHT_PINK)
+        ligning.scale(3).move_to(ORIGIN).shift(2*UP)
+        forklaring = VGroup(
+            VGroup(
+                MathTex(r"\lambda", font_size=48).set_color(color_gradient([BLUE, GREEN, RED], 3)),
+                Tex(": Bølgelængde af laserens lys", font_size=30)
+            ).arrange(RIGHT),
+            VGroup(
+                MathTex("d", font_size=48, color=LIGHT_PINK),
+                Tex(": Gitterkonstanten. Afstanden mellem to ridser", font_size=30)
+            ).arrange(RIGHT),
+            VGroup(
+                MathTex("n", color=YELLOW, font_size=48),
+                Tex(": Den n.'te ordens prik", font_size=30)
+            ).arrange(RIGHT),
+            VGroup(
+                MathTex(r"\theta", "_n", font_size=48).set_color_by_tex_to_color_map({"n": YELLOW}),
+                Tex(": Vinklen mellem 0. ordens prik og n.'te ordens prik", font_size=30)
+            ).arrange(RIGHT, aligned_edge=UP)
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.5).next_to(ligning, DOWN, aligned_edge=LEFT)
+        title = Tex("Gitter", "ligningen").scale(2).to_edge(UL)
+        title[0].set_color(YELLOW)
+        ligning.shift(DOWN)
+        forklaring.shift(DOWN)
+        self.add(ligning, forklaring, title)

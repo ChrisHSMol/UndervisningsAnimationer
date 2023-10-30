@@ -548,6 +548,70 @@ class Egenskaber(Slide if slides else Scene):
         # # self.slide_pause()
 
 
+class EgenskaberThumbnail(Scene):
+    def construct(self):
+        plane = NumberPlane(
+            x_range=[-16, 16, 1],
+            y_range=[-11, 11, 1],
+            x_length=16,
+            y_length=22/18*9,
+            background_line_style={
+                "stroke_color": TEAL,
+                "stroke_width": 1,
+                "stroke_opacity": 0.3
+            }
+        ).set_z_index(1)
+        lam = 5
+        amp = 4
+        x0 = lam/4
+        wave = plane.plot(
+            lambda x: amp*np.sin(2*x*PI/lam),
+            color=BLUE
+        ).set_z_index(2)
+        v_dots = VGroup(
+            Dot(
+                plane.c2p(x0, wave.underlying_function(x0)),
+                color=RED
+            ),
+            Dot(
+                plane.c2p(x0 + lam, wave.underlying_function(x0 + lam)),
+                color=RED
+            )
+        ).set_z_index(2)
+        length_brace = BraceBetweenPoints(
+            point_1=plane.c2p(x0, 1.0*amp),
+            point_2=plane.c2p(x0 + lam, 1.0*amp),
+            color=RED,
+            direction=UP
+        ).set_z_index(4)
+        length_text = MathTex(fr"\lambda={lam:.2f}\text{{m}}", color=RED).next_to(length_brace, UP).set_z_index(4)
+
+        amp_full = Line(
+            start=plane.c2p(0, wave.underlying_function(3*lam/4)),
+            end=plane.c2p(0, wave.underlying_function(lam/4)),
+            color=GREEN,
+            stroke_width=4
+        )
+        amp_brace = BraceBetweenPoints(
+            point_1=amp_full.get_center(),
+            point_2=amp_full.get_top(),
+            color=GREEN,
+            direction=LEFT
+        ).set_z_index(4)
+        amp_text = MathTex(fr"A={amp:.1f}\text{{m}}", color=GREEN).next_to(amp_brace, LEFT).set_z_index(4)
+        srecs = VGroup(*[
+            get_background_rect(m, buff=0.1) for m in [length_brace, length_text, amp_brace, amp_text]
+        ])
+
+        title = Tex("Bølgers", " egenskaber").scale(2).to_edge(UL).set_z_index(4)
+        title[0].set_color(YELLOW)
+        srec = get_background_rect(title, buff=0.2, stroke_colour=YELLOW)
+        for m in [plane, wave, v_dots, length_text, length_brace, amp_brace, amp_text, srecs]:
+            m.shift(DOWN)
+
+        self.add(plane, wave, v_dots, length_text, length_brace, amp_brace, amp_text, srecs, title, srec)
+
+
 class _Interferens(Slide if slides else Scene):
     def construct(self):
         self.konstr_destr()
