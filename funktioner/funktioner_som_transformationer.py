@@ -13,10 +13,13 @@ class Transformation(MovingCameraScene, Slide if slides else Scene):
     name = "Transformation"
 
     def construct(self):
-        # self.slide_pause()
-        # self.linear_transformation()
-        # self.square_transformation()
+        self.slide_pause()
+        self.linear_transformation()
+        self.play(LaggedStart(*[FadeOut(m) for m in self.mobjects]), lag_ratio=0.1)
+        self.square_transformation()
+        self.play(LaggedStart(*[FadeOut(m) for m in self.mobjects]), lag_ratio=0.1)
         self.sine_transformation()
+        self.play(LaggedStart(*[FadeOut(m) for m in self.mobjects]), lag_ratio=0.1)
         self.slide_pause(5)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
@@ -98,7 +101,8 @@ class Transformation(MovingCameraScene, Slide if slides else Scene):
             include_numbers=True,
             include_tip=False
         ).set_z_index(1).next_to(background_rects[1], RIGHT).shift(self.camera.frame.get_width() * LEFT)
-        self.add(inline, outline, background_rects)
+        flabel = MathTex("f(x) = 2x").next_to(background_rects[0], UP)
+        self.add(inline, outline, background_rects, flabel)
 
         for ndots in [11, 21, 101]:
             self.trace_transformations(ndots, inline, outline, func=func)
@@ -130,9 +134,11 @@ class Transformation(MovingCameraScene, Slide if slides else Scene):
         new_outline.shift(
             0.5 * len(new_outline.get_tick_range()) / len(new_intermediate_line.get_tick_range()) * RIGHT
         )
+        new_flabel = MathTex("f(x) = 2x+2").next_to(new_background_rects[0], UP)
         self.play(
             inline.animate.become(new_inline),
             outline.animate.become(new_outline),
+            flabel.animate.become(new_flabel),
             FadeIn(new_intermediate_line),
             FadeIn(new_background_rects),
             FadeOut(background_rects)
@@ -212,7 +218,8 @@ class Transformation(MovingCameraScene, Slide if slides else Scene):
             include_numbers=True,
             include_tip=False
         ).set_z_index(1).next_to(background_rects[1], RIGHT).shift(self.camera.frame.get_width() * LEFT)
-        self.add(inline, outline, background_rects)
+        flabel = MathTex("f(x) = x^2").next_to(background_rects[0], UP)
+        self.add(inline, outline, background_rects, flabel)
 
         for ndots in [11, 21, 101]:
             # self.trace_transformations(ndots, inline, outline, func=func)
@@ -274,9 +281,11 @@ class Transformation(MovingCameraScene, Slide if slides else Scene):
             include_numbers=True,
             include_tip=False
         ).set_z_index(1).move_to(background_rects[1])
-        self.add(inline, outline, background_rects)
+        flabel = MathTex(r"f(x) = \sin(x)").next_to(background_rects[0], UP)
+        self.add(inline, outline, background_rects, flabel)
 
-        for ndots in [9, 17, 33, 161, 321, 0]:
+        # for ndots in [9, 17, 33, 161, 321, 0]:
+        for ndots in [9, 161, 321, 0]:
             if ndots == 0:
                 indots = VGroup(*[
                     Dot(
