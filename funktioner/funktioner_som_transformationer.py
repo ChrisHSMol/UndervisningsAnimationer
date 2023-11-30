@@ -338,9 +338,10 @@ class Transformation(MovingCameraScene, Slide if slides else Scene):
 
 
 if __name__ == "__main__":
-    class_name = Transformation.name
-    scene_marker(rf"RUNNNING:    manim {sys.argv[0]} {class_name} -pqh")
-    subprocess.run(rf"manim {sys.argv[0]} {class_name} -pqh")
+    class_name = Transformation.__name__
+    command = rf"manim {sys.argv[0]} {class_name} -pqh"
+    scene_marker(rf"RUNNNING:    {command}")
+    subprocess.run(command)
     # if slides:
     #     scene_marker(rf"RUNNING:    manim-slides convert {class_name} {class_name}.html")
     #     # subprocess.run(rf"manim-slides convert {class_name} {class_name}.html")
