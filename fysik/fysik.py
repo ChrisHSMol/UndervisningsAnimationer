@@ -2,10 +2,22 @@ from manim import *
 import sys
 sys.path.append("../")
 from helpers import *
+import subprocess
 
 slides = True
 if slides:
     from manim_slides import Slide
+q = "h"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
 
 
 class Tilstand(Slide, MovingCameraScene if slides else MovingCameraScene):
@@ -81,3 +93,10 @@ class Tilstand(Slide, MovingCameraScene if slides else MovingCameraScene):
             ),
             run_time=20
         )
+
+
+if __name__ == "__main__":
+    class_name = Tilstand.__name__
+    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+    scene_marker(rf"RUNNNING:    {command}")
+    subprocess.run(command)

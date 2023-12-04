@@ -8,10 +8,20 @@ slides = True
 if slides:
     from manim_slides import Slide
 q = "h"
-_quality = {
-    "ul": [(6, 6), '--resolution="426,240" --frame_rate=5'],
-    "l": [(12, 12), '--resolution="854,480" --frame_rate=15'],
-    "h": [(6, 6), '--resolution="1920,1080" --frame_rate=60']
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
+_QUALITY = {
+    "ul": (6, 6),
+    "l": (12, 12),
+    "h": (48, 48)
 }
 
 
@@ -33,7 +43,7 @@ class CylindersAreal(ThreeDScene, Slide if slides else Scene):
                 # stroke_color=RED,
                 fill_color=cmap["r"],
                 # resolution=(24, 24) if q == "h" else (8, 8)
-                resolution=_quality[q][0]
+                resolution=_QUALITY[q]
             ).move_to([0, 0, -5])
         )
         radius_and_height_text = always_redraw(lambda:
@@ -123,6 +133,6 @@ class CylindersAreal(ThreeDScene, Slide if slides else Scene):
 
 if __name__ == "__main__":
     class_name = CylindersAreal.__name__
-    command = rf"manim {sys.argv[0]} {class_name} -p {_quality[q][1]}"
+    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
     scene_marker(rf"RUNNNING:    {command}")
     subprocess.run(command)

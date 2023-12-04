@@ -78,8 +78,13 @@ class CoinRotationParadox(MovingCameraScene, Slide if slides else Scene):
         # self.camera.frame.add_
 
         self.add(circle1, circle2, trace)
-        self.wait(60)
-        # self.wait(2*PI)
+        # self.wait(60)
+        self.wait(2*PI - PI/_FRAMERATE[q])
+        for i in range(r1 + r2):
+            self.add(circle2[-1].copy())
+            # self.add(circle2[0].copy())
+            self.wait(2*PI/(r1 + r2) - PI/_FRAMERATE[q])
+
         # self.pause()
         # circle1.set(radius=3)
         # self.wait(60-2*PI)
