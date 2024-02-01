@@ -160,6 +160,18 @@ class GridBackAndMobDrawer(Scene):
         )
 
 
+class TestTransparentBackground(Scene):
+    def construct(self):
+        self.wait()
+        self.play(
+            Write(
+                MathTex(r"c = \pm\sqrt{a^2 + b^2}", color=BLACK)
+            ),
+            run_time=2
+        )
+        self.wait()
+
+
 
 
 
