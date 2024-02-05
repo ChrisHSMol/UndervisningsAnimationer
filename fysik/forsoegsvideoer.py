@@ -70,8 +70,71 @@ class Blypose(Scene):
         self.wait()
 
 
+class GitterLigning(Scene):
+    btransparent = True
+
+    def construct(self):
+        self.camera.background_color = WHITE
+        laserbox = Rectangle(
+            width=0.5, height=2, stroke_color=BLACK, fill_color=BLACK, fill_opacity=1
+        ).to_edge(DOWN)
+        gitter = Line(
+            start=laserbox.get_corner(UL), end=laserbox.get_corner(UR), stroke_color=BLACK
+        ).next_to(laserbox, UP, buff=1)
+        wall = VGroup(
+            Line(start=2*LEFT, end=2*RIGHT, stroke_color=BLACK),
+            Square(side_length=3, stroke_color=self.camera.background_color, fill_color=self.camera.background_color,
+                   fill_opacity=1).set_z_index(5)
+        ).arrange(UP, buff=0.04).next_to(gitter, UP, buff=1)
+        laserbeam = Line(
+            start=laserbox.get_edge_center(UP), end=gitter.get_center(), stroke_color=RED
+        )
+        splitbeams = VGroup(
+            Line(start=gitter.get_center(), end=wall[-1].get_corner(UL), stroke_color=RED),
+            Line(start=gitter.get_center(), end=wall[-1].get_edge_center(UP), stroke_color=RED),
+            Line(start=gitter.get_center(), end=wall[-1].get_corner(UR), stroke_color=RED),
+        )
+        self.add(laserbox, gitter, wall, laserbeam, splitbeams)
+        self.wait()
+        self.play(
+            wall.animate.shift(3*UP),
+            run_time=4,
+            # rate_func=rate_functions.linear
+        )
+        self.wait()
+
+        trekant = VGroup(
+            Line(start=splitbeams[1].get_start(), end=splitbeams[1].get_end(), stroke_color=RED).set_z_index(2),
+            Line(start=splitbeams[1].get_end(), end=splitbeams[2].get_end(), stroke_color=BLUE).set_z_index(2),
+            Line(start=splitbeams[1].get_start(), end=splitbeams[2].get_end(), stroke_color=BLACK).set_z_index(2),
+            Polygon(
+                splitbeams[1].get_start(), splitbeams[1].get_end(), splitbeams[2].get_end(), color=BLACK
+            ).set_z_index(0)
+        )
+        self.play(
+            FadeOut(laserbox, gitter, wall, laserbeam, splitbeams),
+            FadeIn(trekant[-1])
+        )
+        self.wait()
+        self.play(
+            trekant.animate.move_to(ORIGIN)
+        )
+        ligninger = VGroup(
+            VGroup(
+                MathTex(r"\tan(v) = "),
+                VGroup(trekant[1].copy().scale(0.5), MathTex(r"\over"), trekant[0].copy().scale(0.5)).arrange(DOWN),
+            ).arrange(RIGHT)
+        ).to_edge(RIGHT)
+        self.add(ligninger)
+        self.wait()
+
+
 if __name__ == "__main__":
-    class_name = Blypose.__name__
+    cls = GitterLigning
+    class_name = cls.__name__
+    transparent = cls.btransparent
     command = rf"manim {sys.argv[0]} {class_name} -pqh"
+    # if transparent:
+        # command += " --transparent --format=webm"
     scene_marker(rf"RUNNNING:    {command}")
     subprocess.run(command)
