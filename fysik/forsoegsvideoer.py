@@ -4,6 +4,18 @@ sys.path.append("../")
 from helpers import *
 import subprocess
 
+q = "h"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
+
 
 class Blypose(Scene):
     def construct(self):
@@ -104,28 +116,71 @@ class GitterLigning(Scene):
         self.wait()
 
         trekant = VGroup(
+            Polygon(
+                splitbeams[1].get_start(), splitbeams[1].get_end(), splitbeams[2].get_end(), color=BLACK
+            ).set_z_index(0),
             Line(start=splitbeams[1].get_start(), end=splitbeams[1].get_end(), stroke_color=RED).set_z_index(2),
             Line(start=splitbeams[1].get_end(), end=splitbeams[2].get_end(), stroke_color=BLUE).set_z_index(2),
             Line(start=splitbeams[1].get_start(), end=splitbeams[2].get_end(), stroke_color=BLACK).set_z_index(2),
-            Polygon(
-                splitbeams[1].get_start(), splitbeams[1].get_end(), splitbeams[2].get_end(), color=BLACK
-            ).set_z_index(0)
         )
+        trekant.add(Angle(trekant[3], trekant[1], color=GREEN_E, radius=1))
         self.play(
             FadeOut(laserbox, gitter, wall, laserbeam, splitbeams),
-            FadeIn(trekant[-1])
+            FadeIn(trekant[0])
+        )
+        self.wait()
+        self.play(
+            LaggedStart(
+                *[Create(m) for m in trekant[1:]],
+                lag_ratio=0.75
+            ),
+            run_time=2
         )
         self.wait()
         self.play(
             trekant.animate.move_to(ORIGIN)
         )
         ligninger = VGroup(
-            VGroup(
-                MathTex(r"\tan(v) = "),
-                VGroup(trekant[1].copy().scale(0.5), MathTex(r"\over"), trekant[0].copy().scale(0.5)).arrange(DOWN),
-            ).arrange(RIGHT)
-        ).to_edge(RIGHT)
-        self.add(ligninger)
+            MathTex(r"\tan(", "v", ") = ", color=BLACK),
+            MathTex(r"\over", color=BLACK)
+        ).arrange(RIGHT).next_to(trekant, RIGHT)
+        ligninger[0][1].set_color(GREEN_E)
+        ligninger.add(trekant[2].copy().scale(0.5).next_to(ligninger[1], UP))
+        ligninger.add(trekant[1].copy().scale(0.25).next_to(ligninger[1], DOWN))
+        self.play(
+            LaggedStart(
+                Write(ligninger[:2]),
+                ReplacementTransform(trekant[2].copy(), ligninger[2]),
+                ReplacementTransform(trekant[1].copy(), ligninger[3]),
+                lag_ratio=0.75
+            ),
+            run_time=2
+        )
+        # self.add(ligninger)
+        self.wait()
+
+        ligning2 = VGroup(
+            MathTex("v", color=GREEN_E),
+            MathTex(r" = \tan^{-1}(", color=BLACK),
+            MathTex(r"\frac{\quad}{\quad}", color=BLACK),
+            MathTex(r")", color=BLACK)
+        ).arrange(RIGHT).next_to(trekant, RIGHT)
+        ligning2.add(ligninger[2].copy().next_to(ligning2[2], UP))
+        ligning2.add(ligninger[3].copy().next_to(ligning2[2], DOWN))
+        self.play(
+            TransformMatchingShapes(ligninger, ligning2, transform_mismatches=True)
+        )
+        self.wait()
+
+        meassures = VGroup(
+            MathTex(r"1.50\text{cm}", color=BLUE).next_to(ligning2[2], UP),
+            MathTex(r"620\text{cm}", color=RED).next_to(ligning2[2], DOWN),
+        )
+        self.play(
+            *[
+                Transform(line, val) for line, val in zip(ligning2[-2:], meassures)
+            ]
+        )
         self.wait()
 
 
@@ -133,7 +188,7 @@ if __name__ == "__main__":
     cls = GitterLigning
     class_name = cls.__name__
     transparent = cls.btransparent
-    command = rf"manim {sys.argv[0]} {class_name} -pqh"
+    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
     # if transparent:
         # command += " --transparent --format=webm"
     scene_marker(rf"RUNNNING:    {command}")
