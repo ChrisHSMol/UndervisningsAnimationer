@@ -4,7 +4,7 @@ sys.path.append("../")
 from helpers import *
 import subprocess
 
-q = "h"
+q = "l"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -180,6 +180,38 @@ class GitterLigning(Scene):
             *[
                 Transform(line, val) for line, val in zip(ligning2[-2:], meassures)
             ]
+        )
+        self.wait()
+
+        linjer = ValueTracker(10)
+        gitter_ridser = always_redraw(lambda:
+            VGroup(
+                Square(5, color=BLACK),
+                *[
+                    Line(
+                        start=[i, 2.5, 0],
+                        end=[i, -2.5, 0],
+                        stroke_width=0.5,
+                        stroke_color=BLACK
+                    ) for i in np.linspace(2.5, -2.5, int(linjer.get_value()))
+                ]
+            ).to_edge(LEFT)
+        )
+        self.play(
+            LaggedStart(
+                *[Create(m, run_time=0.5) for m in gitter_ridser],
+                lag_ratio=0.1
+            )
+        )
+        self.remove(gitter_ridser)
+        self.add(gitter_ridser)
+        antal_ridser = always_redraw(lambda:
+            Tex(f"Antal ridser: {linjer.get_value():.0f}", color=BLACK).next_to(gitter_ridser, UP, aligned_edge=LEFT)
+        )
+        self.add(antal_ridser)
+        self.play(
+            linjer.animate.set_value(100),
+            run_time=2
         )
         self.wait()
 
