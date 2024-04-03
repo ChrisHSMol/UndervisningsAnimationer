@@ -220,6 +220,17 @@ class LigningsLoesning(Slide if slides else Scene):
         # self.slide_pause()
 
 
+class LigningsLoesningThumbnail(Scene):
+    def construct(self):
+        titel = Tex("Opgave om ", "løsning af ligninger", font_size=80).to_edge(UL)
+        titel[1].set_color(YELLOW)
+        opgave = VGroup(
+            Tex("Løs ligningen:", color=BLUE_B),
+            MathTex("x", "-", "1", "=", "4x", "-", "7")
+        ).arrange(DOWN, aligned_edge=LEFT)
+        self.add(opgave, titel)
+
+
 if __name__ == "__main__":
     cls = LigningsLoesning
     class_name = cls.__name__
