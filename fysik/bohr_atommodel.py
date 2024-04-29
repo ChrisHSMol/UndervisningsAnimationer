@@ -12,7 +12,7 @@ if slides:
 
 class BohrAtomModel(Slide if slides else Scene):
     def construct(self):
-        # self.opbygning()
+        self.opbygning()
         self.grundstoffer()
         self.slide_pause(5)
 
