@@ -13,11 +13,29 @@ slides = False
 # if slides:
 #     from manim_slides import Slide
 
+q = "h"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
+
 
 class KerneKort(MovingCameraScene if not slides else Slide):
     def construct(self):
         nuklider = self.prepare_nuclides()
-        self.load_kerne_labels(nuklider=nuklider)
+        kernekort = self.load_kerne_labels(nuklider=nuklider, N_range=(0, 200), Z_range=(0, 200))
+
+        # self.play(
+        #     self.camera.frame.animate.move_to(random.choice(kernekort)).set_width(10),
+        #     run_time=1
+        # )
+        self.slide_pause()
 
         # self.slide_pause(5)
 
@@ -50,7 +68,8 @@ class KerneKort(MovingCameraScene if not slides else Slide):
         nuklider = np.genfromtxt("complete_nuclides.csv", delimiter=";", dtype=str, skip_header=True)
         # print(nuklider)
         loc_dict = {}
-        rad_colors = {}
+        rad_colors = {"A": YELLOW, "B-": ORANGE, "B+": BLUE_B, "SF": GREEN, "IS": BLACK, "EC": TEAL, "n": RED, "p": PURE_BLUE}
+        # rad_colors = {}
         for i, line in enumerate(nuklider):
             # if i == 200:
             #     break
@@ -58,58 +77,131 @@ class KerneKort(MovingCameraScene if not slides else Slide):
             s = _nuk_dict[Z][0] if Z > 0 else "n"
             elem_name = _nuk_dict[Z][1] if Z > 0 else "neutron"
             rad_type = line[3]
+            _scounter = 0
             for i, _s in enumerate(rad_type):
-                if _s not in "QWERTYUIOPASDFGHJKLZXCVBNM-+":
-                    rad_type = rad_type[:i]
-                    break
-                else:
-                    continue
-            if not rad_type in rad_colors.keys():
+                try:
+                    _s = int(_s)
+                    rad_type = rad_type[1:]
+                    _scounter += 1
+                    # print(rad_type)
+                except:
+                    if _s in "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm-+":
+                        continue
+                    # elif not _sbreak:
+                    #     rad_type = rad_type[1:]
+                    else:
+                        rad_type = rad_type[:i-_scounter]
+                        break
+            if rad_type not in rad_colors.keys():
+                print(elem_name, A, rad_type)
                 rad_colors[rad_type] = random_bright_color()
             loc_dict[f"{s}-{A}"] = [N, Z, elem_name, rad_type, rad_colors[rad_type]]
+        # print(rad_colors.keys())
         # for k, v in loc_dict.items():
         #     print(k, v)
         return loc_dict
 
-    def _nuklid_label(self, label, N, Z, fill_color, fill_opacity=1.0):
-        _label = VGroup(
-            Square(side_length=1, fill_color=fill_color, fill_opacity=fill_opacity),
-            # MathTex(f"^{N+Z}_{Z}{label}")
-            VGroup(
+    def _nuklid_label(self, label, N, Z, fill_color, fill_opacity=1.0, N_range=None, Z_range=None):
+        # print(f"{label}-{N+Z} \t {N} \t {Z}")
+        if N_range is None:
+            N_range = [0, 200]
+        if Z_range is None:
+            Z_range = [0, 200]
+
+        _label = VGroup()
+        if N < N_range[0] or N > N_range[1] or Z < Z_range[0] or Z > Z_range[1]:
+            # print(N, Z)
+            pass
+        else:
+            _label.add(
+                Square(side_length=1, fill_color=fill_color, fill_opacity=fill_opacity),
+                # MathTex(f"^{N+Z}_{Z}{label}")
                 VGroup(
-                    # Integer(N+Z).set_stroke(BLACK), Integer(Z).set_stroke(BLACK)
-                    MathTex(str(N+Z)).set_stroke(width=0.5, color=BLACK),
-                    MathTex(str(Z)).set_stroke(width=0.5, color=BLACK)
-                ).scale(0.5).arrange(DOWN, aligned_edge=RIGHT, buff=0.1),
-                Tex(label).set_stroke(width=0.5, color=BLACK)
-            ).arrange(RIGHT, buff=0.1)
-        )
+                    VGroup(
+                        # Integer(N+Z).set_stroke(BLACK), Integer(Z).set_stroke(BLACK)
+                        MathTex(str(N+Z)).set_stroke(width=0.5, color=BLACK),
+                        MathTex(str(Z)).set_stroke(width=0.5, color=BLACK)
+                    ).scale(0.5).arrange(DOWN, aligned_edge=RIGHT, buff=0.1),
+                    Tex(label).set_stroke(width=0.5, color=BLACK)
+                ).scale(0.9).arrange(RIGHT, buff=0.1)
+            )
         return _label
 
-    def load_kerne_labels(self, nuklider):
-        # kernelabels = VGroup(*[
-        #     MElementObject(
-        #         atomic_number=nuklider[iso][1], atomic_mass=iso.split("-")[1], element_symbol=iso.split("-")[0],
-        #         element_name=str(nuklider[iso][2]), fill_colors=(WHITE, nuklider[iso][4])
-        #     ).set(height=1, width=1).move_to([nuklider[iso][0], nuklider[iso][1], 0]) for iso in list(nuklider.keys())[:100]
-        # ])
-        kernelabels = VGroup(*[
-            self._nuklid_label(
-                label=key.split("-")[0], N=val[0], Z=val[1], fill_color=val[4]
-            ).move_to([val[0], val[1], 0]) for key, val in nuklider.items()
-        ])
-        self.add(kernelabels)
-        self.camera.frame.set(
-            width=kernelabels.width * 1.25, height=kernelabels.height * 1.25
-        ).move_to(kernelabels)
+    def draw_axes(self):
+        Nmin, Nmax = 0, 200
+        Zmin, Zmax = 0, 120
+        Nstep, Zstep = (Nmax - Nmin)//20, (Zmax - Zmin)//12
+        # plane = NumberPlane(
+        plane = Axes(
+            x_range=(Nmin-1, Nmax, Nstep),
+            y_range=(Zmin-1, Zmax, Zstep),
+            x_length=Nmax - Nmin,
+            y_length=Zmax - Zmin,
+            tips=False,
+            # background_line_style={
+            #     "stroke_color": WHITE,
+            #     "stroke_width": 3,
+            #     "stroke_opacity": 1,
+            #     # "stroke_opacity": 0.1
+            # },
+            axis_config={"include_numbers": True, "font_size": 288}
+        ).set_z_index(4)
+        # srec = get_background_rect(plane, stroke_colour=WHITE, stroke_width=3, buff=0)
+        srec = Rectangle(width=Nmax-Nmin, height=Zmax-Zmin, stroke_width=3, stroke_color=WHITE).next_to(
+            plane[0], UP, buff=0
+        )
+        # self.add(plane)
+        return srec, plane
+
+    def get_axlines(self, plane, x_range, y_range, xstep, ystep):
+        axhlines = VGroup()
+        axvlines = VGroup()
+        xmax = x_range[1]
+        ymax = y_range[1]
+        for hline, vline in zip(np.arange(y_range[0], y_range[1], ystep), np.arange(x_range[0], x_range[1], xstep)):
+            print(hline, vline)
+            axhlines.add(DashedLine(
+                start=plane.c2p(0, hline),
+                end=plane.c2p(xmax, hline),
+                stroke_width=2
+            ).set_z_index(5))
+            axvlines.add(DashedLine(
+                start=plane.c2p(vline, 0),
+                end=plane.c2p(vline, ymax),
+                stroke_width=2
+            ).set_z_index(5))
+        return axhlines, axvlines
+
+    def load_kerne_labels(self, nuklider, N_range=(0, 200), Z_range=(0, 200)):
+        scene_marker("Laver kort")
+        plane_rect, plane = self.draw_axes()
+        axhlines, axvlines = self.get_axlines(plane, N_range, Z_range, 10, 10)
+        self.add(plane, plane_rect, axhlines, axvlines)
         self.slide_pause()
+        kernekort = VGroup()
+        for key, val in nuklider.items():
+            if N_range[0] <= val[0] <= N_range[1] and Z_range[0] <= val[1] <= Z_range[1]:
+                kernelabel = self._nuklid_label(
+                    label=key.split("-")[0], N=val[0], Z=val[1], fill_color=val[4], N_range=N_range, Z_range=Z_range
+                ).move_to(plane.c2p(val[0], val[1], 0))
+                kernekort.add(kernelabel)
+        scene_marker("Add to scene")
+        self.add(kernekort)
+        self.camera.frame.set(
+            # width=kernekort.width * 1.25, height=kernekort.height * 1.25
+            width=plane.width * 1.25, height=plane.height * 1.25
+        # ).move_to(kernekort)
+        ).move_to(plane)
+        scene_marker("Vent")
+        self.slide_pause()
+        return kernekort
 
 
 if __name__ == "__main__":
     cls = KerneKort
     class_name = cls.__name__
-    transparent = cls.btransparent
-    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+    # transparent = cls.btransparent
+    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]} --disable_caching"
     # if transparent:
     #     command += " --transparent --format=webm"
     scene_marker(rf"RUNNNING:    {command}")
