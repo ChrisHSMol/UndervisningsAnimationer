@@ -4,7 +4,7 @@ import numpy as np
 
 sys.path.append("../")
 from manim import *
-from manim_chemistry import *
+# from manim_chemistry import *
 from helpers import *
 import random
 import subprocess
@@ -13,7 +13,7 @@ slides = False
 # if slides:
 #     from manim_slides import Slide
 
-q = "h"
+q = "l"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -29,7 +29,7 @@ _FRAMERATE = {
 class KerneKort(MovingCameraScene if not slides else Slide):
     def construct(self):
         nuklider = self.prepare_nuclides()
-        kernekort = self.load_kerne_labels(nuklider=nuklider, N_range=(0, 200), Z_range=(0, 200))
+        kernekort = self.load_kerne_labels(nuklider=nuklider, N_range=(0, 160), Z_range=(0, 100))
 
         # self.play(
         #     self.camera.frame.animate.move_to(random.choice(kernekort)).set_width(10),
@@ -104,9 +104,9 @@ class KerneKort(MovingCameraScene if not slides else Slide):
     def _nuklid_label(self, label, N, Z, fill_color, fill_opacity=1.0, N_range=None, Z_range=None):
         # print(f"{label}-{N+Z} \t {N} \t {Z}")
         if N_range is None:
-            N_range = [0, 200]
+            N_range = [0, 160]
         if Z_range is None:
-            Z_range = [0, 200]
+            Z_range = [0, 100]
 
         _label = VGroup()
         if N < N_range[0] or N > N_range[1] or Z < Z_range[0] or Z > Z_range[1]:
@@ -128,7 +128,7 @@ class KerneKort(MovingCameraScene if not slides else Slide):
         return _label
 
     def draw_axes(self):
-        Nmin, Nmax = 0, 200
+        Nmin, Nmax = 0, 150
         Zmin, Zmax = 0, 120
         Nstep, Zstep = (Nmax - Nmin)//20, (Zmax - Zmin)//12
         # plane = NumberPlane(
@@ -172,27 +172,63 @@ class KerneKort(MovingCameraScene if not slides else Slide):
             ).set_z_index(5))
         return axhlines, axvlines
 
-    def load_kerne_labels(self, nuklider, N_range=(0, 200), Z_range=(0, 200)):
+    def load_kerne_labels(self, nuklider, N_range=(0, 160), Z_range=(0, 100)):
         scene_marker("Laver kort")
         plane_rect, plane = self.draw_axes()
         axhlines, axvlines = self.get_axlines(plane, N_range, Z_range, 10, 10)
         self.add(plane, plane_rect, axhlines, axvlines)
         self.slide_pause()
-        kernekort = VGroup()
-        for key, val in nuklider.items():
-            if N_range[0] <= val[0] <= N_range[1] and Z_range[0] <= val[1] <= Z_range[1]:
-                kernelabel = self._nuklid_label(
-                    label=key.split("-")[0], N=val[0], Z=val[1], fill_color=val[4], N_range=N_range, Z_range=Z_range
-                ).move_to(plane.c2p(val[0], val[1], 0))
-                kernekort.add(kernelabel)
+        # kernekort = VGroup()
+        # for key, val in nuklider.items():
+        #     # iZ = val[1] // (Z_range[1]/len(kernekort))
+        #     # iN = val[0] // len(kernekort)
+        #     if N_range[0] <= val[0] <= N_range[1] and Z_range[0] <= val[1] <= Z_range[1]:
+        #         kernelabel = self._nuklid_label(
+        #             label=key.split("-")[0], N=val[0], Z=val[1], fill_color=val[4], N_range=N_range, Z_range=Z_range
+        #         ).move_to(plane.c2p(val[0], val[1], 0))
+
+        kernekort = VGroup(*[VGroup() for _ in range(5)])
+        _prevZ, _prevN, iK = 0, 0, 0
+        for iZ, iN in zip(
+                np.arange(0, Z_range[1] + 1, Z_range[1]//len(kernekort)),
+                np.arange(0, N_range[1] + 1, N_range[1]//len(kernekort))
+        ):
+            print(iK)
+            if iZ == 0:
+                _prevZ = iZ
+                _prevN = iN
+                continue
+            _Z = [_prevZ, iZ]
+            _N = [_prevN, iN]
+            print(_Z, _N)
+            for key, val in nuklider.items():
+                if not _N[0] <= val[0] <= _N[1] and not _Z[0] <= val[1] <= _Z[1]:
+                    continue
+                else:
+                    kernelabel = self._nuklid_label(
+                        label=key.split("-")[0], N=val[0], Z=val[1], fill_color=val[4], N_range=_N, Z_range=_Z
+                    ).move_to(plane.c2p(val[0], val[1], 0))
+                    kernekort[iK].add(kernelabel)
+            iK += 1
+            _prevZ = iZ
+            _prevN = iN
+
         scene_marker("Add to scene")
-        self.add(kernekort)
+        self.add(kernekort[0])
         self.camera.frame.set(
             # width=kernekort.width * 1.25, height=kernekort.height * 1.25
             width=plane.width * 1.25, height=plane.height * 1.25
         # ).move_to(kernekort)
         ).move_to(plane)
         scene_marker("Vent")
+        self.slide_pause()
+        self.add(kernekort[1])
+        self.slide_pause()
+        self.add(kernekort[2])
+        self.slide_pause()
+        self.add(kernekort[3])
+        self.slide_pause()
+        self.add(kernekort[4])
         self.slide_pause()
         return kernekort
 

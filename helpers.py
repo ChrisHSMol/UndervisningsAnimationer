@@ -18,11 +18,11 @@ import numpy as np
 # ]
 VISIBLE_LIGHT = {
     int(w): c for w, c in zip(
-        np.linspace(400, 650, 26), [
+        np.linspace(400, 670, 28), [
             "#8300b5", "#7e00db", "#6a00ff", "#3800ff", "#000bff", "#004cff", "#007fff",  # 400nm - 460nm
             "#00aeff", "#00daff", "#00fff5", "#00ff87", "#09ff00", "#3aff00", "#5aff00",  # 470nm - 530nm
             "#81ff00", "#a3ff00", "#c3ff00", "#e1ff00", "#ffff00", "#ffdf00", "#ffbe00",  # 540nm - 600nm
-            "#ff9b00", "#ff7700", "#ff4b00", "#ff1b00", "#ff0000"  # 610nm - 650nm
+            "#ff9b00", "#ff7700", "#ff4b00", "#ff1b00", "#ff0000", "#ff0000", "#ff0000"  # 610nm - 650nm
         ]
     )
 }
@@ -111,6 +111,62 @@ def play_title_reverse(self, title, edge=None):
     self.wait(1)
     self.play(Unwrite(title), run_time=0.5)
     self.wait(1)
+
+
+def play_title2(self, title, cols=None, edge=None):
+    if isinstance(title, str):
+        title = Tex(*[t + " " for t in title.split()])
+    if cols is not None and isinstance(cols, dict):
+        for k, v in cols.items():
+            title[int(k)].set_color(v)
+
+    title_ul = Line(
+        start=title.get_corner(DL) + 0.25*DL, end=title.get_corner(DR) + 0.25*DR
+    ).set_z_index(title.get_z_index()+2)
+    title_ul_box = Rectangle(
+        width=title.width * 1.25,
+        height=title.height * 3.0
+    ).next_to(
+        title_ul, DOWN, buff=0
+    ).set_style(fill_opacity=1, stroke_width=0, fill_color=BLACK).set_z_index(title.get_z_index()+1)
+
+    title.shift(DOWN)
+    self.play(
+        # Create(title_ul)
+        FadeIn(title_ul, shift=6*RIGHT)
+    )
+    self.add(title, title_ul_box)
+    self.wait(0.25)
+    self.play(
+        title.animate.shift(UP)
+    )
+    self.wait(1)
+    self.play(
+        title_ul.animate.shift(UP),
+        title_ul_box.animate.shift(UP)
+    )
+    self.remove(title, title_ul_box)
+    self.wait(0.25)
+    self.play(
+        # Uncreate(title_ul, reverse_rate_function=True)
+        FadeOut(title_ul, shift=6*RIGHT)
+    )
+    # if edge is not None:
+    #     self.play(
+    #         title.animate.to_edge(edge, buff=0.05).set_z_index(10).set_opacity(0.15),
+    #     )
+    #     self.play(
+    #         FadeIn(title_ul_box.set_opacity(0.5).to_edge(edge, buff=0.05).set_z_index(9)),
+    #         run_time=0.1
+    #     )
+    #     return title, title_ul_box
+    # else:
+    #     self.play(GrowFromCenter(title_ul), run_time=1)
+    #     self.add(ul_group)
+    #     self.play(ul_group.animate.shift(UP * title_ul_box.height))
+    #     self.play(ShrinkToCenter(title_ul))
+    #     self.remove(ul_group, title)
+    # self.wait(2)
 
 
 def update_title(self, old_title, new_title, edge=None):

@@ -1,10 +1,24 @@
 from manim import *
 from helpers import *
 import numpy as np
+import subprocess
+from custom_classes import BohrAtom
 
 slides = False
 if slides:
     from manim_slides import Slide
+
+q = "l"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
 
 
 """
@@ -172,6 +186,46 @@ class TestTransparentBackground(Scene):
         self.wait()
 
 
+class TestBohrAtom(Scene):
+    def construct(self):
+        ECOL = GOLD_A
+        PCOL = RED
+        NCOL = GRAY
+        OCOL = LIGHT_GRAY
+        balmer_colors = [
+            interpolate_color(VISIBLE_LIGHT[650], VISIBLE_LIGHT[650], 0.628),
+            interpolate_color(VISIBLE_LIGHT[480], VISIBLE_LIGHT[490], 0.614),
+            interpolate_color(VISIBLE_LIGHT[430], VISIBLE_LIGHT[440], 0.405),
+            interpolate_color(VISIBLE_LIGHT[410], VISIBLE_LIGHT[410], 0.173),
+        ]
+
+        atom = BohrAtom(
+            e=10, p=10, n=12,
+            # level=6,
+            orbit_color=OCOL,
+            electron_color=ECOL,
+            proton_color=PCOL,
+            neutron_color=NCOL,
+            sheen_factor=-0.25,
+            separate_nuclei=True
+        ).scale(1)
+        protons = atom.get_protons()
+        print(protons)
+        protons.shift(2*RIGHT)
+        neutrons = atom.get_neutrons()
+        print(neutrons)
+        neutrons.shift(2*LEFT)
+        electron = atom.get_electrons()
+        orbitals = atom.get_orbitals().set_style(stroke_width=1.5)
+        # electron.move_to(
+        #     orbitals[1].point_at_angle(np.arctan(electron.get_center()[1]/electron.get_center()[0]))
+        # )
+        backup_electron = electron.copy()
+        # self.play(
+        #     FadeIn(atom)
+        # )
+        self.add(atom, protons, neutrons)
+        self.wait(5)
 
 
 
@@ -182,5 +236,12 @@ class TestTransparentBackground(Scene):
 
 
 
-
-
+if __name__ == "__main__":
+    cls = TestBohrAtom
+    class_name = cls.__name__
+    # transparent = cls.btransparent
+    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+    # if transparent:
+    #     command += " --transparent --format=webm"
+    scene_marker(rf"RUNNNING:    {command}")
+    subprocess.run(command)

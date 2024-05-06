@@ -1,16 +1,30 @@
 import sys
 sys.path.append("../")
 from manim import *
-from manim_chemistry import *
+# from manim_chemistry import *
+from custom_classes import BohrAtom
 from helpers import *
 import random
+import subprocess
 
 slides = True
 if slides:
     from manim_slides import Slide
 
+q = "ul"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
 
-class AbsorptionExcitation(Slide if slides else Scene):
+
+class AbsorptionExcitation(Scene if not slides else Slide):
     def construct(self):
         # self.absorption()
         # self.excitation()
@@ -163,7 +177,7 @@ class AbsorptionExcitation(Slide if slides else Scene):
 class RydbergBalmer(AbsorptionExcitation):
     def construct(self):
         title = Tex("Rydbergformlen og Balmerserien")
-        play_title(self, title)
+        play_title2(self, title)
         photon_energies = self.rydberg_formel()
         self.balmer_serie(photon_energies)
         self.play(
@@ -203,7 +217,11 @@ class RydbergBalmer(AbsorptionExcitation):
         # self.slide_pause()
         # for i in formel:
         #     print(i)
-        self.add(formel)
+        # self.add(formel)
+        self.play(
+            Write(formel),
+            run_time=0.5
+        )
         # self.play(
         #     LaggedStart(
         #         ReplacementTransform(starter[0][0], formel[4]),
@@ -222,17 +240,19 @@ class RydbergBalmer(AbsorptionExcitation):
 
         calc = VGroup(
             formel.copy(),
-            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{1\over", " n^2}", " -", r"{1\over", " m^2}", r" \right)"),
-            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{1\over", " 2^2}", " -", r"{1\over", " 3^2}", r" \right)"),
-            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{1\over", " 4}", " -", r"{1\over", " 9}", r" \right)"),
-            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{9\over", " 36}", " -", r"{4\over", " 36}", r" \right)"),
-            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{9-4", r"\over", " 36}", r" \right)"),
-            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{5", r"\over", " 36}", r" \right)"),
-            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r"\cdot", r"{5", r"\over", " 36}"),
-            MathTex(r"{1\over\lambda}", r" = ", r"0.152\times10^7 \text{m}^{-1}"),
-            MathTex(r"\lambda", r" = ", r"6.563\times10^{-7} \text{m}"),
-            MathTex(r"\lambda", r" = ", r"656.3 \text{nm}"),
+            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{1\over", " n^2}", " -", r"{1\over", " m^2}", r" \right)", " ", " ", " ", " "),
+            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{1\over", " 2^2}", " -", r"{1\over", " 3^2}", r" \right)", " ", " ", " ", " "),
+            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{1\over", " 4}", " -", r"{1\over", " 9}", r" \right)", " ", " ", " ", " "),
+            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{9\over", " 36}", " -", r"{4\over", " 36}", r" \right)", " ", " ", " ", " "),
+            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{9-4", r"\over", " 36}", r" \right)", " ", " ", " ", " ", " ", " "),
+            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{5", r"\over", " 36}", r" \right)", " ", " ", " ", " ", " ", " "),
+            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r"\cdot", r"{5", r"\over", " 36}", " ", " ", " ", " ", " ", " ", " "),
+            MathTex(r"{1\over\lambda}", r" = ", r"0.152\times10^7 \text{m}^{-1}", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "),
+            MathTex(r"\lambda", r" = ", r"6.563\times10^{-7} \text{m}", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "),
+            MathTex(r"\lambda", r" = ", r"656.3 \text{nm}", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "),
         )
+        for n in calc:
+            print(len(n))
         for i, c in enumerate(calc):
             c[0][-1].set_color(cmap[r"\lambda"])
             if i < 8:
@@ -248,21 +268,21 @@ class RydbergBalmer(AbsorptionExcitation):
                 c[2:].set_color(interpolate_color(cmap[r"R_H"], interpolate_color(cmap["n"], cmap["m"], 0.5), 0.5))
             if i >= 9:
                 c[2].set_color(balmer_colors[0])
-        calc.add(MathTex(r"\lambda_{2\leftarrow3}", r" = ", r"656.3 \text{nm}"))
+        calc.add(MathTex(r"\lambda", r"_{2\leftarrow3}", r" = ", r"656.3 \text{nm}", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "))
         calc[-1][0][0].set_color(cmap[r"\lambda"])
-        calc[-1][-1].set_color(balmer_colors[0])
+        calc[-1][3].set_color(balmer_colors[0])
 
         self.remove(formel)
         for i, c in enumerate(calc):
             if i == 0:
                 self.add(c)
-            elif i in [1, 5, 7]:
-                self.play(
-                    TransformMatchingTex(calc[i-1], c)
-                )
+            # elif i in [1, 5, 7]:
+            #     self.play(
+            #         TransformMatchingTex(calc[i-1], c)
+            #     )
             else:
                 self.play(
-                    ReplacementTransform(calc[i-1], c)
+                    ReplacementTransform(calc[i-1], c, transform_mismatches=True)
                 )
             self.slide_pause()
 
@@ -364,3 +384,102 @@ class RydbergBalmer(AbsorptionExcitation):
             self.exc_animation(electron, orbitals[1], bcol)
             self.slide_pause()
 
+
+class Spektra(MovingCameraScene if not slides else Slide, MovingCameraScene):
+    def construct(self):
+        self.absorption()
+
+    def slide_pause(self, t=1.0, slides_bool=slides):
+        return slides_pause(self, t, slides_bool)
+
+    def absorption(self):
+        H_farver = [
+            interpolate_color(VISIBLE_LIGHT[650], VISIBLE_LIGHT[650], 0.628),
+            interpolate_color(VISIBLE_LIGHT[480], VISIBLE_LIGHT[490], 0.614),
+            interpolate_color(VISIBLE_LIGHT[430], VISIBLE_LIGHT[440], 0.405),
+            interpolate_color(VISIBLE_LIGHT[410], VISIBLE_LIGHT[410], 0.173),
+        ]
+        He_farver = [
+            interpolate_color(VISIBLE_LIGHT[650], VISIBLE_LIGHT[650], 0.0),
+            interpolate_color(VISIBLE_LIGHT[580], VISIBLE_LIGHT[590], 0.8),
+            interpolate_color(VISIBLE_LIGHT[500], VISIBLE_LIGHT[510], 0.2),
+            interpolate_color(VISIBLE_LIGHT[490], VISIBLE_LIGHT[500], 0.2),
+            interpolate_color(VISIBLE_LIGHT[470], VISIBLE_LIGHT[480], 0.1),
+            interpolate_color(VISIBLE_LIGHT[440], VISIBLE_LIGHT[450], 0.7),
+            interpolate_color(VISIBLE_LIGHT[430], VISIBLE_LIGHT[440], 0.9),
+            interpolate_color(VISIBLE_LIGHT[410], VISIBLE_LIGHT[410], 0.0),
+        ]
+
+        H_lambda = [656, 486, 434, 410]
+        He_lambda = [668, 588, 502, 492, 471, 447, 439, 403]
+        fuldt_spektrum = [l for l in np.arange(400, 671, 1)]
+        H_linjer = VGroup(*[
+            Rectangle(
+                width=1, height=25, fill_color=c, fill_opacity=1, stroke_width=0
+            ).shift(l*RIGHT) for c, l in zip(H_farver, H_lambda)
+        ])
+        He_linjer = VGroup(*[
+            Rectangle(
+                width=1, height=25, fill_color=c, fill_opacity=1, stroke_width=0
+            ).shift(l*RIGHT) for c, l in zip(He_farver, He_lambda)
+        ])
+        fuld_linjer = VGroup(*[
+            Rectangle(
+                width=1, height=25, fill_opacity=1, stroke_width=0, fill_color=interpolate_color(
+                    VISIBLE_LIGHT[10*np.floor(l/10)], VISIBLE_LIGHT[10*np.ceil(l/10)], (l - 10*np.floor(l/10))/10
+                )
+            ).shift(l * RIGHT) for l in fuldt_spektrum if l not in H_lambda + He_lambda
+        ])
+
+        titles = VGroup(
+            Tex("Synligt lys", "", "", "", "", font_size=800).next_to(fuld_linjer, UP, aligned_edge=LEFT),
+            Tex("Synligt lys", " minus ", "Hydrogen", "", "", font_size=800).next_to(fuld_linjer, UP, aligned_edge=LEFT),
+            Tex("Synligt lys", " minus ", "Hydrogen", " og ", "Helium", font_size=800).next_to(fuld_linjer, UP, aligned_edge=LEFT),
+            Tex("Hydrogen", "", "", font_size=800).next_to(fuld_linjer, UP, aligned_edge=LEFT).shift(50*DOWN),
+            Tex("", "", "Helium", font_size=800).next_to(fuld_linjer, UP, aligned_edge=LEFT).shift(100*DOWN),
+            Tex("Hydrogen", " + ", "Helium", font_size=800).next_to(fuld_linjer, UP, aligned_edge=LEFT).shift(75*DOWN)
+        )
+
+        self.camera.frame.set(
+            width=300
+        ).move_to(VGroup(fuld_linjer, H_linjer, He_linjer)).shift(50*DOWN)
+        # self.add(fuld_linjer)
+        # self.wait(0.5)
+        # self.add(H_linjer)
+        # self.wait(0.5)
+        # self.add(He_linjer)
+        # self.wait(0.5)
+        self.add(fuld_linjer, H_linjer, He_linjer, titles[0])
+        self.slide_pause()
+
+        self.play(
+            H_linjer.animate.shift(50*DOWN),
+            FadeIn(titles[3], shift=50*DOWN),
+            TransformMatchingTex(titles[0], titles[1], transform_mismatches=False)
+        )
+        self.slide_pause()
+
+        self.play(
+            He_linjer.animate.shift(100*DOWN),
+            FadeIn(titles[4], shift=100*DOWN),
+            TransformMatchingTex(titles[1], titles[2], transform_mismatches=False)
+        )
+        self.slide_pause()
+
+        self.play(
+            H_linjer.animate.shift(25*DOWN),
+            He_linjer.animate.shift(25*UP),
+            TransformMatchingTex(VGroup(titles[3], titles[4]), titles[5], transform_mismatches=False)
+        )
+        self.slide_pause()
+
+
+if __name__ == "__main__":
+    cls = Spektra
+    class_name = cls.__name__
+    # transparent = cls.btransparent
+    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+    # if transparent:
+    #     command += " --transparent --format=webm"
+    scene_marker(rf"RUNNNING:    {command}")
+    subprocess.run(command)
