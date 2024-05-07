@@ -7,11 +7,11 @@ from helpers import *
 import random
 import subprocess
 
-slides = False
-# if slides:
-#     from manim_slides import Slide
+slides = True
+if slides:
+    from manim_slides import Slide
 
-q = "h"
+q = "l"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -489,12 +489,15 @@ class Spektra(MovingCameraScene, Scene if not slides else Slide):
 
 class RedShift(MovingCameraScene, Scene if not slides else Slide):
     def construct(self):
+        self.slide_pause()
         self.absorption()
+        fade_out_all(self)
+
 
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t, slides_bool)
 
-    def absorption(self):
+    def _absorption(self):
         plane = NumberLine(
             x_range=[350, 750, 50],
             # y_range=[0, 2],
@@ -506,16 +509,17 @@ class RedShift(MovingCameraScene, Scene if not slides else Slide):
             font_size=800,
         ).set_z_index(4)
         plane_lines = VGroup(*[
-            DashedLine(start=plane.n2p(i), end=plane.n2p(i) + 210*UP, stroke_width=25) for i in np.linspace(350, 750, 9)
+            DashedLine(start=plane.n2p(i), end=plane.n2p(i) + 210 * UP, stroke_width=25) for i in
+            np.linspace(350, 750, 9)
         ])
         self.add(plane, plane_lines)
 
         H_lambda_ref = [656.34, 486.17, 434.08, 410.21]
         H_farver_ref = [
             interpolate_color(
-                VISIBLE_LIGHT[10*np.floor(l/10)],
-                VISIBLE_LIGHT[10*np.ceil(l/10)],
-                (l - 10*np.floor(l/10))/10
+                VISIBLE_LIGHT[10 * np.floor(l / 10)],
+                VISIBLE_LIGHT[10 * np.ceil(l / 10)],
+                (l - 10 * np.floor(l / 10)) / 10
             ) for l in H_lambda_ref
         ]
         # H_farver_ref = [
@@ -537,9 +541,9 @@ class RedShift(MovingCameraScene, Scene if not slides else Slide):
             #     (l*(1+z) - 10*np.floor(l*(1+z)/10))/10
             # ) for l in H_lambda] for k, z in z_faktorer.items()
             k: [interpolate_color(
-                VISIBLE_LIGHT[10*np.floor(l/10)],
-                VISIBLE_LIGHT[10*np.ceil(l/10)],
-                (l - 10*np.floor(l/10))/10
+                VISIBLE_LIGHT[10 * np.floor(l / 10)],
+                VISIBLE_LIGHT[10 * np.ceil(l / 10)],
+                (l - 10 * np.floor(l / 10)) / 10
             ) for l in H_lambda_fjern[k]] for k in z_faktorer.keys()
         }
         print(H_farver_fjern, H_farver_ref)
@@ -547,13 +551,13 @@ class RedShift(MovingCameraScene, Scene if not slides else Slide):
         H_linjer_ref = VGroup(*[
             Rectangle(
                 width=1, height=50, fill_color=c, fill_opacity=1, stroke_width=0
-            ).move_to(plane.n2p(l)).shift(70*UP) for c, l in zip(H_farver_ref, H_lambda_ref)
+            ).move_to(plane.n2p(l)).shift(70 * UP) for c, l in zip(H_farver_ref, H_lambda_ref)
         ])
         H_linjer_fjern = {
             k: VGroup(*[
                 Rectangle(
                     width=1, height=50, fill_color=c, fill_opacity=1, stroke_width=0
-                ).move_to(plane.n2p(l)).shift(140*UP) for c, l in zip(H_farver_fjern[k], H_lambda_fjern[k])
+                ).move_to(plane.n2p(l)).shift(140 * UP) for c, l in zip(H_farver_fjern[k], H_lambda_fjern[k])
             ]) for k in z_faktorer.keys()
         }
 
@@ -567,8 +571,9 @@ class RedShift(MovingCameraScene, Scene if not slides else Slide):
         }
 
         data_labels = VGroup(
-            Tex("Hydrogen, ref", font_size=800).next_to(plane_lines[0], DR).shift(H_linjer_ref[0].get_y()*UP),
-            Tex("Hydrogen, A2147", font_size=800).next_to(plane_lines[0], DR).shift(H_linjer_fjern["A2147"][0].get_y()*UP)
+            Tex("Hydrogen, ref", font_size=800).next_to(plane_lines[0], DR).shift(H_linjer_ref[0].get_y() * UP),
+            Tex("Hydrogen, A2147", font_size=800).next_to(plane_lines[0], DR).shift(
+                H_linjer_fjern["A2147"][0].get_y() * UP)
         )
         self.add(data_labels)
         # titles = VGroup(
@@ -579,10 +584,10 @@ class RedShift(MovingCameraScene, Scene if not slides else Slide):
         #
         self.camera.frame.set(
             # width=300
-        # ).move_to(VGroup(H_linjer_ref, H_linjer_fjern["A2147"]))
+            # ).move_to(VGroup(H_linjer_ref, H_linjer_fjern["A2147"]))
             width=450,
             # height=125
-        ).move_to(plane).shift(100*UP)
+        ).move_to(plane).shift(100 * UP)
         self.add(H_linjer_ref, H_linjer_fjern["A2147"])
         self.wait()
         # H_linjer_ref.shift(25*UP)
@@ -591,6 +596,185 @@ class RedShift(MovingCameraScene, Scene if not slides else Slide):
         # H_labels_fjern["A2147"].shift(25*DOWN)
         self.add(H_labels_ref, H_labels_fjern["A2147"])
         self.wait()
+
+    def absorption(self):
+        self.camera.frame.set(
+            width=16
+        )
+        plane = NumberLine(
+            x_range=[350, 750, 50],
+            # y_range=[0, 2],
+            length=8,
+            # y_length=75,
+            # axis_config={"include_numbers": True, "font_size": 288}
+            stroke_width=2,
+            include_numbers=True,
+            font_size=40,
+        ).set_z_index(4).shift(3*DOWN)
+        x_labels = plane.get_ticks()
+        plane_lines = VGroup(*[
+            DashedLine(start=plane.n2p(i), end=plane.n2p(i) + 6*UP, stroke_width=1) for i in np.linspace(350, 750, 9)
+        ])
+        # self.add(plane, plane_lines)
+        self.play(
+            LaggedStart(
+                # *[DrawBorderThenFill(m) for m in [*plane, *plane_lines]],
+                # *[Write(m) for m in x_labels],
+                DrawBorderThenFill(plane),
+                DrawBorderThenFill(plane_lines),
+                Write(x_labels),
+                lag_ratio=0.1
+            ),
+            run_time=0.5
+        )
+        # self.add(plane, x_labels)
+
+        H_lambda_ref = [656.34, 486.17, 434.08, 410.21]
+        H_farver_ref = [
+            interpolate_color(
+                VISIBLE_LIGHT[10*np.floor(l/10)],
+                VISIBLE_LIGHT[10*np.ceil(l/10)],
+                (l - 10*np.floor(l/10))/10
+            ) for l in H_lambda_ref
+        ]
+
+        z_faktorer = {"Andromeda": 0.00103, "A2147": 0.035}
+        H_lambda_fjern = {
+            k: [l * (1 + z) for l in H_lambda_ref] for k, z in z_faktorer.items()
+        }
+        H_farver_fjern = {
+            k: [interpolate_color(
+                VISIBLE_LIGHT[10*np.floor(l/10)],
+                VISIBLE_LIGHT[10*np.ceil(l/10)],
+                (l - 10*np.floor(l/10))/10
+            ) for l in H_lambda_fjern[k]] for k in z_faktorer.keys()
+        }
+
+        # H_linjer_ref = VGroup(*[
+        #     Rectangle(
+        #         width=1, height=50, fill_color=c, fill_opacity=1, stroke_width=0
+        #     ).move_to(plane.n2p(l)).shift(70*UP) for c, l in zip(H_farver_ref, H_lambda_ref)
+        # ])
+        H_linjer_ref = VGroup(*[
+            Line(
+                start=plane.n2p(l)+0.5*UP, end=plane.n2p(l)+2.5*UP, stroke_color=c, stroke_width=3
+            ) for c, l in zip(H_farver_ref, H_lambda_ref)
+        ])
+        # H_linjer_fjern = {
+        #     k: VGroup(*[
+        #         Rectangle(
+        #             width=1, height=50, fill_color=c, fill_opacity=1, stroke_width=0
+        #         ).move_to(plane.n2p(l)).shift(140*UP) for c, l in zip(H_farver_fjern[k], H_lambda_fjern[k])
+        #     ]) for k in z_faktorer.keys()
+        # }
+        H_linjer_fjern = {
+            k: VGroup(*[
+                Line(
+                    start=plane.n2p(l)+3.5*UP, end=plane.n2p(l)+5.5*UP, stroke_color=c, stroke_width=3
+                ) for c, l in zip(H_farver_fjern[k], H_lambda_fjern[k])
+            ]) for k in z_faktorer.keys()
+        }
+
+        H_labels_ref = VGroup(*[
+            Tex(f"{plane.p2n(l.get_center()):.2f}nm", font_size=24).next_to(l, UP, buff=b) for l, b in zip(
+                H_linjer_ref, [0, 0, 0.25, 0]
+            )
+        ])
+        H_labels_fjern = {
+            k: VGroup(*[
+                Tex(f"{plane.p2n(l.get_center()):.2f}nm", font_size=24).next_to(l, UP, buff=b) for l, b in zip(
+                H_linjer_fjern[k], [0, 0, 0.25, 0]
+            )
+            ]) for k in z_faktorer.keys()
+        }
+
+        data_labels = VGroup(
+            Tex("Hydrogen, ref", font_size=24).next_to(plane_lines[0], DL, aligned_edge=DOWN).shift(1.5*UP),
+            Tex("Hydrogen, A2147", font_size=24).next_to(plane_lines[0], DL, aligned_edge=DOWN).shift(4.5*UP)
+        )
+        self.play(
+            LaggedStart(
+                *[Write(m) for m in data_labels],
+                *[Create(m) for m in [*H_linjer_ref, *H_linjer_fjern["A2147"]]],
+                lag_ratio=0.1
+            ),
+            run_time=0.5
+        )
+        # self.add(data_labels)
+        # self.add(H_linjer_ref, H_linjer_fjern["A2147"])
+        self.slide_pause()
+
+        self.play(
+            LaggedStart(
+                *[Write(m) for m in [*H_labels_ref, *H_labels_fjern["A2147"]]],
+                lag_ratio=0.1
+            ),
+            run_time=0.5
+        )
+        # self.add(H_labels_ref, H_labels_fjern["A2147"])
+        self.slide_pause()
+
+        opgave = VGroup(
+            Tex("Find ud af, hvordan spektret fra A2147"),
+            Tex("er opstået ud fra referencen.")
+        ).arrange(DOWN, aligned_edge=RIGHT).next_to(plane_lines[4], UP)
+        self.play(
+            Write(opgave),
+            run_time=0.5
+        )
+        # self.add(opgave)
+        self.slide_pause()
+
+        z_tracker = ValueTracker(z_faktorer["A2147"])
+        # z_tracker = ValueTracker(0)
+        H_linjer_tracker = always_redraw(lambda:
+            VGroup(*[
+                Line(
+                    start=plane.n2p(l * (1+z_tracker.get_value()))+3.5*UP,
+                    end=plane.n2p(l * (1+z_tracker.get_value()))+5.5*UP,
+                    stroke_width=3,
+                    stroke_color=interpolate_color(
+                        VISIBLE_LIGHT[10*np.floor(l * (1+z_tracker.get_value())/10)],
+                        VISIBLE_LIGHT[10*np.ceil(l * (1+z_tracker.get_value())/10)],
+                        (l * (1+z_tracker.get_value()) - 10*np.floor(l * (1+z_tracker.get_value())/10))/10
+                    )
+                ) for l in H_lambda_ref
+            ])
+        )
+        self.play(
+            LaggedStart(
+                *[FadeOut(m) for m in [data_labels, H_labels_ref, H_labels_fjern["A2147"], H_linjer_fjern["A2147"]]],
+                *[FadeIn(m) for m in H_linjer_tracker],
+                lag_ratio=0.1
+            ),
+            run_time=0.5
+        )
+        self.remove(H_linjer_tracker)
+        # self.remove(data_labels, H_labels_ref, H_labels_fjern["A2147"], H_linjer_fjern["A2147"])
+        self.add(H_linjer_tracker)
+        self.slide_pause()
+
+        self.play(
+            z_tracker.animate.set_value(0),
+            run_time=1
+        )
+        self.slide_pause()
+
+        z_label = always_redraw(lambda:
+            VGroup(
+                MathTex("z = "),
+                DecimalNumber(z_tracker.get_value(), num_decimal_places=5)
+            ).arrange(RIGHT).next_to(plane_lines[-1], DR, aligned_edge=DOWN).shift(4.5*UP)
+        )
+        # self.add(z_label)
+        self.play(
+            Write(z_label)
+        )
+        self.play(
+            z_tracker.animate.set_value(z_faktorer["A2147"]),
+            run_time=5
+        )
+        self.slide_pause()
 
 
 if __name__ == "__main__":
