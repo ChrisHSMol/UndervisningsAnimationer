@@ -7,11 +7,11 @@ from helpers import *
 import random
 import subprocess
 
-slides = True
-if slides:
-    from manim_slides import Slide
+slides = False
+# if slides:
+#     from manim_slides import Slide
 
-q = "ul"
+q = "h"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -177,6 +177,7 @@ class AbsorptionExcitation(Scene if not slides else Slide):
 class RydbergBalmer(AbsorptionExcitation):
     def construct(self):
         title = Tex("Rydbergformlen og Balmerserien")
+        self.slide_pause()
         play_title2(self, title)
         photon_energies = self.rydberg_formel()
         self.balmer_serie(photon_energies)
@@ -253,21 +254,33 @@ class RydbergBalmer(AbsorptionExcitation):
         )
         for n in calc:
             print(len(n))
-        for i, c in enumerate(calc):
-            c[0][-1].set_color(cmap[r"\lambda"])
-            if i < 8:
-                c[2].set_color(cmap[r"R_H"])
-            if 0 < i < 4:
-                c[5][0].set_color(cmap["n"])
-                c[8][0].set_color(cmap["m"])
-            if 4 <= i < 7:
-                c[4:-1].set_color(interpolate_color(cmap["n"], cmap["m"], 0.5))
-            if i == 7:
-                c[4:].set_color(interpolate_color(cmap["n"], cmap["m"], 0.5))
-            if i == 8:
-                c[2:].set_color(interpolate_color(cmap[r"R_H"], interpolate_color(cmap["n"], cmap["m"], 0.5), 0.5))
-            if i >= 9:
-                c[2].set_color(balmer_colors[0])
+        [calc[i][0][2].set_color(cmap[r"\lambda"]) for i in [1, 2, 3, 4, 5, 6, 7, 8]]
+        [calc[i][0].set_color(cmap[r"\lambda"]) for i in [9, 10]]
+        [calc[i][2].set_color(cmap[r"R_H"]) for i in [1, 2, 3, 4, 5, 6, 7]]
+        [calc[i][5][0].set_color(cmap["n"]) for i in [1, 2, 3]]
+        # calc[4][5].set_color(cmap["n"])
+        calc[4][4:9].set_color(interpolate_color(cmap["n"], cmap["m"], 0.5))
+        [calc[i][4:7].set_color(interpolate_color(cmap["n"], cmap["m"], 0.5)) for i in [5, 6, 7]]
+        [calc[i][8][0].set_color(cmap["m"]) for i in [1, 2, 3]]
+        # calc[4][8].set_color(cmap["m"])
+        calc[8][2].set_color(interpolate_color(cmap[r"R_H"], interpolate_color(cmap["n"], cmap["m"], 0.5), 0.5))
+        [calc[i][2].set_color(balmer_colors[0]) for i in [9, 10]]
+
+        # for i, c in enumerate(calc):
+        #     c[0][-1].set_color(cmap[r"\lambda"])
+        #     if i < 8:
+        #         c[2].set_color(cmap[r"R_H"])
+        #     if 0 < i < 4:
+        #         c[5][0].set_color(cmap["n"])
+        #         c[8][0].set_color(cmap["m"])
+        #     if 4 <= i < 7:
+        #         c[4:-1].set_color(interpolate_color(cmap["n"], cmap["m"], 0.5))
+        #     if i == 7:
+        #         c[4:].set_color(interpolate_color(cmap["n"], cmap["m"], 0.5))
+        #     if i == 8:
+        #         c[2:].set_color(interpolate_color(cmap[r"R_H"], interpolate_color(cmap["n"], cmap["m"], 0.5), 0.5))
+        #     if i >= 9:
+        #         c[2].set_color(balmer_colors[0])
         calc.add(MathTex(r"\lambda", r"_{2\leftarrow3}", r" = ", r"656.3 \text{nm}", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "))
         calc[-1][0][0].set_color(cmap[r"\lambda"])
         calc[-1][3].set_color(balmer_colors[0])
@@ -385,7 +398,7 @@ class RydbergBalmer(AbsorptionExcitation):
             self.slide_pause()
 
 
-class Spektra(MovingCameraScene if not slides else Slide, MovingCameraScene):
+class Spektra(MovingCameraScene, Scene if not slides else Slide):
     def construct(self):
         self.absorption()
 
@@ -474,8 +487,114 @@ class Spektra(MovingCameraScene if not slides else Slide, MovingCameraScene):
         self.slide_pause()
 
 
+class RedShift(MovingCameraScene, Scene if not slides else Slide):
+    def construct(self):
+        self.absorption()
+
+    def slide_pause(self, t=1.0, slides_bool=slides):
+        return slides_pause(self, t, slides_bool)
+
+    def absorption(self):
+        plane = NumberLine(
+            x_range=[350, 750, 50],
+            # y_range=[0, 2],
+            length=400,
+            # y_length=75,
+            # axis_config={"include_numbers": True, "font_size": 288}
+            stroke_width=50,
+            include_numbers=True,
+            font_size=800,
+        ).set_z_index(4)
+        plane_lines = VGroup(*[
+            DashedLine(start=plane.n2p(i), end=plane.n2p(i) + 210*UP, stroke_width=25) for i in np.linspace(350, 750, 9)
+        ])
+        self.add(plane, plane_lines)
+
+        H_lambda_ref = [656.34, 486.17, 434.08, 410.21]
+        H_farver_ref = [
+            interpolate_color(
+                VISIBLE_LIGHT[10*np.floor(l/10)],
+                VISIBLE_LIGHT[10*np.ceil(l/10)],
+                (l - 10*np.floor(l/10))/10
+            ) for l in H_lambda_ref
+        ]
+        # H_farver_ref = [
+        #     interpolate_color(VISIBLE_LIGHT[650], VISIBLE_LIGHT[660], 0.628),
+        #     interpolate_color(VISIBLE_LIGHT[480], VISIBLE_LIGHT[490], 0.614),
+        #     interpolate_color(VISIBLE_LIGHT[430], VISIBLE_LIGHT[440], 0.405),
+        #     interpolate_color(VISIBLE_LIGHT[400], VISIBLE_LIGHT[410], 0.173),
+        # ]
+
+        z_faktorer = {"Andromeda": 0.00103, "A2147": 0.035}
+        # z_faktorer = {"Andromeda": 0.0203}
+        H_lambda_fjern = {
+            k: [l * (1 + z) for l in H_lambda_ref] for k, z in z_faktorer.items()
+        }
+        H_farver_fjern = {
+            # k: [interpolate_color(
+            #     VISIBLE_LIGHT[10*np.floor(l*(1+z)/10)],
+            #     VISIBLE_LIGHT[10*np.ceil(l*(1+z)/10)],
+            #     (l*(1+z) - 10*np.floor(l*(1+z)/10))/10
+            # ) for l in H_lambda] for k, z in z_faktorer.items()
+            k: [interpolate_color(
+                VISIBLE_LIGHT[10*np.floor(l/10)],
+                VISIBLE_LIGHT[10*np.ceil(l/10)],
+                (l - 10*np.floor(l/10))/10
+            ) for l in H_lambda_fjern[k]] for k in z_faktorer.keys()
+        }
+        print(H_farver_fjern, H_farver_ref)
+
+        H_linjer_ref = VGroup(*[
+            Rectangle(
+                width=1, height=50, fill_color=c, fill_opacity=1, stroke_width=0
+            ).move_to(plane.n2p(l)).shift(70*UP) for c, l in zip(H_farver_ref, H_lambda_ref)
+        ])
+        H_linjer_fjern = {
+            k: VGroup(*[
+                Rectangle(
+                    width=1, height=50, fill_color=c, fill_opacity=1, stroke_width=0
+                ).move_to(plane.n2p(l)).shift(140*UP) for c, l in zip(H_farver_fjern[k], H_lambda_fjern[k])
+            ]) for k in z_faktorer.keys()
+        }
+
+        H_labels_ref = VGroup(*[
+            Tex(f"{plane.p2n(l.get_center()):.2f}nm", font_size=600).next_to(l, DOWN) for l in H_linjer_ref
+        ])
+        H_labels_fjern = {
+            k: VGroup(*[
+                Tex(f"{plane.p2n(l.get_center()):.2f}nm", font_size=600).next_to(l, DOWN) for l in H_linjer_fjern[k]
+            ]) for k in z_faktorer.keys()
+        }
+
+        data_labels = VGroup(
+            Tex("Hydrogen, ref", font_size=800).next_to(plane_lines[0], DR).shift(H_linjer_ref[0].get_y()*UP),
+            Tex("Hydrogen, A2147", font_size=800).next_to(plane_lines[0], DR).shift(H_linjer_fjern["A2147"][0].get_y()*UP)
+        )
+        self.add(data_labels)
+        # titles = VGroup(
+        #     Tex("Synligt lys", "", "", font_size=800).next_to(fuld_linjer, UP, aligned_edge=LEFT),
+        #     Tex("Synligt lys", " minus ", "Hydrogen", font_size=800).next_to(fuld_linjer, UP, aligned_edge=LEFT),
+        #     Tex("Hydrogen", "", "", font_size=800).next_to(fuld_linjer, UP, aligned_edge=LEFT).shift(50*DOWN),
+        # )
+        #
+        self.camera.frame.set(
+            # width=300
+        # ).move_to(VGroup(H_linjer_ref, H_linjer_fjern["A2147"]))
+            width=450,
+            # height=125
+        ).move_to(plane).shift(100*UP)
+        self.add(H_linjer_ref, H_linjer_fjern["A2147"])
+        self.wait()
+        # H_linjer_ref.shift(25*UP)
+        # H_labels_ref.shift(25*UP)
+        # H_linjer_fjern["A2147"].shift(25*DOWN)
+        # H_labels_fjern["A2147"].shift(25*DOWN)
+        self.add(H_labels_ref, H_labels_fjern["A2147"])
+        self.wait()
+
+
 if __name__ == "__main__":
-    cls = Spektra
+    cls = RedShift
     class_name = cls.__name__
     # transparent = cls.btransparent
     command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
