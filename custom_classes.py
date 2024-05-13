@@ -66,6 +66,7 @@ class BohrAtom(VGroup):
         self.separate_nuclei = separate_nuclei
         self.sheen_factor = sheen_factor
         self.sheen_direction = sheen_direction
+        # self.n_nucleons = self.p + self.n
         self.TOTAL_ELECTRONS_PER_LEVEL = {
             # Electrons that fit in total: Level
             2: 1,
@@ -93,13 +94,54 @@ class BohrAtom(VGroup):
             next(x for x in list(TOTAL_ELECTRONS_PER_LEVEL.keys()) if x >= self.e)
         ]
 
+    def calculate_arrangement_angles(self, n_electrons: int = 0):
+        print(n_electrons)
+        arrangement_angles = []
+        if n_electrons <= 4:
+            arrangement_angles.append([
+                i * TAU / n_electrons for i in range(n_electrons)
+            ])
+        elif 4 < n_electrons <= 8:
+            # arrangement_angles = [
+            #     *[i * (TAU - 0) / 4 for i in range(4) if i >= n_electrons % 4],
+            #     *[i * (TAU - 0) / 4 + 0.05 * PI for i in range(4) if i < n_electrons % 4],
+            #     *[i * (TAU - 0) / 4 - 0.05 * PI for i in range(4) if i < n_electrons % 4],
+            # ]
+            arrangement_angles.append([0.05*PI, -0.05*PI])
+            if n_electrons >= 6:
+                arrangement_angles.append([1.05*PI, 0.95*PI])
+            else:
+                arrangement_angles.append([1.0*PI])
+            if n_electrons >= 7:
+                arrangement_angles.append([0.55*PI, 0.45*PI])
+            else:
+                arrangement_angles.append([0.5*PI])
+            if n_electrons == 8:
+                arrangement_angles.append([1.55*PI, 1.45*PI])
+            else:
+                arrangement_angles.append([1.5*PI])
+        # elif n_electrons == 8:
+        #     arrangement_angles = [
+        #         *[i * (2*TAU - 0)/n_electrons + 0.05*PI for i in range(4)],
+        #         *[i * (2*TAU - 0)/n_electrons - 0.05*PI for i in range(4)]
+        #     ]
+        # print(arrangement_angles)
+        arrangement_angles = [x for xs in arrangement_angles for x in xs]  # Flatten list of lists to list
+        # print(arrangement_angles)
+        return arrangement_angles
+
     def orbitals_group(self):
         return VGroup(
             *[
-                Circle(radius=1 + i, color=self.orbit_color)
+                # Circle(radius=1 + i, color=self.orbit_color)
+                Circle(radius=1 + i + self.n_nucleons()**0.1, color=self.orbit_color)
+                # TODO: Find ud af, hvordan afstanden kan skrives til at være nogenlunde rigtig
                 for i in range(self.occupied_levels)
             ]
         )
+
+    def n_nucleons(self) -> int:
+        return self.p + self.n
 
     def protons_group(self) -> VGroup:
         # protons = VGroup(*[
@@ -115,7 +157,11 @@ class BohrAtom(VGroup):
             ) for _ in range(self.p)
         ])
         if self.p > 1:
-            [proton.shift(np.random.uniform(-0.25, 0.25, 3)) for proton in protons]
+            # [proton.shift(np.random.uniform(-0.05, 0.05, 3) * self.n_nucleons()**0.5) for proton in protons]
+            [proton.move_to(Circle(
+                radius=np.random.uniform(0, 0.05)*self.n_nucleons()**0.5
+            ).point_at_angle(np.random.uniform(0, 2*PI))) for proton in protons]
+            [proton.set_z_index(2*z) for z, proton in enumerate(protons)]
         # print(protons[0].nuclid_color, type(protons[0].nuclid_color), self.proton_color, type(self.proton_color))
         return protons
 
@@ -130,8 +176,14 @@ class BohrAtom(VGroup):
             Nuclid(
                 nuclid_type="neutron", nuclid_color=self.neutron_color,
                 sheen_factor=self.sheen_factor, sheen_direction=self.sheen_direction
-            ).shift(np.random.uniform(-0.25, 0.25, 3)) for _ in range(self.n)
+            ) for _ in range(self.n)
         ])
+        if self.n > 1:
+            # [neutron.shift(np.random.uniform(-0.05, 0.05, 3) * self.n_nucleons()**0.5) for neutron in neutrons]
+            [neutron.move_to(Circle(
+                radius=np.random.uniform(0, 0.05)*self.n_nucleons()**0.5
+            ).point_at_angle(np.random.uniform(0, 2*PI))) for neutron in neutrons]
+            [neutron.set_z_index(2*z + 1) for z, neutron in enumerate(neutrons)]
         return neutrons
 
     def nuclei_groups(self) -> VGroup:#, protons: list, neutrons: list) -> VGroup:
@@ -140,24 +192,6 @@ class BohrAtom(VGroup):
         nuclei = VGroup(*protons, *neutrons)
         random.shuffle(nuclei)
         return VGroup(*nuclei)
-
-    # def _nuclei_groups(self):
-    #     protons = [
-    #         Dot(color=self.proton_color)
-    #         .scale(2)
-    #         .shift(np.random.uniform(-0.25, 0.25, 3))
-    #         for i in range(self.p)
-    #     ]
-    #     neutrons = [
-    #         Dot(color=self.neutron_color)
-    #         .scale(2)
-    #         .shift(np.random.uniform(-0.25, 0.25, 3))
-    #         for i in range(self.n)
-    #     ]
-    #     nuclei = protons + neutrons
-    #     random.shuffle(nuclei)
-    #
-    #     return VGroup(*nuclei)
 
     def electrons_group(self):
         ELECTRONS_PER_LEVEL = {
@@ -175,9 +209,15 @@ class BohrAtom(VGroup):
         for level in ELECTRONS_PER_LEVEL:
             level_electrons = ELECTRONS_PER_LEVEL[level]
             if remaining_electrons > level_electrons:
-                group = self.arrange_electrons(level_electrons, level)
+                # group = self.arrange_electrons(level_electrons, level)
+                group = self.arrange_electrons(
+                    level_electrons, self.orbitals_group()[level-1].radius, use_orig_method=False
+                )
             else:
-                group = self.arrange_electrons(remaining_electrons, level)
+                # group = self.arrange_electrons(remaining_electrons, level)
+                group = self.arrange_electrons(
+                    remaining_electrons, self.orbitals_group()[level-1].radius, use_orig_method=False
+                )
                 electrons_group.add(group)
                 break
 
@@ -186,14 +226,17 @@ class BohrAtom(VGroup):
 
         return electrons_group
 
-    def arrange_electrons(self, n_electrons, level):
+    def arrange_electrons(self, n_electrons, level, use_orig_method=True):
         level_group = VGroup()
-        for angle in np.arange(0, TAU, TAU / n_electrons):
+        arrangement_angles = np.arange(0, TAU, TAU / n_electrons) if use_orig_method else self.calculate_arrangement_angles(n_electrons)
+        # for angle in np.arange(0, TAU, TAU / n_electrons):
+        for angle in self.calculate_arrangement_angles(n_electrons):
+            print(f"Angle={angle}")
             electron = Dot(
                 color=self.electron_color, sheen_factor=self.sheen_factor, sheen_direction=self.sheen_direction,
                 stroke_width=1, stroke_color=BLACK
             ).scale(2)
-            electron.shift(level * RIGHT)
+            electron.shift(level * UP)
             electron.rotate(angle, about_point=[0, 0, 0])
             level_group.add(electron)
 

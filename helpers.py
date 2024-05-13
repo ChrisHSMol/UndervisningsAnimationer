@@ -52,7 +52,7 @@ def interpolate_visible_light(delta, light_dict=VISIBLE_LIGHT):
 def _prep_title(title, close=False):
     if isinstance(title, str):
         title = Tex(title)
-    title_ul = Underline(title)
+    title_ul = Underline(title, stroke_opacity=[0, 1, 0])
     title_ul_box = Rectangle(
         width=title.width * 1.05,
         height=title.height * 1.6
@@ -115,7 +115,7 @@ def play_title_reverse(self, title, edge=None):
     self.wait(1)
 
 
-def play_title2(self, title, cols=None, edge=None):
+def play_title2(self, title, cols=None, direction=None):
     if isinstance(title, str):
         title = Tex(*[t + " " for t in title.split()])
     if cols is not None and isinstance(cols, dict):
@@ -123,8 +123,8 @@ def play_title2(self, title, cols=None, edge=None):
             title[int(k)].set_color(v)
 
     title_ul = Line(
-        start=title.get_corner(DL) + 0.25*DL, end=title.get_corner(DR) + 0.25*DR
-    ).set_z_index(title.get_z_index()+2)
+        start=title.get_corner(DL) + 0.25*DL, end=title.get_corner(DR) + 0.25*DR, stroke_opacity=[0, 1, 0]
+    ).scale(1.5).set_z_index(title.get_z_index()+2)
     title_ul_box = Rectangle(
         width=title.width * 1.25,
         height=title.height * 3.0
@@ -133,10 +133,21 @@ def play_title2(self, title, cols=None, edge=None):
     ).set_style(fill_opacity=1, stroke_width=0, fill_color=BLACK).set_z_index(title.get_z_index()+1)
 
     title.shift(DOWN)
-    self.play(
-        # Create(title_ul)
-        FadeIn(title_ul, shift=6*RIGHT)
-    )
+    if direction is None:
+        _dot = Dot(radius=title_ul.height * 0.5).move_to(title_ul)
+        self.play(
+            LaggedStart(
+                GrowFromCenter(_dot),
+                GrowFromCenter(title_ul),
+                lag_ratio=1
+            )
+        )
+        self.remove(_dot)
+    else:
+        self.play(
+            # Create(title_ul)
+            FadeIn(title_ul, shift=6*direction)
+        )
     self.add(title, title_ul_box)
     self.wait(0.25)
     self.play(
@@ -149,10 +160,20 @@ def play_title2(self, title, cols=None, edge=None):
     )
     self.remove(title, title_ul_box)
     self.wait(0.25)
-    self.play(
-        # Uncreate(title_ul, reverse_rate_function=True)
-        FadeOut(title_ul, shift=6*RIGHT)
-    )
+    if direction is None:
+        _dot = Dot(radius=title_ul.height * 0.5).move_to(title_ul)
+        self.play(
+            LaggedStart(
+                ShrinkToCenter(title_ul),
+                ShrinkToCenter(_dot),
+                lag_ratio=1
+            )
+        )
+    else:
+        self.play(
+            # Uncreate(title_ul, reverse_rate_function=True)
+            FadeOut(title_ul, shift=6*direction)
+        )
     # if edge is not None:
     #     self.play(
     #         title.animate.to_edge(edge, buff=0.05).set_z_index(10).set_opacity(0.15),

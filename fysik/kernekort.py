@@ -13,7 +13,7 @@ slides = False
 # if slides:
 #     from manim_slides import Slide
 
-q = "l"
+q = "ul"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -27,6 +27,9 @@ _FRAMERATE = {
 
 
 class KerneKort(MovingCameraScene if not slides else Slide):
+    def scale_factor(self):
+        return 1/20
+
     def construct(self):
         nuklider = self.prepare_nuclides()
         kernekort = self.load_kerne_labels(nuklider=nuklider, N_range=(0, 160), Z_range=(0, 100))
@@ -101,7 +104,7 @@ class KerneKort(MovingCameraScene if not slides else Slide):
         #     print(k, v)
         return loc_dict
 
-    def _nuklid_label(self, label, N, Z, fill_color, fill_opacity=1.0, N_range=None, Z_range=None):
+    def _nuklid_label(self, label, N, Z, fill_color, fill_opacity=1.0, N_range=None, Z_range=None, width=1):
         # print(f"{label}-{N+Z} \t {N} \t {Z}")
         if N_range is None:
             N_range = [0, 160]
@@ -114,7 +117,7 @@ class KerneKort(MovingCameraScene if not slides else Slide):
             pass
         else:
             _label.add(
-                Square(side_length=1, fill_color=fill_color, fill_opacity=fill_opacity),
+                Square(side_length=1, fill_color=fill_color, fill_opacity=fill_opacity, stroke_width=width),
                 # MathTex(f"^{N+Z}_{Z}{label}")
                 VGroup(
                     VGroup(
@@ -123,7 +126,7 @@ class KerneKort(MovingCameraScene if not slides else Slide):
                         MathTex(str(Z)).set_stroke(width=0.5, color=BLACK)
                     ).scale(0.5).arrange(DOWN, aligned_edge=RIGHT, buff=0.1),
                     Tex(label).set_stroke(width=0.5, color=BLACK)
-                ).scale(0.9).arrange(RIGHT, buff=0.1)
+                ).scale(0.9).arrange(RIGHT, buff=0.1).scale(2*width)
             )
         return _label
 
@@ -131,12 +134,13 @@ class KerneKort(MovingCameraScene if not slides else Slide):
         Nmin, Nmax = 0, 150
         Zmin, Zmax = 0, 120
         Nstep, Zstep = (Nmax - Nmin)//20, (Zmax - Zmin)//12
+        scale_factor = self.scale_factor()
         # plane = NumberPlane(
         plane = Axes(
             x_range=(Nmin-1, Nmax, Nstep),
             y_range=(Zmin-1, Zmax, Zstep),
-            x_length=Nmax - Nmin,
-            y_length=Zmax - Zmin,
+            x_length=(Nmax - Nmin)*scale_factor,
+            y_length=(Zmax - Zmin)*scale_factor,
             tips=False,
             # background_line_style={
             #     "stroke_color": WHITE,
@@ -144,7 +148,7 @@ class KerneKort(MovingCameraScene if not slides else Slide):
             #     "stroke_opacity": 1,
             #     # "stroke_opacity": 0.1
             # },
-            axis_config={"include_numbers": True, "font_size": 288}
+            axis_config={"include_numbers": True, "font_size": 288*scale_factor}
         ).set_z_index(4)
         # srec = get_background_rect(plane, stroke_colour=WHITE, stroke_width=3, buff=0)
         srec = Rectangle(width=Nmax-Nmin, height=Zmax-Zmin, stroke_width=3, stroke_color=WHITE).next_to(
@@ -172,7 +176,7 @@ class KerneKort(MovingCameraScene if not slides else Slide):
             ).set_z_index(5))
         return axhlines, axvlines
 
-    def load_kerne_labels(self, nuklider, N_range=(0, 160), Z_range=(0, 100)):
+    def load_kerne_labels(self, nuklider, N_range=(0, 160), Z_range=(0, 100), overlap=20):
         scene_marker("Laver kort")
         plane_rect, plane = self.draw_axes()
         axhlines, axvlines = self.get_axlines(plane, N_range, Z_range, 10, 10)
@@ -198,15 +202,16 @@ class KerneKort(MovingCameraScene if not slides else Slide):
                 _prevZ = iZ
                 _prevN = iN
                 continue
-            _Z = [_prevZ, iZ]
-            _N = [_prevN, iN]
+            _Z = [_prevZ - overlap, iZ + overlap]
+            _N = [_prevN - overlap, iN + overlap]
             print(_Z, _N)
             for key, val in nuklider.items():
                 if not _N[0] <= val[0] <= _N[1] and not _Z[0] <= val[1] <= _Z[1]:
                     continue
                 else:
                     kernelabel = self._nuklid_label(
-                        label=key.split("-")[0], N=val[0], Z=val[1], fill_color=val[4], N_range=_N, Z_range=_Z
+                        label=key.split("-")[0], N=val[0], Z=val[1], fill_color=val[4], N_range=_N, Z_range=_Z,
+                        width=self.scale_factor()
                     ).move_to(plane.c2p(val[0], val[1], 0))
                     kernekort[iK].add(kernelabel)
             iK += 1
@@ -215,21 +220,16 @@ class KerneKort(MovingCameraScene if not slides else Slide):
 
         scene_marker("Add to scene")
         self.add(kernekort[0])
-        self.camera.frame.set(
-            # width=kernekort.width * 1.25, height=kernekort.height * 1.25
-            width=plane.width * 1.25, height=plane.height * 1.25
-        # ).move_to(kernekort)
-        ).move_to(plane)
+        # self.camera.frame.set(
+        #     # width=kernekort.width * 1.25, height=kernekort.height * 1.25
+        #     width=plane.width * 1.25, height=plane.height * 1.25
+        # # ).move_to(kernekort)
+        # ).move_to(plane)
         scene_marker("Vent")
-        self.slide_pause()
-        self.add(kernekort[1])
-        self.slide_pause()
-        self.add(kernekort[2])
-        self.slide_pause()
-        self.add(kernekort[3])
-        self.slide_pause()
-        self.add(kernekort[4])
-        self.slide_pause()
+        self.slide_pause(1/_FRAMERATE[q])
+        for kk in kernekort[1:]:
+            self.add(kk)
+            self.slide_pause(1/_FRAMERATE[q])
         return kernekort
 
 
