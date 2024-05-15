@@ -4,10 +4,23 @@ sys.path.append("../")
 from helpers import *
 import numpy as np
 import math
+import subprocess
 
 slides = True
 if slides:
     from manim_slides import Slide
+
+q = "l"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
 
 
 class Egenskaber(Slide if slides else Scene):
@@ -816,10 +829,7 @@ class Interferens(Slide if slides else Scene):
             self.slide_pause()
 
 
-
-
-
-class Doppler(Slide if slides else MovingCameraScene):
+class _Doppler(Slide if slides else MovingCameraScene):
     def construct(self):
         self.lydkilde()
         self.slide_pause(5)
@@ -896,3 +906,48 @@ class Doppler(Slide if slides else MovingCameraScene):
         )
         self.remove(swave)
 
+
+class Doppler(MovingCameraScene, Scene if not slides else Slide):
+    def construct(self):
+        self.slide_pause()
+        self.lydkilde()
+        self.slide_pause(5)
+
+    def slide_pause(self, t=1.0, slides_bool=slides):
+        return slides_pause(self, t, slides_bool)
+
+    def lydkilde(self):
+        ambulance = SVGMobject("../SVGs/ambulance.svg").shift(2*DOWN)
+        swaves = Circle(radius=4, stroke_color=WHITE).move_to(ambulance)
+        # swaves.add_updater(lambda m: m.move_to(ambulance))
+        self.play(
+            DrawBorderThenFill(ambulance),
+            run_time=2
+        )
+        self.slide_pause()
+
+        self.play(
+            Broadcast(swaves, focal_point=ambulance.get_center())
+        )
+        self.slide_pause()
+
+        self.play(
+            ambulance.animate.to_edge(RIGHT)
+        )
+        self.play(
+            ambulance.animate.to_edge(LEFT),
+            Broadcast(swaves, focal_point=ambulance.get_center()),
+            run_time=2,
+            rate_func=rate_functions.linear
+        )
+
+
+if __name__ == "__main__":
+    cls = Doppler
+    class_name = cls.__name__
+    # transparent = cls.btransparent
+    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+    # if transparent:
+    #     command += " --transparent --format=webm"
+    scene_marker(rf"RUNNNING:    {command}")
+    subprocess.run(command)
