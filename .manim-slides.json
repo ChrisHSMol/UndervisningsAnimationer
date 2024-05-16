@@ -1,0 +1,44 @@
+{
+  "QUIT": {
+    "ids": [
+      81
+    ],
+    "name": "QUIT"
+  },
+  "CONTINUE": {
+    "ids": [
+      16777236
+    ],
+    "name": "CONTINUE / NEXT"
+  },
+  "BACK": {
+    "ids": [
+      16777234
+    ],
+    "name": "BACK"
+  },
+  "REVERSE": {
+    "ids": [
+      86
+    ],
+    "name": "REVERSE"
+  },
+  "REWIND": {
+    "ids": [
+      82
+    ],
+    "name": "REWIND"
+  },
+  "PLAY_PAUSE": {
+    "ids": [
+      32
+    ],
+    "name": "PLAY / PAUSE"
+  },
+  "HIDE_MOUSE": {
+    "ids": [
+      72
+    ],
+    "name": "HIDE / SHOW MOUSE"
+  }
+}
