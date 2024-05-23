@@ -6,12 +6,11 @@ from custom_classes import BohrAtom
 from helpers import *
 import random
 import subprocess
+from manim_slides import Slide
 
 slides = True
-if slides:
-    from manim_slides import Slide
 
-q = "l"
+q = "h"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -493,7 +492,6 @@ class RedShift(MovingCameraScene, Scene if not slides else Slide):
         self.absorption()
         fade_out_all(self)
 
-
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t, slides_bool)
 
@@ -778,11 +776,14 @@ class RedShift(MovingCameraScene, Scene if not slides else Slide):
 
 
 if __name__ == "__main__":
-    cls = RedShift
+    cls = Spektra
     class_name = cls.__name__
     # transparent = cls.btransparent
     command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+    # command = rf"manim-slides render {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
     # if transparent:
     #     command += " --transparent --format=webm"
     scene_marker(rf"RUNNNING:    {command}")
     subprocess.run(command)
+    if slides:
+        command = rf"manim-slides convert {class_name} {class_name}.html"
