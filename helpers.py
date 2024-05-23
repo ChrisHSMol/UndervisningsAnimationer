@@ -310,8 +310,8 @@ def slides_pause(self, t=1.0, slides_bool=slides):
         # indicator = Arrow(start=LEFT, end=RIGHT, fill_opacity=0.15, fill_color=GREEN, buff=20).to_edge(DR, buff=0.1)
         self.play(FadeIn(indicator), run_time=0.25)
         xs_pause(self)
-        self.pause()
-        # self.next_slide()
+        # self.pause()
+        self.next_slide()
         self.play(FadeOut(indicator), run_time=0.25)
     else:
         self.wait(t)
