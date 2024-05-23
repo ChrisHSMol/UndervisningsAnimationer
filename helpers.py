@@ -17,7 +17,7 @@ import numpy as np
 #     "#ff9b00", "#ff7700", "#ff4b00", "#ff1b00", "#ff0000"  # 610nm - 650nm
 # ]
 VISIBLE_LIGHT = {
-    int(w): c for w, c in zip(
+    int(w): ManimColor(c) for w, c in zip(
         np.linspace(380, 750, 38), [
             "#610061", "#79008d",  # 380nm - 390nm
             "#8300b5", "#7e00db", "#6a00ff", "#3800ff", "#000bff", "#004cff", "#007fff",  # 400nm - 460nm
