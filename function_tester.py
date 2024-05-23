@@ -8,7 +8,7 @@ slides = False
 if slides:
     from manim_slides import Slide
 
-q = "l"
+q = "ul"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -280,6 +280,41 @@ class TestTitelSkrivning(Scene):
         self.wait()
 
 
+class TestVariabelZoomTykkelse(MovingCameraScene):
+    def construct(self):
+        lines = VGroup(*[
+            Line(start=2*LEFT, end=2*RIGHT, stroke_width=0.5).shift(1/x*DOWN) for x in [1, 2, 3, 4, 5, 6]
+        ])
+        brace = always_redraw(lambda: VGroup(*[
+                BraceBetweenPoints(
+                    lines[i].get_end(), lines[1+i].get_end(), stroke_width=0.01*self.camera.frame.get_height(),
+                    sharpness=1/(i+1), buff=0
+                ) for i in range(len(lines) - 1)
+            ])
+        )
+        brace_text = always_redraw(lambda: VGroup(*[
+                DecimalNumber(
+                    lines[i].get_end()[1] - lines[i+1].get_end()[1], num_decimal_places=4,
+                    font_size=min(4.2*self.camera.frame.get_height(), 32)
+                ).next_to(brace[i], RIGHT, buff=0.15) for i in range(len(lines) - 1)
+            ])
+        )
+        self.add(lines, brace, brace_text)
+        for b, t in zip(brace, brace_text):
+            self.play(
+                self.camera.frame.animate.set(height=1.5).move_to(VGroup(b, t)),
+                run_time=4
+            )
+        # self.play(
+        #     self.camera.frame.animate.set(height=2.5).move_to(brace[0]),
+        #     run_time=4
+        # )
+        # self.play(
+        #     self.camera.frame.animate.set(height=1.5).move_to(brace[0]),
+        #     run_time=4
+        # )
+
+
 
 
 
@@ -290,7 +325,7 @@ class TestTitelSkrivning(Scene):
 
 
 if __name__ == "__main__":
-    cls = TestTitelSkrivning
+    cls = TestVariabelZoomTykkelse
     class_name = cls.__name__
     # transparent = cls.btransparent
     command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
