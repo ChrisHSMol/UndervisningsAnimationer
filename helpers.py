@@ -299,7 +299,7 @@ def create_table(data, orientation="vertical", numcol1=BLUE, numcol2=None, dec=0
 slides = False
 
 
-def slides_pause(self, t=1.0, slides_bool=slides):
+def slides_pause(self, t=1.0, slides_bool=True):
     if t <= 0:
         pass
     if slides_bool:
