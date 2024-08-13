@@ -3,10 +3,11 @@ from helpers import *
 import numpy as np
 import subprocess
 from custom_classes import BohrAtom
+import sys
 
 slides = False
 if slides:
-    from manim_slides import Slide
+    import manim_slides
 
 q = "ul"
 _RESOLUTION = {

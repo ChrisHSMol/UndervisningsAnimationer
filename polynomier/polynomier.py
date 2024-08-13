@@ -169,123 +169,134 @@ class Polynomier(Slide if slides else MovingCameraScene):
                     TransformMatchingTex(
                         polynomier[i].copy(), poly, transform_mismatches=True
                     ),
+                    # *[
+                    #     p2p_anim_copy(
+                    #         polynomier[i], poly, polynomier[i][j].get_tex_string(), poly[j].get_tex_string()
+                    #     ) for j in range(len(polynomier[i]))
+                    # ],
                     run_time=2
                 )
                 self.slide_pause()
+                # for j in range(len(polynomier[i])):
+                #     t1, t2 = polynomier[i][j].get_tex_string(), poly[j].get_tex_string()
+                #     print(t1, t2)
+                #     self.play(
+                #         p2p_anim_copy(polynomier[i], poly, t1, t2)
+                #     )
         else:
             self.add(polynomier)
 
-        moving_rects = VGroup(*[
-            get_background_rect(
-                VGroup(polynomier[i], polynomier[-1][:3]),
-                buff=0.25,
-                stroke_colour=pmap[f"a_{i}"],
-                stroke_width=2,
-                fill_opacity=0
-            ) for i in range(len(polynomier))
-        ])
-        rect_labels = VGroup(*[
-            Tex(f"{i}. orden").set_color(pmap[f"a_{i}"]).next_to(moving_rects[i], LEFT) for i in range(len(moving_rects))
-        ])
-        if not play_latest:
-            for i, rect, lab in zip(range(len(moving_rects)), moving_rects, rect_labels):
-                if i == 0:
-                    self.play(
-                        Create(rect),
-                        Write(lab)
-                    )
-                else:
-                    self.remove(moving_rects[i-1], rect_labels[i-1])
-                    self.play(
-                        TransformFromCopy(moving_rects[i-1], rect),
-                        TransformFromCopy(rect_labels[i-1], lab),
-                        run_time=2
-                    )
-                self.slide_pause()
-            self.play(FadeOut(lab, rect, polynomier))
-            self.slide_pause()
-        else:
-            self.remove(polynomier)
-
-        ex_pol = VGroup(
-            VGroup(
-                MathTex(r"f(x) = 2 \cdot x - 4").set_color(YELLOW_B),
-                MathTex(r"f(x) = -4 \cdot x + 2").set_color(YELLOW_C),
-                MathTex(r"f(x) = x^2 + 2 \cdot x - 1").set_color(YELLOW_D)
-            ).arrange(DOWN, aligned_edge=LEFT, buff=1.5),
-            VGroup(
-                MathTex(r"f(x) = x^6 + 2 \cdot x^4 - x^3 + 2 \cdot x").set_color(BLUE_B),
-                MathTex(r"f(x) = x^3 - 5 \cdot x^4 + x - 1").set_color(BLUE_C),
-                MathTex(r"f(x) = x + 2\cdot x - 30 \cdot x^3 + x^{25}").set_color(BLUE_D)
-            ).arrange(DOWN, aligned_edge=LEFT, buff=1.5)
-        ).arrange(RIGHT, aligned_edge=DOWN, buff=1)
-
-        answers = VGroup(*[
-            Tex("Svar: ", f"{n}. orden").scale(0.65).set_color(
-                ex.get_color()
-            ).next_to(ex, DOWN, aligned_edge=LEFT) for n, ex in zip(
-                ["1", "1", "2", "6", "4", "25"],
-                list(ex_pol[0])+list(ex_pol[1])
-            )
-        ])
-        ans_rect = VGroup(*[
-            get_background_rect(
-                ans[-1], fill_opacity=1, buff=0.25
-            ).set_style(fill_color=ans.get_color()).set_z_index(ans.get_z_index() + 2) for ans in answers
-        ])
-        for ex, ans, ansr in zip(list(ex_pol[0])+list(ex_pol[1]), answers, ans_rect):
-            self.play(
-                Write(ex),
-                LaggedStart(
-                    DrawBorderThenFill(ansr),
-                    Write(ans),
-                    lag_ratio=1
-                ),
-                run_time=1
-            )
-        self.slide_pause()
-
-        [tekst[-1].set_opacity(0.01) for tekst in answers]
-        for iq, eq in enumerate(list(ex_pol[0])+list(ex_pol[1])):
-            self.play(
-                *[pol.animate.set_opacity(0.15) for pol in list(ex_pol[0])+list(ex_pol[1]) if not pol == eq],
-                *[tekst[0].animate.set_opacity(0.15) for tekst in answers if not tekst == answers[iq]],
-                # *[rect.animate.set_opacity(0.25) for rect in ans_rect if not rect == ans_rect[iq]],
-                *[rect.animate.set_opacity(0.15) for rect in ans_rect[iq+1:]],
-                run_time=2
-            )
-            self.slide_pause()
-
-            self.play(
-                ans_rect[iq].animate.set_opacity(0.05),
-                answers[iq].animate.set_opacity(1.0),
-                run_time=1
-            )
-            # print(self.highest_power_in_tex(eq))
-            # self.play(
-            #     Circumscribe(
-            #         eq[self.highest_power_in_tex(eq)]
-            #     ),
-            #     Circumscribe(
-            #         answers[iq][:2]
-            #     ),
-            #     run_time=2
-            # )
-
-            self.slide_pause()
-            self.play(
-                *[pol.animate.set_opacity(1) for pol in list(ex_pol[0]) + list(ex_pol[1]) if not pol == eq],
-                *[tekst[0].animate.set_opacity(1) for tekst in answers if not tekst == answers[iq]],
-                *[rect.animate.set_opacity(1) for rect in ans_rect[iq+1:]],
-                answers[iq].animate.set_opacity(0.15),
-                run_time=2
-            )
-
-        self.play(
-            *[m.animate.set_opacity(1) for m in self.mobjects if m not in ans_rect],
-            run_time=0.5
-        )
-        self.slide_pause()
+        # moving_rects = VGroup(*[
+        #     get_background_rect(
+        #         VGroup(polynomier[i], polynomier[-1][:3]),
+        #         buff=0.25,
+        #         stroke_colour=pmap[f"a_{i}"],
+        #         stroke_width=2,
+        #         fill_opacity=0
+        #     ) for i in range(len(polynomier))
+        # ])
+        # rect_labels = VGroup(*[
+        #     Tex(f"{i}. orden").set_color(pmap[f"a_{i}"]).next_to(moving_rects[i], LEFT) for i in range(len(moving_rects))
+        # ])
+        # if not play_latest:
+        #     for i, rect, lab in zip(range(len(moving_rects)), moving_rects, rect_labels):
+        #         if i == 0:
+        #             self.play(
+        #                 Create(rect),
+        #                 Write(lab)
+        #             )
+        #         else:
+        #             self.remove(moving_rects[i-1], rect_labels[i-1])
+        #             self.play(
+        #                 TransformFromCopy(moving_rects[i-1], rect),
+        #                 TransformFromCopy(rect_labels[i-1], lab),
+        #                 run_time=2
+        #             )
+        #         self.slide_pause()
+        #     self.play(FadeOut(lab, rect, polynomier))
+        #     self.slide_pause()
+        # else:
+        #     self.remove(polynomier)
+        #
+        # ex_pol = VGroup(
+        #     VGroup(
+        #         MathTex(r"f(x) = 2 \cdot x - 4").set_color(YELLOW_B),
+        #         MathTex(r"f(x) = -4 \cdot x + 2").set_color(YELLOW_C),
+        #         MathTex(r"f(x) = x^2 + 2 \cdot x - 1").set_color(YELLOW_D)
+        #     ).arrange(DOWN, aligned_edge=LEFT, buff=1.5),
+        #     VGroup(
+        #         MathTex(r"f(x) = x^6 + 2 \cdot x^4 - x^3 + 2 \cdot x").set_color(BLUE_B),
+        #         MathTex(r"f(x) = x^3 - 5 \cdot x^4 + x - 1").set_color(BLUE_C),
+        #         MathTex(r"f(x) = x + 2\cdot x - 30 \cdot x^3 + x^{25}").set_color(BLUE_D)
+        #     ).arrange(DOWN, aligned_edge=LEFT, buff=1.5)
+        # ).arrange(RIGHT, aligned_edge=DOWN, buff=1)
+        #
+        # answers = VGroup(*[
+        #     Tex("Svar: ", f"{n}. orden").scale(0.65).set_color(
+        #         ex.get_color()
+        #     ).next_to(ex, DOWN, aligned_edge=LEFT) for n, ex in zip(
+        #         ["1", "1", "2", "6", "4", "25"],
+        #         list(ex_pol[0])+list(ex_pol[1])
+        #     )
+        # ])
+        # ans_rect = VGroup(*[
+        #     get_background_rect(
+        #         ans[-1], fill_opacity=1, buff=0.25
+        #     ).set_style(fill_color=ans.get_color()).set_z_index(ans.get_z_index() + 2) for ans in answers
+        # ])
+        # for ex, ans, ansr in zip(list(ex_pol[0])+list(ex_pol[1]), answers, ans_rect):
+        #     self.play(
+        #         Write(ex),
+        #         LaggedStart(
+        #             DrawBorderThenFill(ansr),
+        #             Write(ans),
+        #             lag_ratio=1
+        #         ),
+        #         run_time=1
+        #     )
+        # self.slide_pause()
+        #
+        # [tekst[-1].set_opacity(0.01) for tekst in answers]
+        # for iq, eq in enumerate(list(ex_pol[0])+list(ex_pol[1])):
+        #     self.play(
+        #         *[pol.animate.set_opacity(0.15) for pol in list(ex_pol[0])+list(ex_pol[1]) if not pol == eq],
+        #         *[tekst[0].animate.set_opacity(0.15) for tekst in answers if not tekst == answers[iq]],
+        #         # *[rect.animate.set_opacity(0.25) for rect in ans_rect if not rect == ans_rect[iq]],
+        #         *[rect.animate.set_opacity(0.15) for rect in ans_rect[iq+1:]],
+        #         run_time=2
+        #     )
+        #     self.slide_pause()
+        #
+        #     self.play(
+        #         ans_rect[iq].animate.set_opacity(0.05),
+        #         answers[iq].animate.set_opacity(1.0),
+        #         run_time=1
+        #     )
+        #     # print(self.highest_power_in_tex(eq))
+        #     # self.play(
+        #     #     Circumscribe(
+        #     #         eq[self.highest_power_in_tex(eq)]
+        #     #     ),
+        #     #     Circumscribe(
+        #     #         answers[iq][:2]
+        #     #     ),
+        #     #     run_time=2
+        #     # )
+        #
+        #     self.slide_pause()
+        #     self.play(
+        #         *[pol.animate.set_opacity(1) for pol in list(ex_pol[0]) + list(ex_pol[1]) if not pol == eq],
+        #         *[tekst[0].animate.set_opacity(1) for tekst in answers if not tekst == answers[iq]],
+        #         *[rect.animate.set_opacity(1) for rect in ans_rect[iq+1:]],
+        #         answers[iq].animate.set_opacity(0.15),
+        #         run_time=2
+        #     )
+        #
+        # self.play(
+        #     *[m.animate.set_opacity(1) for m in self.mobjects if m not in ans_rect],
+        #     run_time=0.5
+        # )
+        # self.slide_pause()
 
     def andengrad(self):
         a = ValueTracker(0)
