@@ -1552,14 +1552,30 @@ class ResidualerOgResidualPlotThumbnail(ResidualerOgResidualPlot):
                 start=plane_res.c2p(point[0], 0),
                 end=plane_res.c2p(point[0], point[1] - graph.underlying_function(point[0])),
                 color=dev_cols[0] if point[1] > graph.underlying_function(point[0]) else dev_cols[1],
-                stroke_width=2.5
-            ) for point in data_points
+                stroke_width=2.5,
+            ).set_z_index(7) for point in data_points
         ])
+        # shine_lines = VGroup(*[
+        #     VGroup(*[
+        #         line.copy().set(
+        #             stroke_width=2.5+5*i,
+        #             stroke_opacity=1-i**0.5
+        #         ).set_z_index(7-10*i) for i in [0.1, 0.2, 0.3, 0.4, 0.5]
+        #     ]) for line in reslines
+        # ])
+        shine_lines = VGroup()
+        for line in reslines:
+            # for i in [1, 2, 3, 4, 5]:
+            for i in np.linspace(1, 5, 20):
+                shine_lines.add(
+                    line.copy().set(stroke_width=2.5 + 4*i).set_opacity(2*np.exp(-i)).set_z_index(7-i)
+                )
+        print(*shine_lines)
         points = VGroup(*[
             Dot(
                 plane_res.c2p(point[0], point[1] - graph.underlying_function(point[0])),
                 color=point_col
-            ) for point in data_points
+            ).set_z_index(10).scale(1.5) for point in data_points
         ])
 
         titel = Tex("Residualer", " og ", "residual", "plot", font_size=72).to_edge(UL)
@@ -1567,7 +1583,7 @@ class ResidualerOgResidualPlotThumbnail(ResidualerOgResidualPlot):
         titel[2].set_color(YELLOW)
         titel[3].set_color(BLUE)
 
-        self.add(plane_res, reslines, points, titel)
+        self.add(plane_res, reslines, points, titel, shine_lines)
 
 
 if __name__ == "__main__":
