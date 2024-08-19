@@ -4,10 +4,11 @@ import numpy as np
 import subprocess
 import sys
 from custom_classes import BohrAtom
+import sys
 
 slides = False
 if slides:
-    from manim_slides import Slide
+    import manim_slides
 
 q = "l"
 _RESOLUTION = {
@@ -374,7 +375,11 @@ class CollisionTester(Scene):
 
 
 if __name__ == "__main__":
+<<<<<<< HEAD
     cls = CollisionTester
+=======
+    cls = TestTitelSkrivning
+>>>>>>> 048053bf87978cd2a98125146b63547c069b8508
     class_name = cls.__name__
     # transparent = cls.btransparent
     command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
