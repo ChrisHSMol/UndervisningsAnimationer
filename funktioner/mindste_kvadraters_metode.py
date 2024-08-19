@@ -663,15 +663,19 @@ class _LeastSquares(MovingCameraScene, Slide if slides else Scene):
 
 
 class LeastSquares(MovingCameraScene, Slide if slides else Scene):
+    btransparent = False
+
     def construct(self):
+        self.slide_pause()
         title = "Mindste kvadraters metode"
-        play_title(self, title)
+        # play_title(self, title)
+        play_title2(self, title)
 
         plane, points = self.plot_points_on_plane(animation=True)
         self.try_simple_deviation(plane, points)
 
         fade_out_all(self)
-        play_title_reverse(self, title)
+        # play_title_reverse(self, title)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t=t, slides_bool=slides_bool)
@@ -781,13 +785,17 @@ class LeastSquares(MovingCameraScene, Slide if slides else Scene):
         ]))
         self.add(_points)
         self.play(
-            LaggedStart(
-                DrawBorderThenFill(graph),
-                Write(graph_text),
-                lag_ratio=0.1
-            ),
-            run_time=2
+            # LaggedStart(
+            #     DrawBorderThenFill(graph),
+            #     Write(graph_text),
+            #     lag_ratio=0.1
+            # ),
+            # run_time=2
+            Create(graph),
+            Write(graph_text)
         )
+        # self.remove(graph, graph_text)
+        # self.add(graph, graph_text)
         # self.play(
         #     DrawBorderThenFill(knapper),
         #     run_time=1
@@ -1042,6 +1050,8 @@ class LeastSquares(MovingCameraScene, Slide if slides else Scene):
                 Square(
                     side_length=np.abs(point.get_y() - gpoint.get_y()),
                     color=dev_cols[0],
+                    fill_color=dev_cols[0],
+                    fill_opacity=0.25,
                     stroke_width=2.5
                 ).next_to(
                     ftp(point.get_center(), gpoint.get_center()),
@@ -1242,7 +1252,7 @@ class LeastSquaresThumbnail(LeastSquares):
         VGroup(plane, points).to_edge(DR)
         point_col, graph_col, dev_cols, acol, bcol = self.distribute_colors()
         graph = plane.plot(
-            lambda x: 8*x+30
+            lambda x: 5*x+50
         )
         _points = VGroup(*[
             Dot(
@@ -1257,6 +1267,8 @@ class LeastSquaresThumbnail(LeastSquares):
             Square(
                 side_length=np.abs(point.get_y() - gpoint.get_y()),
                 color=dev_cols[0],
+                fill_color=dev_cols[0],
+                fill_opacity=0.25,
                 stroke_width=2.5
             ).next_to(
                 ftp(point.get_center(), gpoint.get_center()),
@@ -1364,7 +1376,7 @@ class ResidualerOgResidualPlot(LeastSquares, Slide if slides else Scene):
         #     run_time=1.5
         # )
         self.add(dotlines)
-        self.slide_pause()
+        # self.slide_pause()
 
         residual_label = always_redraw(lambda:
             LabeledArrow(
@@ -1404,7 +1416,7 @@ class ResidualerOgResidualPlot(LeastSquares, Slide if slides else Scene):
         print(mobs)
         point_col, graph_col, dev_cols, acol, bcol = self.distribute_colors()
         plane, points, _points, dotlines, a, b, graph, graph_text, residual_label = mobs
-        self.slide_pause()
+        # self.slide_pause()
 
         self.camera.frame.save_state()
         self.play(
@@ -1412,7 +1424,7 @@ class ResidualerOgResidualPlot(LeastSquares, Slide if slides else Scene):
                 height=13
             ).shift(2.75*UP)
         )
-        self.slide_pause()
+        # self.slide_pause()
 
         xmin, xmax, xstep = -1, 11.5, 1
         ymin, ymax, ystep = -20, 20, 4
@@ -1465,7 +1477,6 @@ class ResidualerOgResidualPlot(LeastSquares, Slide if slides else Scene):
             run_time=2
         )
         self.add(reslines, respoints)
-        self.slide_pause()
 
         residual_label_2 = always_redraw(lambda:
             # LabeledArrow(
@@ -1485,6 +1496,7 @@ class ResidualerOgResidualPlot(LeastSquares, Slide if slides else Scene):
         self.play(
             DrawBorderThenFill(residual_label_2)
         )
+        self.slide_pause()
 
         for i in [20, 0, 10]:
             self.play(
@@ -1559,7 +1571,7 @@ class ResidualerOgResidualPlotThumbnail(ResidualerOgResidualPlot):
 
 
 if __name__ == "__main__":
-    cls = ResidualerOgResidualPlot
+    cls = LeastSquares
     class_name = cls.__name__
     transparent = cls.btransparent
     command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
