@@ -326,7 +326,7 @@ class TestVariabelZoomTykkelse(MovingCameraScene):
 
 
 if __name__ == "__main__":
-    cls = TestVariabelZoomTykkelse
+    cls = TestTitelSkrivning
     class_name = cls.__name__
     # transparent = cls.btransparent
     command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"

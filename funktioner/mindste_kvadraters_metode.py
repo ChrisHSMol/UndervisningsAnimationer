@@ -2,6 +2,25 @@ from manim import *
 import sys
 sys.path.append("../")
 from helpers import *
+import subprocess
+import random
+
+slides = True
+if slides:
+    from manim_slides import Slide
+
+
+q = "h"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
 
 
 def _prep_title(title, close=False):
@@ -99,12 +118,7 @@ def ftp(point1, point2, dim="y"): # Find Top Point
     return point1 if point1[dim]>point2[dim] else point2
 
 
-slides = True
-if slides:
-    from manim_slides import Slide
-
-
-class _LeastSquares(MovingCameraScene, Slide if slides else None):
+class _LeastSquares(MovingCameraScene, Slide if slides else Scene):
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t=t, slides_bool=slides_bool)
 
@@ -648,7 +662,7 @@ class _LeastSquares(MovingCameraScene, Slide if slides else None):
         play_title_reverse(self, title=title)
 
 
-class LeastSquares(MovingCameraScene, Slide if slides else None):
+class LeastSquares(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
         title = "Mindste kvadraters metode"
         play_title(self, title)
@@ -1220,4 +1234,345 @@ class LeastSquares(MovingCameraScene, Slide if slides else None):
 
         fade_out_all(self)
         play_title_reverse(self, title=title)
+
+
+class LeastSquaresThumbnail(LeastSquares):
+    def construct(self):
+        plane, points = self.plot_points_on_plane(animation=False)
+        VGroup(plane, points).to_edge(DR)
+        point_col, graph_col, dev_cols, acol, bcol = self.distribute_colors()
+        graph = plane.plot(
+            lambda x: 8*x+30
+        )
+        _points = VGroup(*[
+            Dot(
+                plane.c2p(
+                    plane.p2c(point.get_center())[0],
+                    graph.underlying_function(plane.p2c(point.get_center())[0]),
+                    0
+                )
+            ).scale(0.01) for point in points
+        ])
+        dotsquares = VGroup(*[
+            Square(
+                side_length=np.abs(point.get_y() - gpoint.get_y()),
+                color=dev_cols[0],
+                stroke_width=2.5
+            ).next_to(
+                ftp(point.get_center(), gpoint.get_center()),
+                DL,
+                buff=0
+            ) for point, gpoint in zip(points, _points)
+        ])
+
+        titel = Tex("Mindste ", "kvadraters", " metode", font_size=72).to_edge(UL)
+        titel[1].set_color(GREEN)
+
+        self.add(plane, dotsquares, points, titel, graph)
+
+
+# class ResidualerOgResidualPlot(Slide if slides else Scene):
+class ResidualerOgResidualPlot(LeastSquares, Slide if slides else Scene):
+    btransparent = False
+
+    def construct(self):
+        self.slide_pause()
+        title = Tex("Residualer og residualplot")
+        play_title2(self, title)
+        plane, points = self.plot_points_on_plane(animation=False)
+        mobs = self.residualer(plane, points, banimation=True)
+        self.residualplot(mobs)
+        self.play(
+            *[FadeOut(m, run_time=0.5) for m in self.mobjects]
+        )
+
+    def residualer(self, plane, points, banimation=True):
+        # self.play(
+        #     LaggedStart(
+        #         Create(plane),
+        #         LaggedStart(
+        #             *[DrawBorderThenFill(point) for point in points],
+        #             lag_ratio=0.1
+        #         ),
+        #         lag_ratio=0.5
+        #     ),
+        #     run_time=1
+        # )
+        # self.slide_pause()
+        srec = ScreenRectangle(fill_color=BLACK, fill_opacity=1).scale(3).set_z_index(10)
+        self.add(srec)
+        self.add(plane, points)
+
+        point_col, graph_col, dev_cols, acol, bcol = self.distribute_colors()
+        a = ValueTracker(12.0)
+        b = ValueTracker(10.0)
+        graph = always_redraw(lambda:
+            plane.plot(
+                lambda x: a.get_value() * x + b.get_value(),
+                x_range=[-1, 11.5], color=graph_col, stroke_width=2.5
+            )
+        )
+        graph_text = always_redraw(lambda:
+            VGroup(
+                MathTex("y = "), DecimalNumber(a.get_value(), num_decimal_places=2, color=acol),
+                MathTex(r"\cdot x + "), DecimalNumber(b.get_value(), num_decimal_places=2, color=bcol),
+            ).arrange(RIGHT).next_to(plane, UP, aligned_edge=LEFT)
+        )
+        _points = always_redraw(lambda: VGroup(*[
+            Dot(
+                plane.c2p(
+                    plane.p2c(point.get_center())[0],
+                    graph.underlying_function(plane.p2c(point.get_center())[0]),
+                    0
+                ),
+                color=None
+            ).scale(0.01) for point in points
+        ]))
+        self.add(_points)
+        # self.play(
+        #     LaggedStart(
+        #         DrawBorderThenFill(graph),
+        #         Write(graph_text),
+        #         lag_ratio=0.1
+        #     ),
+        #     run_time=2
+        # )
+        # self.remove(graph, graph_text)
+        self.add(graph, graph_text)
+        # self.slide_pause()
+
+        dotlines = always_redraw(
+            lambda: VGroup(
+                *[
+                    Line(
+                        start=point.get_center(),
+                        end=gpoint.get_center(),
+                        color=dev_cols[0] if gpoint.get_y() - point.get_y() < 0 else dev_cols[1],
+                        stroke_width=2.5
+                    ) for point, gpoint in zip(points, _points)
+                ]
+            )
+        )
+        # self.play(
+        #     LaggedStart(
+        #         *[
+        #             DrawBorderThenFill(line) for line in dotlines
+        #         ],
+        #         lag_ratio=0.5,
+        #         rate_func=rate_functions.smooth
+        #     ),
+        #     run_time=1.5
+        # )
+        self.add(dotlines)
+        self.slide_pause()
+
+        residual_label = always_redraw(lambda:
+            LabeledArrow(
+                r"\text{Residual}",
+                start=points[-1].get_center() + 3*RIGHT,
+                end=dotlines[-1].get_center(),
+                color=dotlines[-1].get_color(),
+                # label_color=dotlines[-1].get_color(),
+                label_position=0,
+                font_size=30
+            )
+        )
+        self.play(
+            FadeOut(srec),
+            run_time=1
+        )
+        if banimation:
+            self.play(
+                DrawBorderThenFill(residual_label),
+                run_time=0.5
+            )
+            self.slide_pause()
+
+            for i in [50, -30, 10]:
+                self.play(
+                    b.animate.set_value(i),
+                    run_time=2
+                )
+            self.slide_pause()
+        else:
+            self.add(residual_label)
+        # return self.mobjects
+        mobs = [plane, points, _points, dotlines, a, b, graph, graph_text, residual_label]
+        return mobs
+
+    def residualplot(self, mobs):
+        print(mobs)
+        point_col, graph_col, dev_cols, acol, bcol = self.distribute_colors()
+        plane, points, _points, dotlines, a, b, graph, graph_text, residual_label = mobs
+        self.slide_pause()
+
+        self.camera.frame.save_state()
+        self.play(
+            self.camera.frame.animate.set(
+                height=13
+            ).shift(2.75*UP)
+        )
+        self.slide_pause()
+
+        xmin, xmax, xstep = -1, 11.5, 1
+        ymin, ymax, ystep = -20, 20, 4
+        width = 10
+        plane_res = NumberPlane(
+            x_range=[xmin, xmax, xstep],
+            y_range=[ymin, ymax, ystep],
+            x_length=width,
+            y_length=width / 16 * 9,
+            background_line_style={
+                "stroke_color": TEAL,
+                "stroke_width": 1,
+                "stroke_opacity": 0.3
+            },
+            axis_config={"include_numbers": True}
+        ).next_to(plane, UP, buff=1.25)
+        self.play(
+            DrawBorderThenFill(plane_res)
+        )
+        # self.add(plane_res)
+        self.slide_pause()
+
+        reslines = always_redraw(
+            lambda: VGroup(*[
+                Line(
+                    start=plane_res.c2p(plane.p2c(point.get_center())[0], 0),
+                    end=plane_res.c2p(
+                        plane.p2c(gpoint.get_center())[0],
+                        plane.p2c(point.get_center())[1] - plane.p2c(gpoint.get_center())[1]
+                    ),
+                    color=dev_cols[0] if gpoint.get_y() - point.get_y() < 0 else dev_cols[1],
+                    stroke_width=2.5
+                ) for point, gpoint in zip(points, _points)
+            ])
+        )
+        respoints = always_redraw(
+            lambda: VGroup(*[
+                point.copy().move_to(line.get_end()) for point, line in zip(points, reslines)
+            ])
+        )
+        self.play(
+            LaggedStart(
+                *[ReplacementTransform(dline.copy(), rline) for dline, rline in zip(dotlines, reslines)],
+                lag_ratio=0.1
+            ),
+            LaggedStart(
+                *[ReplacementTransform(point.copy(), rpoint) for point, rpoint in zip(points, respoints)],
+                lag_ratio=0.1
+            ),
+            run_time=2
+        )
+        self.add(reslines, respoints)
+        self.slide_pause()
+
+        residual_label_2 = always_redraw(lambda:
+            # LabeledArrow(
+            #     "",
+            #     start=residual_label.get_start(),
+            #     end=reslines[-1].get_center(),
+            #     color=reslines[-1].get_color(),
+            #     label_position=0.25,
+            #     font_size=30
+            # )
+            Arrow(
+                start=residual_label.get_start(),
+                end=reslines[-1].get_center(),
+                color=reslines[-1].get_color()
+            )
+        )
+        self.play(
+            DrawBorderThenFill(residual_label_2)
+        )
+
+        for i in [20, 0, 10]:
+            self.play(
+                b.animate.set_value(i),
+                run_time=2
+            )
+        self.slide_pause()
+        for i in [13, 10, 12]:
+            self.play(
+                a.animate.set_value(i),
+                run_time=2
+            )
+        self.slide_pause()
+
+        # self.play(
+        #     self.camera.frame.animate.set(height=1.25*plane_res.height).move_to(plane_res),
+        #     *[FadeOut(m, run_time=0.25) for m in self.mobjects if m not in [plane_res, respoints]],
+        #     run_time=2
+        # )
+        # self.slide_pause()
+
+
+class ResidualerOgResidualPlotThumbnail(ResidualerOgResidualPlot):
+    def construct(self):
+        point_col, graph_col, dev_cols, acol, bcol = self.distribute_colors()
+        data_points = []
+        for x, y in zip(
+                [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                [10, 22, 30, 48, 62, 68, 76, 95, 104, 120, 125]
+        ):
+            data_points.append((x, y, 0))
+        data_points = np.array(data_points)
+        xmin, xmax, xstep = -1, 11.5, 1
+        ymin, ymax, ystep = -10, 10, 2
+        width = 10
+        plane_res = NumberPlane(
+            x_range=[xmin, xmax, xstep],
+            y_range=[ymin, ymax, ystep],
+            x_length=width,
+            y_length=width / 16 * 9,
+            background_line_style={
+                "stroke_color": TEAL,
+                "stroke_width": 1,
+                "stroke_opacity": 0.3
+            },
+            axis_config={"include_numbers": True}
+        ).to_edge(DR)
+        graph = plane_res.plot(
+            lambda x: 12*x+10
+        )
+        reslines = VGroup(*[
+            Line(
+                start=plane_res.c2p(point[0], 0),
+                end=plane_res.c2p(point[0], point[1] - graph.underlying_function(point[0])),
+                color=dev_cols[0] if point[1] > graph.underlying_function(point[0]) else dev_cols[1],
+                stroke_width=2.5
+            ) for point in data_points
+        ])
+        points = VGroup(*[
+            Dot(
+                plane_res.c2p(point[0], point[1] - graph.underlying_function(point[0])),
+                color=point_col
+            ) for point in data_points
+        ])
+
+        titel = Tex("Residualer", " og ", "residual", "plot", font_size=72).to_edge(UL)
+        titel[0].set_color(YELLOW)
+        titel[2].set_color(YELLOW)
+        titel[3].set_color(BLUE)
+
+        self.add(plane_res, reslines, points, titel)
+
+
+if __name__ == "__main__":
+    cls = ResidualerOgResidualPlot
+    class_name = cls.__name__
+    transparent = cls.btransparent
+    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+    # if transparent:
+    #     command += " --transparent --format=webm"
+    scene_marker(rf"RUNNNING:    {command}")
+    subprocess.run(command)
+    if slides and q == "h":
+        command = rf"manim-slides convert {class_name} {class_name}.html"
+        scene_marker(rf"RUNNNING:    {command}")
+        subprocess.run(command)
+        if class_name+"Thumbnail" in dir():
+            command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+            scene_marker(rf"RUNNNING:    {command}")
+            subprocess.run(command)
 
