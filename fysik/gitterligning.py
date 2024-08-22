@@ -2,12 +2,24 @@ from manim import *
 import sys
 sys.path.append("../")
 from helpers import *
+import subprocess
 import numpy as np
 
 slides = True
 if slides:
     from manim_slides import Slide
 
+q = "l"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
 
 class GitterLigning(MovingCameraScene if not slides else MovingCameraScene, Slide):
     def construct(self):
@@ -511,7 +523,7 @@ class SpalteInterferens(MovingCameraScene, Slide if slides else None):
         laser_gun.set_color(invert_color(laser_gun.get_color()))
         laser_name = Tex("Laser").set_color(color_gradient([BLUE, GREEN, RED], 3)).next_to(laser_gun, UP)
 
-        linjer = ValueTracker(5)
+        linjer = ValueTracker(10)
         dist_lg = ValueTracker(2)
         dist_gw = ValueTracker(5)
 
@@ -521,9 +533,9 @@ class SpalteInterferens(MovingCameraScene, Slide if slides else None):
         gitter_huller = always_redraw(lambda: VGroup(*[
             Rectangle(
                 # height=0.25*gitter_top.width, width=gitter_top.width, color=YELLOW
-                height=0.025, width=0.05, color=BLACK, stroke_width=0.01, fill_opacity=1
+                height=0.05, width=0.05, color=BLACK, stroke_width=0.01, fill_opacity=1
             ).set_z_index(2) for _ in range(int(linjer.get_value()))
-        ]).arrange(DOWN, buff=0.1/int(linjer.get_value())).move_to(gitter_top.get_center()))
+        ]).arrange(DOWN, buff=0.2/int(linjer.get_value())).move_to(gitter_top.get_center()))
         # ]).arrange(DOWN, buff=1/int(linjer.get_value())).move_to(gitter_top.get_center()))
 
         # wall = Line(5*DOWN, 5*UP).shift(dist_gw.get_value() * RIGHT)
@@ -602,12 +614,149 @@ class SpalteInterferens(MovingCameraScene, Slide if slides else None):
                 ]) for gitterlinje in gitter_huller
             ])
         )
-        self.add(laser_waves)
+        # constr_points = always_redraw(lambda:
+        #     VGroup(*[
+        #         VGroup([
+        #             Dot(
+        #                 line_intersection(laser_waves[0][i], laser_waves[0][j])
+        #             ) for j in range(i)
+        #         ] for i in range(len(laser_waves)))
+        #     ])
+        # )
+        constr_points = VGroup()
+        for i in range(len(laser_waves)):
+            for j in range(i):
+                print(laser_waves[0][i], laser_waves[0][j])
+                constr_points.add(always_redraw(lambda:
+                    Dot(line_intersection(laser_waves[0][i], laser_waves[0][j]))
+                ))
+        self.add(laser_waves, constr_points)
+        tracker_goal = 5
         self.play(
-            time_tracker.animate.set_value(0.75),
+            time_tracker.animate.set_value(tracker_goal),
             rate_func=rate_functions.linear,
-            run_time=0.75
+            run_time=tracker_goal
         )
+
+
+class ToSpalteInterferens(MovingCameraScene, Slide if slides else Scene):
+    def construct(self):
+        self.interferens()
+        self.wait(5)
+
+    def slide_pause(self, t=1.0, slides_bool=slides):
+        return slides_pause(self, t=t, slides_bool=slides_bool)
+
+    def interferens(self):
+        wl = 530
+        top, bottom = -2, 2
+        mid = 0.5*(top + bottom)
+        left, right = -7, 7
+
+        time_tracker = ValueTracker(0)
+        tracker_goal = 20
+        col = VISIBLE_LIGHT[wl]
+
+        laser_waves = always_redraw(lambda:
+            VGroup(*[
+                VGroup(*[
+                    # Arc(
+                    #     radius=max(time_tracker.get_value() - i, 0),
+                    #     start_angle=-PI/2,
+                    #     angle=PI,
+                    #     # arc_center=gitter_top.get_center(),
+                    #     arc_center=gitterlinje.get_center(),
+                    #     color=col,
+                    #     stroke_opacity=0.5,
+                    #     # sheen_factor=0.5,
+                    #     # sheen_direction=RIGHT
+                    # ) for i in range(10)
+                    Circle(
+                        radius=max(time_tracker.get_value() - i, 0)
+                    ).move_to(gitterlinje.get_center()) for i in range(10)
+                ]) for gitterlinje in VGroup(*[Dot([left, y, 0]) for y in np.linspace(bottom, top, 2)])
+            ])
+        )
+
+        # constr_points = always_redraw(lambda:
+        #     VGroup(*[
+        #         VGroup(*[
+        #             Dot(
+        #                 color=col,
+        #                 stroke_opacity=1 if w1,
+        #             ) for i in range(10)
+        #         ]) for gitterlinje in VGroup(*[Dot([-8, y, 0]) for y in np.linspace(-3, 3, 2)])
+        #     ])
+        # )
+        # lineal = NumberPlane()
+        # timer = always_redraw(lambda:
+        #     DecimalNumber(time_tracker.get_value(), num_decimal_places=3).to_edge(UR)
+        # )
+
+        def quartic(x):
+            f = 0.0
+            # for i, par in enumerate([-0.000541777383, 0.0230171663281, -0.3584548571557,
+            #                          3.4670920208452, -7.9162170066376]):
+            #     pot = 4-i
+            #     f += par * x**pot
+            for pot, par in enumerate([
+                -11.9330722359, 10.8359953382, -3.3709974627, 0.5884736635, -0.0550180092, 0.0026217709, -0.0000499956  # For top, bot, lef, rig = 2, -2, -7, 7
+                # -17.9836337271, 11.6538307777, -2.9273529633, 0.4243597197, -0.0337686958, 0.0013939482, -0.0000233229  # For top, bot, lef, rig = 3, -3, -8, 8
+            ]):
+                f += par * x**pot
+            return f
+
+        constr_points_0 = always_redraw(lambda:
+            VGroup(*[
+                Dot(
+                    # [left + 10*max(time_tracker.get_value() - i - top, 0)**0.5, mid, 0],
+                    [left + quartic(time_tracker.get_value() - i), mid, 0],
+                    color=WHITE,
+                    fill_opacity=1 if time_tracker.get_value() - i < right-left else 0
+                ) for i in range(len(laser_waves[0]))
+            ])
+        )
+        # constr_points_1 = always_redraw(lambda:
+        #     VGroup(*[
+        #         Dot(
+        #             # [left + 10*max(time_tracker.get_value() - i - top, 0)**0.5, mid, 0],
+        #             [left + quartic(time_tracker.get_value() - i) + 1, mid, 0],
+        #             color=WHITE,
+        #             fill_opacity=1 if time_tracker.get_value() - i < right-left else 0
+        #         ),
+        #         Dot(
+        #             [
+        #                 (left + quartic(time_tracker.get_value() - i) + 1) *
+        #                 , mid, 0],
+        #             color=WHITE,
+        #             fill_opacity=1 if time_tracker.get_value() - i < right-left else 0
+        #         ) for i in range(len(laser_waves[0]))
+        #     ])
+        # )
+        diff_lines = VGroup(*[
+            # wall.get_left() + dist_gw.get_value() * np.tan(
+            #     np.arcsin(
+            #         n * wavelength * 10 ** (-9) * linjer.get_value() * 10 ** 3
+            #     )
+            # ) * UP
+            Line(
+                # start=between_mobjects(laser_waves[0][0], laser_waves[1][0]),
+                # end=right*RIGHT + (right-left) * np.tan()
+            # ).rotate(np.arcsin(n * wl / (top - bottom)) * DEGREES).move_to(
+            ).rotate(np.arcsin(n * wl * 10**(-9) / ((top-bottom) * 0.001) * DEGREES)).move_to(
+                between_mobjects(laser_waves[0][0], laser_waves[1][0])
+                # ORIGIN
+            ).scale(100).set(stroke_width=1) for n in [0, 1, -1, 2, -2]
+        ])
+
+        plane, timer = NumberPlane(), always_redraw(lambda: DecimalNumber(time_tracker.get_value(), num_decimal_places=3))
+        self.add(laser_waves, constr_points_0, diff_lines)#, plane, timer)
+        self.play(
+            time_tracker.animate.set_value(tracker_goal),
+            rate_func=rate_functions.linear,
+            run_time=tracker_goal
+        )
+
 
 
 class GitterLigningThumbnail(Scene):
@@ -643,3 +792,15 @@ class GitterLigningThumbnail(Scene):
         ligning.shift(DOWN)
         forklaring.shift(DOWN)
         self.add(ligning, forklaring, title)
+
+
+if __name__ == "__main__":
+    cls = ToSpalteInterferens
+    class_name = cls.__name__
+    # transparent = cls.btransparent
+    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+    # if transparent:
+    #     command += " --transparent --format=webm"
+    scene_marker(rf"RUNNNING:    {command}")
+    subprocess.run(command)
+

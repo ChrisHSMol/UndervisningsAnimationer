@@ -2,6 +2,7 @@ from manim import *
 from helpers import *
 import numpy as np
 import subprocess
+import sys
 from custom_classes import BohrAtom
 import sys
 
@@ -9,7 +10,7 @@ slides = False
 if slides:
     import manim_slides
 
-q = "ul"
+q = "l"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -316,6 +317,54 @@ class TestVariabelZoomTykkelse(MovingCameraScene):
         # )
 
 
+class CollisionTester(Scene):
+    def _borders(self):
+        xMin, xMax, yMin, yMax = -5, 5, -3, 3
+        return xMin, xMax, yMin, yMax
+
+    def construct(self):
+        xMin, xMax, yMin, yMax = self._borders()
+        rPuck = 0.1
+        initial_velocity = [1, np.sqrt(2)]
+
+        _borders = VGroup(
+            Line(start=(xMin, yMin, 0), end=(xMax, yMin, 0)),
+            Line(start=(xMin, yMax, 0), end=(xMax, yMax, 0)),
+            Line(start=(xMin, yMin, 0), end=(xMin, yMax, 0)),
+            Line(start=(xMax, yMin, 0), end=(xMax, yMax, 0))
+        )
+        puck = Circle(radius=rPuck)
+        path = TracedPath(puck.get_center, dissipating_time=20)
+        puck.add_updater(self.update_puck_location)
+
+        self.add(_borders, puck, path)
+        self.wait(60)
+
+    def update_puck_location(self, m, dt):
+        xMin, xMax, yMin, yMax = self._borders()
+        dir = np.zeros(3)
+        if m.get_center()[0] <= xMin + m.radius:
+            dir += dt * RIGHT
+            # m.shift(dt * RIGHT)
+        elif m.get_center()[0] >= xMax - m.radius:
+        # else:
+            dir += dt * LEFT
+            # m.shift(dt * LEFT)
+        else:
+            dir += dt * np.random.uniform(-1, 1) * RIGHT
+        if m.get_center()[1] <= yMin + m.radius:
+            dir += dt * UP
+            # m.shift(dt * UP)
+        elif m.get_center()[1] >= yMax - m.radius:
+        # else:
+            dir += dt * DOWN
+            # m.shift(dt * DOWN)
+        else:
+            dir += dt * np.random.uniform(-1, 1) * UP
+        m.shift(dir * _FRAMERATE[q]**0.5)
+        return m
+
+
 
 
 
@@ -326,7 +375,11 @@ class TestVariabelZoomTykkelse(MovingCameraScene):
 
 
 if __name__ == "__main__":
+<<<<<<< HEAD
+    cls = CollisionTester
+=======
     cls = TestTitelSkrivning
+>>>>>>> 048053bf87978cd2a98125146b63547c069b8508
     class_name = cls.__name__
     # transparent = cls.btransparent
     command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"

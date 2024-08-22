@@ -5,12 +5,12 @@ from helpers import *
 import subprocess
 import random
 
-slides = True
+slides = False
 if slides:
     from manim_slides import Slide
 
 
-q = "h"
+q = "ul"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -684,6 +684,9 @@ class LeastSquares(MovingCameraScene, Slide if slides else Scene):
         point_col = BLUE_C
         graph_col = BLUE_A
         dev_cols = [GREEN, RED]
+        # point_col = PINK
+        # graph_col = LIGHT_PINK
+        # dev_cols = [BLUE, ORANGE]
         acol = YELLOW
         bcol = PURPLE
         return [point_col, graph_col, dev_cols, acol, bcol]
@@ -1588,7 +1591,7 @@ class ResidualerOgResidualPlotThumbnail(ResidualerOgResidualPlot):
 
 
 if __name__ == "__main__":
-    cls = LeastSquares
+    cls = ResidualerOgResidualPlot
     class_name = cls.__name__
     transparent = cls.btransparent
     command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
