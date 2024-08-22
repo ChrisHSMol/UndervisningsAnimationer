@@ -1,0 +1,41 @@
+\usepackage[ansinew]{inputenc}
+\usepackage[a4paper, total={19cm, 25cm}]{geometry}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage[danish]{babel}
+\usepackage{amsmath}
+\usepackage{diagbox}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{mdframed}
+\usepackage{enumerate}
+\usepackage{wrapfig}
+\usepackage{pgfplots}
+
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=black,      
+    urlcolor=blue,
+}
+
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead{}
+\cfoot{Side \thepage\ af \pageref{LastPage}}
+
+% \renewcommand{\theenumi}{\alph{enum}}
+
+\renewcommand{\thesection}{Opgave \arabic{section}:}
+\definecolor{burgundy}{HTML}{800020}
+\definecolor{pine}{HTML}{008B72}
+\definecolor{klein}{HTML}{120A8F}
+\setlength\parindent{0pt}
+\newcommand{\linje}{
+    \vskip\bigskipamount
+    \leaders\vrule width \textwidth\vskip0.4pt
+    \vskip\bigskipamount
+    \nointerlineskip
+}

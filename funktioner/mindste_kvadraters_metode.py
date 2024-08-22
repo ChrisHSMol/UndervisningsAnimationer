@@ -1570,6 +1570,7 @@ class ResidualerOgResidualPlotThumbnail(ResidualerOgResidualPlot):
                 shine_lines.add(
                     line.copy().set(stroke_width=2.5 + 4*i).set_opacity(2*np.exp(-i)).set_z_index(7-i)
                 )
+            # shine_lines.add(add_shine(line, nlines=10))
         print(*shine_lines)
         points = VGroup(*[
             Dot(
