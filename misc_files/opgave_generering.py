@@ -423,7 +423,7 @@ class Geometri(Opgave):
                 cx = random.randint(-10, 10)
                 cy = random.randint(-10, 10)
                 r = random.randint(1, 10)
-            opgave += f"C({cx},{cy}) \quad r={r}"
+            opgave += f"C({cx},{cy}) \\quad r={r}"
             svar = "(x"
             svar += "-" if cx >= 0 else "+"
             svar += f"{np.abs(cx)})^2 + (y"
@@ -537,27 +537,27 @@ class Geometri(Opgave):
         return opgaver
 
 
-r = LigningsLoesning()
-ul = r.generer_ligninger_med_uniforme_loesninger(
-    n_forskellige_loesninger=18,
-    n_opgaver_pr_loesning=5,
-    x_min=-10,
-    x_max=10,
-    b_shuffle=True
-)
-pl = r.generer_ligninger_med_parenteser(
-    n_forskellige_loesninger=18,
-    n_opgaver_pr_loesning=5,
-    x_min=-10,
-    x_max=10,
-    b_shuffle=True
-)
-resultater = ul + pl
-for res in resultater:
-    print("\\section{}\n", "Løs ligningen:\n", f"\\[{res[0]}\\]", f"\n% \\[{res[1]}\\]", "\n\\vspace{2cm}\n")
-filnavn = r.skriv_opgaver_til_fil(
-    "ligningsløsning.tex", resultater, opgavetekst="Løs ligningen:", vspace=3
-)
+# r = LigningsLoesning()
+# ul = r.generer_ligninger_med_uniforme_loesninger(
+#     n_forskellige_loesninger=18,
+#     n_opgaver_pr_loesning=5,
+#     x_min=-10,
+#     x_max=10,
+#     b_shuffle=True
+# )
+# pl = r.generer_ligninger_med_parenteser(
+#     n_forskellige_loesninger=18,
+#     n_opgaver_pr_loesning=5,
+#     x_min=-10,
+#     x_max=10,
+#     b_shuffle=True
+# )
+# resultater = ul + pl
+# for res in resultater:
+#     print("\\section{}\n", "Løs ligningen:\n", f"\\[{res[0]}\\]", f"\n% \\[{res[1]}\\]", "\n\\vspace{2cm}\n")
+# filnavn = r.skriv_opgaver_til_fil(
+#     "ligningsløsning.tex", resultater, opgavetekst="Løs ligningen:", vspace=3
+# )
 
 # parabel = ParablersTopOgNulpunkter()
 # resultater = parabel.load_polynomium_koefficienter("parabel_toppunkt_koefficienter.txt")
@@ -572,7 +572,8 @@ filnavn = r.skriv_opgaver_til_fil(
 #     b_shuffle=True
 # )
 # filnavn = parabel.skriv_opgaver_til_fil(
-#     "parablens_nulpunkter.tex", resultater, opgavetekst="Bestem nulpunkterne for $f$:"
+#     "parablens_nulpunkter.tex", resultater, opgavetekst="Bestem nulpunkterne for $f$:",
+#     vspace=3
 # )
 # for res in resultater:
 #     print(
@@ -585,7 +586,8 @@ filnavn = r.skriv_opgaver_til_fil(
 # opgaver += dif_opg.generer_opgaver_om_polynomier(n_opgaver=100)
 # opgaver += dif_opg.generer_opgaver_om_blandede_funktioner(n_opgaver=100)
 # filnavn = dif_opg.skriv_opgaver_til_fil(
-#     "differentialregning.tex", opgaver, opgavetekst="En funktion $f$ er givet ved:", opgavetekst2="Bestem $f'$."
+#     "differentialregning.tex", opgaver, opgavetekst="En funktion $f$ er givet ved:", opgavetekst2="Bestem $f'$.",
+#     vspace=3
 # )
 
 # vek_opg = VektorRegning()
@@ -594,7 +596,8 @@ filnavn = r.skriv_opgaver_til_fil(
 # filnavn = vek_opg.skriv_opgaver_til_fil(
 #     "prikprodukt.tex", opgaver,
 #     opgavetekst="I et koordinatsystem er vektorerne $\\vec{a}$ og $\\vec{b}$ givet ved:",
-#     opgavetekst2="Bestem skalarproduktet $\\vec{a}\\cdot\\vec{b}$."
+#     opgavetekst2="Bestem skalarproduktet $\\vec{a}\\cdot\\vec{b}$.",
+#     vspace=4
 # )
 # vek_opg = VektorRegning()
 # opgaver = []
@@ -602,7 +605,8 @@ filnavn = r.skriv_opgaver_til_fil(
 # filnavn = vek_opg.skriv_opgaver_til_fil(
 #     "retningsvektorer.tex", opgaver,
 #     opgavetekst="I et koordinatsystem er der givet punkterne:",
-#     opgavetekst2="Bestem koordinatsættet til hver af vektorerne $\\overrightarrow{AB}$ og $\\overrightarrow{AC}$."
+#     opgavetekst2="Bestem koordinatsættet til hver af vektorerne $\\overrightarrow{AB}$ og $\\overrightarrow{AC}$.",
+#     vspace=4
 # )
 # vek_opg = VektorRegning()
 # opgaver = []
@@ -610,7 +614,8 @@ filnavn = r.skriv_opgaver_til_fil(
 # filnavn = vek_opg.skriv_opgaver_til_fil(
 #     "linjens_ligning.tex", opgaver,
 #     opgavetekst="En linje $l$ går gennem punktet $P$ og har normalvektoren $\\vec{n}$:",
-#     opgavetekst2="Opskriv en ligning for $l$."
+#     opgavetekst2="Opskriv en ligning for $l$.",
+#     vspace=4
 # )
 
 # geom_opg = Geometri()
@@ -620,24 +625,28 @@ filnavn = r.skriv_opgaver_til_fil(
 #     "cirklens_ligning.tex", opgaver,
 #     opgavetekst="En cirkel har centrum $C$ og radius $r$ som følger:",
 #     opgavetekst2="Bestem en ligning for cirklen.",
-#     vspace=1.25
+#     vspace=2.5
 # )
+# geom_opg = Geometri()
+# opgaver = []
 # opgaver += geom_opg.generer_kryds_af_linjer(n_opgaver=60)
 # filnavn = geom_opg.skriv_opgaver_til_fil(
 #     "skæring_mellem_linjer.tex", opgaver,
 #     opgavetekst="To linjer $l$ og $m$ er givet ved:",
 #     opgavetekst2="Bestem koordinatsættet til skæringspunktet mellem $l$ og $m$.",
-#     vspace=1.5,
+#     vspace=4,
 #     align=True
 # )
-# opgaver += geom_opg.generer_kryds_af_linje_og_cirkel(n_opgaver=24)
-# filnavn = geom_opg.skriv_opgaver_til_fil(
-#     "skæring_mellem_linje_og_cirkel.tex", opgaver,
-#     opgavetekst="En linje $l$ og en cirkel $C$ er givet ved:",
-#     opgavetekst2="Bestem koordinatsættet til skæringspunkterne mellem $l$ og $C$.",
-#     vspace=2,
-#     align=True
-# )
+geom_opg = Geometri()
+opgaver = []
+opgaver += geom_opg.generer_kryds_af_linje_og_cirkel(n_opgaver=24)
+filnavn = geom_opg.skriv_opgaver_til_fil(
+    "skæring_mellem_linje_og_cirkel.tex", opgaver,
+    opgavetekst="En linje $l$ og en cirkel $C$ er givet ved:",
+    opgavetekst2="Bestem koordinatsættet til skæringspunkterne mellem $l$ og $C$.",
+    vspace=4,
+    align=True
+)
 
 # for res in opgaver:
 #     print(
