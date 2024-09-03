@@ -537,6 +537,28 @@ class Geometri(Opgave):
         return opgaver
 
 
+class ToPunkt(Opgave):
+    def generer_to_punkt_formel_linear(self, n_opgaver):
+        opgaver = []
+        for iopg in range(n_opgaver):
+            opgave = ""
+            a, b = 0, 0
+            while a == 0 or b == 0:
+                a = random.randint(-5, 5)
+                b = random.randint(-10, 10)
+
+            x1, x2 = 0, 0
+            while x2 <= x1:
+                x1, x2 = [random.randint(-5, 10) for _ in range(2)]
+            y1, y2 = [a * x + b for x in [x1, x2]]
+            opgave += f"A({x1}, {y1}) \\quad B({x2}, {y2})"
+            svar = f"y = {a} * x "
+            svar += "+" if b >= 0 else ""
+            svar += f" {b}"
+            opgaver.append([opgave, svar])
+        return opgaver
+
+
 # r = LigningsLoesning()
 # ul = r.generer_ligninger_med_uniforme_loesninger(
 #     n_forskellige_loesninger=18,
@@ -562,7 +584,8 @@ class Geometri(Opgave):
 # parabel = ParablersTopOgNulpunkter()
 # resultater = parabel.load_polynomium_koefficienter("parabel_toppunkt_koefficienter.txt")
 # filnavn = parabel.skriv_opgaver_til_fil(
-#     "parablens_toppunkt.tex", resultater, opgavetekst="Find koordinatsættet til toppunktet for parablen:"
+#     "parablens_toppunkt.tex", resultater, opgavetekst="Find koordinatsættet til toppunktet for parablen:",
+#     vspace=2.5
 # )
 # resultater = parabel.generer_opgaver_om_nulpunkter_uh(
 #     n_forskellige_svar=12,
@@ -637,15 +660,24 @@ class Geometri(Opgave):
 #     vspace=4,
 #     align=True
 # )
-geom_opg = Geometri()
+# geom_opg = Geometri()
+# opgaver = []
+# opgaver += geom_opg.generer_kryds_af_linje_og_cirkel(n_opgaver=24)
+# filnavn = geom_opg.skriv_opgaver_til_fil(
+#     "skæring_mellem_linje_og_cirkel.tex", opgaver,
+#     opgavetekst="En linje $l$ og en cirkel $C$ er givet ved:",
+#     opgavetekst2="Bestem koordinatsættet til skæringspunkterne mellem $l$ og $C$.",
+#     vspace=4,
+#     align=True
+# )
+
+to_punkt_opg = ToPunkt()
 opgaver = []
-opgaver += geom_opg.generer_kryds_af_linje_og_cirkel(n_opgaver=24)
-filnavn = geom_opg.skriv_opgaver_til_fil(
-    "skæring_mellem_linje_og_cirkel.tex", opgaver,
-    opgavetekst="En linje $l$ og en cirkel $C$ er givet ved:",
-    opgavetekst2="Bestem koordinatsættet til skæringspunkterne mellem $l$ og $C$.",
-    vspace=4,
-    align=True
+opgaver += to_punkt_opg.generer_to_punkt_formel_linear(n_opgaver=48)
+filnavn = to_punkt_opg.skriv_opgaver_til_fil(
+    "to_punkt_formel_lin.tex", opgaver,
+    opgavetekst="Bestem ligningen til grafen, som går gennem punkterne:",
+    vspace=2.5
 )
 
 # for res in opgaver:
