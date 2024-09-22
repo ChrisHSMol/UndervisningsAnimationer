@@ -2,24 +2,610 @@ from manim import *
 import sys
 sys.path.append("../")
 import numpy as np
+import subprocess
 from helpers import *
 
 slides = True
 if slides:
     from manim_slides import Slide
 
+q = "h"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
+
+
+class HyppighedsTabel(MovingCameraScene, Slide if slides else Scene):
+    def construct(self):
+        self.slide_pause()
+        title = Tex("Hyppighedstabel")
+        play_title2(self, title)
+        self.hyppighedstabel()
+        self.slide_pause()
+        self.play(
+            LaggedStart(
+                *[FadeOut(m) for m in self.mobjects],
+                lag_ratio=0.15
+            )
+        )
+
+    def slide_pause(self, t=1.0, slides_bool=slides):
+        return slides_pause(self, t=t, slides_bool=slides_bool)
+
+    def data_to_DecNum(self, data, numdec=0, bsign=False):
+        return VGroup(
+            *[DecimalNumber(
+                    val,
+                    include_sign=bsign,
+                    num_decimal_places=numdec,
+                ).scale(0.5) for val in data]
+        ).arrange(DOWN, aligned_edge=RIGHT, buff=0.1)
+
+    def one_to_one_sort(self, data, desc=True):
+        _numbers = [d.get_value() for d in data]
+        _numbers.sort(reverse=desc)
+        sorted_data = self.data_to_DecNum(_numbers).next_to(data, RIGHT, buff=2)
+        num_of_each_value = {}
+        dict_sorting = {}
+        for i, d in enumerate(data):
+            strVal = str(d.get_value())
+            if strVal not in num_of_each_value.keys():
+                num_of_each_value[strVal] = 0
+
+            # dict_sorting[strVal + f"_{num_of_each_value[strVal]}"] = [
+            #     s for s in sorted_data if s.get_value() == d.get_value()
+            # ][num_of_each_value[strVal]]
+
+            dict_sorting[d] = [
+                s for s in sorted_data if s.get_value() == d.get_value()
+            ][num_of_each_value[strVal]]
+
+            num_of_each_value[strVal] += 1
+        # print(dict_sorting)
+        return sorted_data, dict_sorting
+
+    def prepare_table(
+            self,
+            data: list[float],
+            cell_width: float = 1.5,
+            cell_height: float = 0.65,
+            include_header_row: bool = False,
+            include_label_column: bool = False,
+            include_coloured_inlay: bool = True,
+            numdecs: list[int] = None,
+    ):
+        if numdecs is None:
+            numdecs = [0, 0]
+        row_offset = int(include_header_row)
+        col_offset = int(include_label_column)
+        different_numbers = np.unique(data)
+        num_different_numbers = len(different_numbers)
+        # tabel_struktur = VGroup(*[
+        #     VGroup(*[
+        #         Rectangle(
+        #             width=1.5, height=0.65, stroke_width=1,
+        #             # fill_color=[*[BLACK for _ in range(1+col_offset)], YELLOW, YELLOW, GREEN, GREEN][i],
+        #             # fill_opacity=[*[0 for _ in range(1+col_offset)], 0.1, 0.15, 0.1, 0.15][i]
+        #         ) for i in range(5 + col_offset)
+        #     ]).arrange(RIGHT, buff=0) for _ in range(num_different_numbers + row_offset)
+        # ]).arrange(DOWN, buff=0).to_edge(RIGHT)
+        # if include_coloured_inlay:
+        #     for row in tabel_struktur:
+        #         for i, cell in enumerate(row):
+        #             tabel_struktur.add(
+        #                 Rectangle(
+        #                     width=cell.width - 0.05, height=cell.height - 0.05, fill_opacity=0, stroke_width=2,
+        #                     stroke_color=[*[BLACK for _ in range(1+col_offset)], YELLOW, YELLOW, GREEN, GREEN][i],
+        #                     stroke_opacity=[*[0 for _ in range(1+col_offset)], 0.5, 0.75, 0.5, 0.75][i]
+        #                 ).move_to(cell)
+        #             )
+        tabel_struktur = VGroup()
+        for j in range(num_different_numbers + row_offset):
+            row = VGroup()
+            for i in range(5 + col_offset):
+                row.add(
+                    VGroup(
+                        Rectangle(width=cell_width, height=cell_height, stroke_width=1),
+                        Rectangle(
+                            width=cell_width - 0.05, height=cell_height - 0.05, fill_opacity=0,
+                            stroke_width=3 if include_coloured_inlay else 0,
+                            stroke_color=[*[BLACK for _ in range(1+col_offset)], BLUE, BLUE, YELLOW, YELLOW][i],
+                            stroke_opacity=[*[0 for _ in range(1+col_offset)], 0.5, 0.75, 0.5, 0.75][i]
+                        )
+                    )
+                )
+            row.arrange(RIGHT, buff=0)
+            tabel_struktur.add(row)
+        tabel_struktur.arrange(DOWN, buff=0)
+        # TODO: coloured inlay to each rect
+
+        _tabel_raw = []
+        _tabel = []
+        kumhyp = 0
+        kumfre = 0
+        for i, obs in enumerate(different_numbers):
+            hyp = len([d for d in data if d == obs])
+            kumhyp += hyp
+            fre = hyp/len(data)
+            kumfre += fre
+            _tabel_raw.append([obs, hyp, kumhyp, fre, kumfre])
+            _tabel.append([
+                str(obs), str(hyp), str(kumhyp), f"{fre*100:.{numdecs[0]}f} \\%", f"{kumfre*100:.{numdecs[1]}f} \\%"
+            ])
+
+        tabel_data_raw = np.array(_tabel_raw)
+        tabel_data = VGroup(*[
+            VGroup(*[
+                MathTex(d, font_size=22).move_to(tabel_struktur[j+row_offset][i+col_offset]) for i, d in enumerate(row)
+            ]) for j, row in enumerate(_tabel)
+        ])
+        return tabel_struktur, tabel_data, tabel_data_raw
+
+    def hyppighedstabel(self):
+        data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
+        data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=2)
+        sorted_data, sorting_dict = self.one_to_one_sort(data, desc=False)
+        # self.add(data)
+        self.play(
+            LaggedStart(
+                *[Write(d) for d in data],
+                lag_ratio=0.05
+            )
+        )
+        self.slide_pause()
+
+        self.play(
+            LaggedStart(
+                *[TransformFromCopy(k, v) for k, v in sorting_dict.items()],
+                lag_ratio=0.1
+            ),
+            run_time=2
+        )
+        self.slide_pause()
+
+        different_numbers = np.unique(data_raw)
+        num_different_numbers = len(different_numbers)
+        # tabel_struktur = VGroup(*[
+        #     VGroup(*[
+        #         Rectangle(
+        #             width=1.5, height=0.65, stroke_width=1
+        #         ) for _ in range(5)
+        #     ]).arrange(RIGHT, buff=0) for _ in range(num_different_numbers + 1)
+        # ]).arrange(DOWN, buff=0).to_edge(RIGHT)
+        tabel_struktur, tabel_data, tabel_data_raw = self.prepare_table(data_raw, include_header_row=True)
+        VGroup(tabel_struktur, tabel_data).to_edge(RIGHT)
+        # self.add(tabel_struktur)
+        self.play(
+            LaggedStart(
+                *[DrawBorderThenFill(r, lag_ratio=0.05) for r in tabel_struktur],
+                lag_ratio=0.05
+            )
+        )
+
+        # _tabel = []
+        # kumhyp = 0
+        # kumfre = 0
+        # for i, obs in enumerate(different_numbers):
+        #     hyp = len([d for d in data_raw if d == obs])
+        #     kumhyp += hyp
+        #     fre = hyp/len(data_raw)
+        #     kumfre += fre
+        #     _tabel.append([str(obs), str(hyp), str(kumhyp), f"{fre*100:.0f}\\%", f"{kumfre*100:.0f}\\%"])
+        #
+        # tabel_data = VGroup(*[
+        #     VGroup(*[
+        #         MathTex(d, font_size=22).move_to(tabel_struktur[j+1][i]) for i, d in enumerate(row)
+        #     ]) for j, row in enumerate(_tabel)
+        # ])
+
+        col_labels = VGroup(*[Tex(d, font_size=22).move_to(tabel_struktur[0][i]) for i, d in enumerate([
+            "Observation", "Hyppighed", "Kumuleret\\\\hyppighed", "Frekvens", "Kumuleret\\\\frekvens"
+        ])])
+        # self.add(col_labels)
+        self.play(
+            Write(col_labels, lag_ratio=0.1)
+        )
+        self.slide_pause()
+
+        for i, obs in enumerate(different_numbers):
+            nums_in_sorted_list = VGroup(*[
+                d for d in sorted_data if d.get_value() == obs
+            ])
+            brect = get_background_rect(nums_in_sorted_list, buff=0.1, stroke_colour=YELLOW, fill_opacity=0)
+            brace = Brace(nums_in_sorted_list, direction=RIGHT)
+            hyp = Tex(str(len(nums_in_sorted_list)), font_size=22).next_to(brace)
+            if i == 0:
+                self.play(
+                    DrawBorderThenFill(brect),
+                    run_time=0.5
+                )
+                self.play(
+                    # FadeIn(tabel_data[i][0], shift=tabel_data[i][0].get_center() - brect.get_center())
+                    ReplacementTransform(nums_in_sorted_list.copy(), tabel_data[i][0]),
+                    run_time=0.5
+                )
+                self.slide_pause()
+
+                self.play(
+                    LaggedStart(
+                        DrawBorderThenFill(brace),
+                        Write(hyp),
+                        lag_ratio=0.8
+                    ),
+                    run_time=0.5
+                )
+                self.play(
+                    ReplacementTransform(hyp.copy(), tabel_data[i][1]),
+                    run_time=0.5
+                )
+            else:
+                self.play(
+                    ReplacementTransform(prev_brect, brect),
+                    ReplacementTransform(prev_brace, brace),
+                    ReplacementTransform(prev_hyp, hyp),
+                    run_time=0.85**(i-1)
+                )
+                self.play(
+                    LaggedStart(
+                        ReplacementTransform(nums_in_sorted_list.copy(), tabel_data[i][0]),
+                        ReplacementTransform(hyp.copy(), tabel_data[i][1]),
+                        lag_ratio=1
+                    ),
+                    run_time=0.85**(i-1)
+                )
+            self.slide_pause()
+
+            prev_brect, prev_brace, prev_hyp = brect, brace, hyp
+            if obs == different_numbers[-1]:
+                self.play(
+                    FadeOut(brect),
+                    FadeOut(brace),
+                    FadeOut(hyp),
+                    run_time=0.25
+                )
+
+        self.camera.frame.save_state()
+        self.play(
+            *[FadeOut(m) for m in [data, sorted_data]],
+            self.camera.frame.animate.move_to(tabel_struktur),
+            run_time=1
+        )
+        self.slide_pause()
+
+        for i, obs in enumerate(different_numbers):
+            movement_arrows = VGroup(
+                Arrow(
+                    start=tabel_data[i][1].get_center(), end=tabel_data[i][2].get_center(), stroke_width=1,
+                    max_tip_length_to_length_ratio=0.1
+                ),
+            )
+            if i > 0:
+                movement_arrows.add(
+                    Arrow(
+                        start=tabel_data[i-1][2].get_center(), end=tabel_data[i][2].get_center(), stroke_width=1,
+                        max_tip_length_to_length_ratio=0.1
+                    ),
+                )
+            self.play(
+                *[GrowArrow(a) for a in movement_arrows]
+            )
+            self.play(
+                ReplacementTransform(
+                    tabel_data[i][1].copy() if i == 0 else VGroup(tabel_data[i][1].copy(), tabel_data[i-1][2].copy()),
+                    tabel_data[i][2]
+                ),
+                run_time=1
+            )
+            self.slide_pause()
+            self.play(
+                *[FadeOut(a) for a in movement_arrows],
+                run_time=0.25
+            )
+
+        samlet_rect = tabel_struktur[-1][2].copy().set_fill(
+            color=BLUE, opacity=0.25
+        ).set_stroke(width=0).set_z_index(tabel_data[-1][2].get_z_index()-1)
+        self.play(
+            # Circumscribe(tabel_data[-1][2], time_width=2, stroke_opacity=[0, 1, 0]),
+            FadeIn(samlet_rect),
+            run_time=1
+        )
+        self.slide_pause()
+
+        moving_rect = tabel_struktur[1][1].copy().set_fill(
+            color=BLUE_A, opacity=0.25
+        ).set_stroke(width=0).set_z_index(tabel_data[0][1].get_z_index()-1)
+
+        for i, obs in enumerate(different_numbers):
+            udregning = VGroup(
+                tabel_data[i][1].copy(),
+                tabel_data[-1][2].copy()
+            ).scale(2).arrange(DOWN, buff=0.2).next_to(tabel_struktur, LEFT, buff=2)
+            udregning.add(
+                Line(
+                    start=udregning[1].get_left(), end=udregning[1].get_right(), stroke_width=2
+                ).scale(2).next_to(udregning[1], UP, buff=0.1)
+            )
+            udr_samlet_rect = samlet_rect.copy().scale(0.75).move_to(udregning[1])
+            udr_obs_rect = moving_rect.copy().scale(0.75).move_to(udregning[0])
+            udregning.add(
+                MathTex("=").next_to(udregning[2], RIGHT)
+            )
+            udregning.add(
+                tabel_data[i][3].copy().scale(2).next_to(udregning[3])
+            )
+            if i == 0:
+                self.play(
+                    FadeIn(moving_rect)
+                )
+                self.play(
+                    LaggedStart(
+                        ReplacementTransform(moving_rect.copy(), udr_obs_rect),
+                        Create(udregning[2]),
+                        ReplacementTransform(samlet_rect.copy(), udr_samlet_rect),
+                        FadeIn(udregning[0]),
+                        FadeIn(udregning[1]),
+                        lag_ratio=0.75
+                    )
+                )
+                self.play(
+                    LaggedStart(
+                        *[FadeIn(m, shift=0.25*RIGHT) for m in udregning[3:]],
+                        lag_ratio=0.75
+                    )
+                )
+                self.slide_pause()
+
+                self.play(
+                    ReplacementTransform(udregning[4].copy(), tabel_data[i][3])
+                )
+            else:
+                self.play(
+                    moving_rect.animate.move_to(tabel_struktur[i+1][1]),
+                    FadeOut(prev_udregning[0], shift=0.5*UP),
+                    FadeOut(prev_udregning[4], shift=0.25*RIGHT),
+                    FadeIn(udregning[0], shift=0.5*UP),
+                    FadeIn(udregning[4], shift=0.25*RIGHT),
+                    run_time=0.5
+                )
+                self.play(
+                    ReplacementTransform(udregning[4].copy(), tabel_data[i][3])
+                )
+                self.slide_pause()
+                # self.remove(*prev_udregning)
+            # self.remove(*udregning, udr_samlet_rect, udr_obs_rect)
+            # self.add(*udregning, udr_samlet_rect, udr_obs_rect)
+            prev_udregning = udregning
+
+            if obs == different_numbers[-1]:
+                cover_box = get_background_rect(udregning, stroke_width=0, fill_opacity=1).set_z_index(10)
+                self.play(
+                    *[FadeOut(m) for m in (
+                        moving_rect, samlet_rect, udr_samlet_rect, udr_obs_rect, *udregning, *prev_udregning
+                    )],
+                    # *[FadeOut(m) for m in self.mobjects if m not in (*tabel_data, *tabel_struktur)],
+                    FadeIn(cover_box),
+                    run_time=0.5
+                )
+                self.slide_pause()
+
+        for i, obs in enumerate(different_numbers):
+            movement_arrows = VGroup(
+                Arrow(
+                    start=tabel_data[i][3].get_center(), end=tabel_data[i][4].get_center(), stroke_width=1,
+                    max_tip_length_to_length_ratio=0.1
+                ),
+            )
+            if i > 0:
+                movement_arrows.add(
+                    Arrow(
+                        start=tabel_data[i-1][4].get_center(), end=tabel_data[i][4].get_center(), stroke_width=1,
+                        max_tip_length_to_length_ratio=0.1
+                    ),
+                )
+            self.play(
+                *[GrowArrow(a) for a in movement_arrows]
+            )
+            self.play(
+                ReplacementTransform(
+                    tabel_data[i][3].copy() if i == 0 else VGroup(tabel_data[i][3].copy(), tabel_data[i-1][4].copy()),
+                    tabel_data[i][4]
+                ),
+                run_time=0.75
+            )
+            self.slide_pause()
+            self.play(
+                *[FadeOut(a) for a in movement_arrows],
+                run_time=0.25
+            )
+
+        self.remove(*[m for m in self.mobjects])
+        self.add(tabel_data, tabel_struktur, col_labels)
+
+
+class PrikOgPindediagrammer(HyppighedsTabel):
+    def construct(self):
+        self.slide_pause()
+        title = Tex("Prik- og pindediagrammer fra rå data")
+        play_title2(self, title)
+        self.data_til_prik_og_pindediagram()
+        self.slide_pause()
+
+    def data_til_prik_og_pindediagram(self):
+        data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
+        data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=2)
+        self.play(
+            LaggedStart(
+                *[Write(d) for d in data],
+                lag_ratio=0.05
+            )
+        )
+        axis = NumberLine(
+            x_range=[min(min(data_raw)-1, 0), max(data_raw)+1, 1],
+            length=10,
+            include_numbers=True,
+            label_direction=DOWN,
+        ).set_z_index(3).to_edge(DR)
+        # self.add(axis)
+        self.play(
+            DrawBorderThenFill(axis),
+            run_time=1
+        )
+        self.slide_pause()
+
+        num_of_each_value = {}
+        _dots = {}
+        prikker = VGroup()
+        _r = 0.15
+        for i, d in enumerate(data_raw):
+            if d not in num_of_each_value.keys():
+                num_of_each_value[d] = 0
+                _dots[d] = VGroup()
+            prik = Dot(
+                point=axis.n2p(d) + (num_of_each_value[d] + 0.5)*2*_r*UP,
+                radius=_r, fill_color=RED, fill_opacity=1, stroke_width=0
+            ).set_z_index(2)
+            prikker.add(prik)
+            _dots[d].add(prik)
+            num_of_each_value[d] += 1
+
+        self.play(
+            LaggedStart(
+                *[ReplacementTransform(d.copy(), p) for d, p in zip(data, prikker)],
+                lag_ratio=0.75
+            ),
+            run_time=10
+        )
+        self.slide_pause()
+
+        plane = Axes(
+            x_range=[min(min(data_raw)-1, 0), max(data_raw)+1, 1],
+            y_range=[0, 6, 1],
+            x_length=10,
+            y_length=12*_r,
+            x_axis_config={"include_numbers": True, "label_direction": DOWN},
+            y_axis_config={"include_numbers": True, "label_direction": LEFT},
+            tips=False
+            # include_numbers=True,
+            # label_direction=DOWN,
+        ).set_z_index(3).to_edge(DR)
+        axvlines = always_redraw(lambda: VGroup(*[
+            DashedLine(
+                start=axis.n2p(tick),
+                end=plane.c2p(tick, plane.axes[1].get_tick_range()[-1]),
+                stroke_width=0.25
+            ).set_z_index(1) for tick in axis.get_tick_range()
+        ]))
+        axhlines = always_redraw(lambda: VGroup(*[
+            DashedLine(
+                start=plane.c2p(0, tick),
+                end=plane.c2p(plane.axes[0].get_tick_range()[-1], tick),
+                stroke_width=0.25
+            ).set_z_index(1) for tick in plane.axes[1].get_tick_range()
+        ]))
+        # self.add(plane, axvlines, axhlines)
+        self.play(
+            # LaggedStart(
+            #     DrawBorderThenFill(plane),
+            #     FadeIn(axvlines, lag_ratio=0.2),
+            #     FadeIn(axhlines, lag_ratio=0.2),
+            #     lag_ratio=0.75
+            # ),
+            # run_time=3
+            DrawBorderThenFill(plane),
+            run_time=2
+        )
+        self.play(
+            FadeIn(axvlines, lag_ratio=0.1),
+            FadeIn(axhlines, lag_ratio=0.1),
+            run_time=1
+        )
+        self.remove(axvlines, axhlines)
+        self.add(axvlines, axhlines)
+        self.slide_pause()
+
+        pinde = VGroup()
+        for k, v in num_of_each_value.items():
+            pinde.add(
+                get_background_rect(
+                    _dots[k], buff=0, fill_color=BLUE, fill_opacity=0, stroke_width=1, stroke_colour=BLUE
+                ).set_z_index(2).move_to(plane.c2p(k, 0.5*v))
+            )
+        # self.add(pinde)
+        self.play(
+            DrawBorderThenFill(pinde, lag_ratio=0.2)
+        )
+        self.slide_pause()
+
+        self.play(
+            VGroup(plane, pinde).animate.shift(4*UP)
+        )
+        self.play(
+            LaggedStart(
+                *[pind.animate.set_fill(opacity=1).set_stroke(width=0) for pind in pinde],
+                lag_ratio=0.1
+            ),
+            FadeOut(axvlines)
+        )
+        self.slide_pause()
+
+        diagramnavne = VGroup(
+            Tex("Pinde", "diagram"),
+            Tex("Prik", "diagram")
+        ).arrange(DOWN, aligned_edge=RIGHT).next_to(plane, DOWN, aligned_edge=RIGHT)
+        diagramnavne[0][0].set_color(BLUE)
+        diagramnavne[1][0].set_color(RED)
+        self.play(
+            Write(diagramnavne, lag_ratio=0.25)
+        )
+
+
+class SumkurveFraTabel(HyppighedsTabel):
+    def construct(self):
+        self.hyppighedstabel_til_sumkurve()
+        self.wait(5)
+
+    def hyppighedstabel_til_sumkurve(self):
+        data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
+        data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=2)
+        sorted_data, sorting_dict = self.one_to_one_sort(data, desc=False)
+        different_numbers = np.unique(data_raw)
+        num_different_numbers = len(different_numbers)
+        tabel_struktur, tabel_data, tabel_data_raw = self.prepare_table(data_raw, include_header_row=True)
+        VGroup(tabel_struktur, tabel_data).to_edge(RIGHT)
+        col_labels = VGroup(*[Tex(d, font_size=22).move_to(tabel_struktur[0][i]) for i, d in enumerate([
+            "Observation", "Hyppighed", "Kumuleret\\\\hyppighed", "Frekvens", "Kumuleret\\\\frekvens"
+        ])])
+        self.play(
+            LaggedStart(
+                *[DrawBorderThenFill(r, lag_ratio=0.05) for r in tabel_struktur],
+                *[Write(r) for r in col_labels],
+                *[Write(r, lag_ratio=0.05) for r in tabel_data],
+                lag_ratio=0.05
+            ),
+            run_time=2
+        )
+        # self.add(tabel_data, tabel_struktur, col_labels)
+
 
 class UgrupperetData(Slide if slides else Scene):
     def construct(self):
         title = Tex("Ugrupperet", " data")
         title[0].set_color(YELLOW)
-        play_title(self, title)
+        play_title2(self, title)
         self.slide_pause(0.5)
         self.kvartiler()
         self.slide_pause(5)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
-        return slides_pause(self, t, slides)
+        return slides_pause(self, t=t, slides_bool=slides_bool)
 
     def data_to_DecNum(self, data):
         return VGroup(
@@ -112,7 +698,6 @@ class UgrupperetData(Slide if slides else Scene):
             *[FadeOut(m) for m in self.mobjects if m != full_plot]
         )
         return full_plot
-
 
     def kvartiler(self):
         data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
@@ -515,4 +1100,22 @@ class SampleSize(Slide if slides else Scene):
         if (point[0]-circle.get_center()[0])**2 + (point[1]-circle.get_center()[1])**2 < circle.get_radius()**2:
             return point
 
+
+if __name__ == "__main__":
+    cls = PrikOgPindediagrammer
+    class_name = cls.__name__
+    # transparent = cls.btransparent
+    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+    # if transparent:
+    #     command += " --transparent --format=webm"
+    scene_marker(rf"RUNNNING:    {command}")
+    subprocess.run(command)
+    if slides and q == "h":
+        command = rf"manim-slides convert {class_name} {class_name}.html"
+        scene_marker(rf"RUNNNING:    {command}")
+        subprocess.run(command)
+        if class_name+"Thumbnail" in dir():
+            command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+            scene_marker(rf"RUNNNING:    {command}")
+            subprocess.run(command)
 
