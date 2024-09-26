@@ -5,11 +5,11 @@ import numpy as np
 import subprocess
 from helpers import *
 
-slides = True
+slides = False
 if slides:
     from manim_slides import Slide
 
-q = "h"
+q = "l"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -428,6 +428,189 @@ class HyppighedsTabel(MovingCameraScene, Slide if slides else Scene):
 
         self.remove(*[m for m in self.mobjects])
         self.add(tabel_data, tabel_struktur, col_labels)
+
+
+class Deskriptorer(HyppighedsTabel):
+    def construct(self):
+        self.centrale_deskriptorer()
+        self.wait(5)
+
+    def centrale_deskriptorer(self):
+        cmap = {
+            "datasæt": YELLOW,
+            "observation": BLUE,
+            "deskriptor": RED
+        }
+        data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 5, 6, 7, 10]
+        data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=2)
+        # self.add(data)
+        self.play(
+            LaggedStart(
+                *[Write(d) for d in data],
+                lag_ratio=0.05
+            )
+        )
+
+        dataset_box = get_background_rect(data, stroke_colour=cmap["datasæt"])
+        brace = Brace(dataset_box, RIGHT, buff=0.2)
+        dataset_text = VGroup(
+            Tex("Et ", "datasæt").set_color_by_tex_to_color_map(cmap),
+            Tex("består af flere ", "observationer", ".").set_color_by_tex_to_color_map(cmap)
+        ).arrange(DOWN, aligned_edge=LEFT).next_to(brace, RIGHT)
+        dataset_text.shift((dataset_text[0].get_y() - brace.get_y()) * DOWN)
+        # self.add(brace, dataset_text, dataset_box)
+
+        self.play(
+            DrawBorderThenFill(dataset_box),
+            GrowFromEdge(brace, LEFT),
+            Write(dataset_text)
+        )
+        self.play(
+            LaggedStart(
+                *[Indicate(m, scale_factor=1.5, color=cmap["observation"]) for m in data],
+                lag_ratio=0.25
+            ),
+            run_time=3
+        )
+        self.play(
+            FadeOut(dataset_box, shift=LEFT),
+            FadeOut(brace, shift=LEFT),
+            FadeOut(dataset_text, shift=LEFT)
+        )
+        self.slide_pause()
+        # self.remove(brace, dataset_text, dataset_box)
+
+        deskriptor_text = VGroup(
+            Tex("En ", "deskriptor", " er et tal, ").set_color_by_tex_to_color_map(cmap),
+            Tex("som beskriver ", "datasættet", ".").set_color_by_tex_to_color_map(cmap)
+        ).arrange(DOWN, aligned_edge=LEFT)
+        # self.add(deskriptor_text)
+        self.play(
+            Write(deskriptor_text), run_time=0.5
+        )
+        self.slide_pause()
+        self.play(
+            deskriptor_text.animate.arrange(RIGHT, aligned_edge=UP).to_edge(UR)
+        )
+
+        size_text = VGroup(
+            Tex("Størrelsen", " af et ", "datasæt").set_color_by_tex_to_color_map(cmap),
+            Tex("er antallet af ", "observationer", ".").set_color_by_tex_to_color_map(cmap)
+        ).arrange(DOWN, aligned_edge=LEFT)
+        size_text[0][0].set_color(cmap["deskriptor"])
+        size_counter = VGroup(Tex("N", " = "), Integer(0)).arrange(RIGHT).next_to(size_text, DOWN, aligned_edge=LEFT)
+        size_counter[0][0].set_color(cmap["deskriptor"])
+        # self.add(size_text, size_counter)
+        self.play(
+            LaggedStart(
+                Write(size_text),
+                Write(size_counter),
+                lag_ratio=0.5
+            )
+        )
+        self.slide_pause()
+        for i, d in enumerate(data):
+            self.play(
+                Indicate(d, color=cmap["observation"]),
+                size_counter[1].animate.set_value(i+1),
+                run_time=0.25
+            )
+        self.slide_pause()
+
+        self.play(
+            FadeOut(size_text, shift=UP),
+            size_counter.animate.next_to(deskriptor_text, DOWN, buff=0.5, aligned_edge=LEFT)
+        )
+        self.slide_pause()
+
+        middel = Tex(r"Middelværdien kaldes {{$\overline{x}$}} eller {{$\mu$}}.").next_to(data, RIGHT, buff=0.5)
+        middel[1].set_color(cmap["deskriptor"])
+        middel[3].set_color(cmap["deskriptor"])
+        middel_udregning = VGroup(
+            MathTex(r"\overline{x}", " = ")
+        ).next_to(middel, DOWN, aligned_edge=LEFT, buff=1)
+        middel_udregning[0][0].set_color(cmap["deskriptor"])
+        middel_udregning.add(
+            VGroup(
+                data.copy().arrange(RIGHT).next_to(middel_udregning, RIGHT)
+            )
+        )
+        middel_udregning[1].add(
+            VGroup(*[
+                MathTex("+").scale(0.5).move_to(
+                    between_mobjects(middel_udregning[1][0][i], middel_udregning[1][0][i+1])
+                ) for i in range(len(data_raw) - 1)
+            ])
+        )
+        middel_udregning[1].add(
+            Line(
+                start=middel_udregning[1][0].get_left(), end=middel_udregning[1][0].get_right(), stroke_width=1.5
+            ).next_to(middel_udregning[1][0], DOWN, buff=0.125),
+            # MathTex(f"{len(data_raw):.0f}").next_to(middel_udregning[1][0], DOWN, buff=0.25)
+            size_counter[1].copy().next_to(middel_udregning[1][0], DOWN, buff=0.25)
+        )
+        self.add(middel, middel_udregning[0])
+        self.play(
+            ReplacementTransform(data[0].copy(), middel_udregning[1][0][0]),
+            data[0].animate.set_opacity(0.5)
+        )
+        for i in range(len(data_raw) - 1):
+            self.play(
+                LaggedStart(
+                    ReplacementTransform(data[i+1].copy(), middel_udregning[1][0][i+1]),
+                    FadeIn(middel_udregning[1][1][i], shift=0.5*RIGHT),
+                    data[i+1].animate.set_opacity(0.33),
+                    lag_ratio=0.25
+                ),
+                run_time=0.5
+            )
+        self.play(
+            Create(middel_udregning[1][2]),
+            # Write(middel_udregning[1][3]),
+            # ReplacementTransform(size_counter[1].copy(), middel_udregning[1][3]),
+            middel_udregning[0].animate.shift(
+                (middel_udregning[0].get_y() - middel_udregning[1][2].get_y()) * DOWN
+            )
+        )
+        self.play(
+            Write(middel_udregning[1][3]),
+            Indicate(size_counter, color=cmap["deskriptor"])
+        )
+        middel_udregning.add(
+            VGroup(
+                Integer(sum(data_raw)),
+                Line(start=Integer(sum(data_raw)).get_left(), end=Integer(sum(data_raw)).get_right(), stroke_width=1.5),
+                size_counter[1].copy()
+            ).arrange(DOWN, buff=0.125).next_to(middel_udregning[0], RIGHT)
+        )
+        self.play(
+            # *[ReplacementTransform(middel_udregning[1][i], middel_udregning[2][i]) for i in range(3)]
+            ReplacementTransform(VGroup(middel_udregning[1][0], middel_udregning[1][1]), middel_udregning[2][0]),
+            ReplacementTransform(middel_udregning[1][2], middel_udregning[2][1]),
+            ReplacementTransform(middel_udregning[1][3], middel_udregning[2][2])
+        )
+        self.slide_pause()
+
+        middel_udregning.add(
+            VGroup(
+                middel_udregning[0].copy(),
+                Integer(sum(data_raw)/len(data_raw)).next_to(middel_udregning[0], RIGHT)
+            )
+        )
+        self.play(
+            ReplacementTransform(
+                middel_udregning[2], middel_udregning[3][1]
+            )
+        )
+        self.slide_pause()
+
+        self.remove(*[m for m in self.mobjects if m not in (deskriptor_text, data, size_counter, middel)])
+        self.add(middel_udregning[3])
+        self.play(
+            FadeOut(middel, shift=UP),
+            middel_udregning[3].animate.next_to(size_counter, RIGHT, buff=0.5),
+            data.animate.set_opacity(1)
+        )
 
 
 class PrikOgPindediagrammer(HyppighedsTabel):
@@ -1102,7 +1285,7 @@ class SampleSize(Slide if slides else Scene):
 
 
 if __name__ == "__main__":
-    cls = PrikOgPindediagrammer
+    cls = Deskriptorer
     class_name = cls.__name__
     # transparent = cls.btransparent
     command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
