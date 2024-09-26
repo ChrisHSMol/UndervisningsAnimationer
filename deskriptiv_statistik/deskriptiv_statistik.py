@@ -5,11 +5,11 @@ import numpy as np
 import subprocess
 from helpers import *
 
-slides = False
+slides = True
 if slides:
     from manim_slides import Slide
 
-q = "l"
+q = "h"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -433,13 +433,125 @@ class HyppighedsTabel(MovingCameraScene, Slide if slides else Scene):
 class Deskriptorer(HyppighedsTabel):
     def construct(self):
         self.centrale_deskriptorer()
-        self.wait(5)
+        # self._tester()
+        # self.wait(5)
+        self.play(
+            LaggedStart(
+                *[FadeOut(m) for m in self.mobjects],
+                lag_ratio=0.025
+            )
+        )
+
+    def _tester(self):
+        data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 5, 6, 7, 10]
+        data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=2)
+        data_sorted, sorting_dict = self.one_to_one_sort(data)
+        data_sorted.next_to(data, RIGHT, buff=2)
+        self.add(data_sorted, data)
+        # self.animer_median(data_sorted)
+        self.animer_typetal(data_sorted)
+
+    def animer_median(self, data, colors=(GREEN_A, GREEN_E)):
+        moving_arrows = VGroup(
+            Arrow(
+                start=0.5*LEFT, end=0.5*RIGHT, stroke_color=colors[0],
+                max_tip_length_to_length_ratio=1, max_stroke_width_to_length_ratio=1
+            ).next_to(data[0], LEFT, buff=0.1),
+            Arrow(
+                start=0.5*RIGHT, end=0.5*LEFT, stroke_color=colors[1],
+                max_tip_length_to_length_ratio=1, max_stroke_width_to_length_ratio=1
+            ).next_to(data[-1], RIGHT, buff=0.1),
+        )
+        self.add(moving_arrows)
+        self.play(
+            DrawBorderThenFill(moving_arrows, lag_ratio=0.5),
+            run_time=0.5
+        )
+        self.slide_pause()
+        i = 0
+        while moving_arrows[0].get_y() > moving_arrows[1].get_y():
+            # print(moving_arrows[0].get_y(), moving_arrows[1].get_y())
+            i += 1
+            self.play(
+                moving_arrows[0].animate.next_to(data[i], LEFT, buff=0.1),
+                moving_arrows[1].animate.next_to(data[-(1+i)], RIGHT, buff=0.1),
+            )
+        i_median = i
+        # print(i_median, len(data)//2)
+        self.slide_pause()
+        self.play(
+            data[i_median].animate.set_color(GREEN_C),
+            FadeOut(moving_arrows)
+        )
+
+    def animer_typetal(self, data):
+        different_numbers = np.unique([d.get_value() for d in data])
+        stoerste_tal = VGroup(
+            Tex("Største antal: "), Integer(0), Integer(0)
+        ).arrange(RIGHT).next_to(data, RIGHT, aligned_edge=DOWN, buff=0.5)
+        for i, obs in enumerate(different_numbers):
+            nums_in_sorted_list = VGroup(*[
+                d for d in data if d.get_value() == obs
+            ])
+            brect = get_background_rect(nums_in_sorted_list, buff=0.1, stroke_colour=YELLOW, fill_opacity=0)
+            brace = Brace(nums_in_sorted_list, direction=RIGHT)
+            hyp = Tex(str(len(nums_in_sorted_list)), font_size=22).next_to(brace)
+            if i == 0:
+                self.play(
+                    DrawBorderThenFill(brect),
+                    DrawBorderThenFill(stoerste_tal[:2]),
+                    run_time=0.5
+                )
+                self.slide_pause()
+
+                self.play(
+                    LaggedStart(
+                        DrawBorderThenFill(brace),
+                        Write(hyp),
+                        lag_ratio=0.8
+                    ),
+                    run_time=0.5
+                )
+            else:
+                self.play(
+                    ReplacementTransform(prev_brect, brect),
+                    ReplacementTransform(prev_brace, brace),
+                    ReplacementTransform(prev_hyp, hyp),
+                    run_time=0.85**(i-1)
+                )
+            if len(nums_in_sorted_list) > stoerste_tal[1].get_value():
+                stoerste_tal[2].set_value(obs)
+                self.play(
+                    stoerste_tal[1].animate.set_value(len(nums_in_sorted_list)),
+                    run_time=0.5
+                )
+
+            prev_brect, prev_brace, prev_hyp = brect, brace, hyp
+            if obs == different_numbers[-1]:
+                self.play(
+                    FadeOut(brect),
+                    FadeOut(brace),
+                    FadeOut(hyp),
+                    run_time=0.25
+                )
+        typetal = Tex("typetal", " = ", f"{stoerste_tal[2].get_value():.0f}").next_to(
+            data, RIGHT, aligned_edge=DOWN, buff=0.5
+        )
+        self.play(
+            FadeIn(typetal, shift=UP),
+            stoerste_tal[:2].animate.shift(UP)
+        )
+        self.play(
+            FadeOut(stoerste_tal[:2])
+        )
+        return typetal
 
     def centrale_deskriptorer(self):
         cmap = {
             "datasæt": YELLOW,
             "observation": BLUE,
-            "deskriptor": RED
+            "deskriptor": RED,
+            "sorter": GREEN
         }
         data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 5, 6, 7, 10]
         data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=2)
@@ -465,6 +577,7 @@ class Deskriptorer(HyppighedsTabel):
             GrowFromEdge(brace, LEFT),
             Write(dataset_text)
         )
+        self.slide_pause()
         self.play(
             LaggedStart(
                 *[Indicate(m, scale_factor=1.5, color=cmap["observation"]) for m in data],
@@ -472,10 +585,14 @@ class Deskriptorer(HyppighedsTabel):
             ),
             run_time=3
         )
+        self.slide_pause()
         self.play(
-            FadeOut(dataset_box, shift=LEFT),
-            FadeOut(brace, shift=LEFT),
-            FadeOut(dataset_text, shift=LEFT)
+            LaggedStart(
+                FadeOut(dataset_box, shift=LEFT),
+                FadeOut(brace, shift=LEFT),
+                FadeOut(dataset_text, shift=LEFT),
+                lag_ratio=0.2
+            )
         )
         self.slide_pause()
         # self.remove(brace, dataset_text, dataset_box)
@@ -549,7 +666,15 @@ class Deskriptorer(HyppighedsTabel):
             # MathTex(f"{len(data_raw):.0f}").next_to(middel_udregning[1][0], DOWN, buff=0.25)
             size_counter[1].copy().next_to(middel_udregning[1][0], DOWN, buff=0.25)
         )
-        self.add(middel, middel_udregning[0])
+        # self.add(middel, middel_udregning[0])
+        self.play(
+            LaggedStart(
+                Write(middel),
+                Write(middel_udregning[0]),
+                lag_ratio=0.9
+            )
+        )
+        self.slide_pause()
         self.play(
             ReplacementTransform(data[0].copy(), middel_udregning[1][0][0]),
             data[0].animate.set_opacity(0.5)
@@ -567,15 +692,16 @@ class Deskriptorer(HyppighedsTabel):
         self.play(
             Create(middel_udregning[1][2]),
             # Write(middel_udregning[1][3]),
-            # ReplacementTransform(size_counter[1].copy(), middel_udregning[1][3]),
+            ReplacementTransform(size_counter[1].copy(), middel_udregning[1][3]),
             middel_udregning[0].animate.shift(
                 (middel_udregning[0].get_y() - middel_udregning[1][2].get_y()) * DOWN
             )
         )
-        self.play(
-            Write(middel_udregning[1][3]),
-            Indicate(size_counter, color=cmap["deskriptor"])
-        )
+        self.slide_pause()
+        # self.play(
+        #     Write(middel_udregning[1][3]),
+        #     Indicate(size_counter, color=cmap["deskriptor"])
+        # )
         middel_udregning.add(
             VGroup(
                 Integer(sum(data_raw)),
@@ -611,6 +737,85 @@ class Deskriptorer(HyppighedsTabel):
             middel_udregning[3].animate.next_to(size_counter, RIGHT, buff=0.5),
             data.animate.set_opacity(1)
         )
+        self.slide_pause()
+
+        median_text = VGroup(
+            Tex("Medianen", " er den midterste ", "observation").set_color_by_tex_to_color_map(cmap),
+            Tex("i ", "datasættet", ".").set_color_by_tex_to_color_map(cmap),
+            Tex("Vi skal derfor ", "sortere", " datasættet", ".").set_color_by_tex_to_color_map(cmap)
+        ).arrange(DOWN, aligned_edge=LEFT)
+        self.play(
+            Write(median_text),
+            run_time=1
+        )
+        data_sorted, sorting_dict = self.one_to_one_sort(data, desc=False)
+        self.play(
+            data.animate.to_edge(LEFT)
+        )
+        self.slide_pause()
+        data_sorted.next_to(data, RIGHT, buff=1)
+
+        self.play(
+            LaggedStart(
+                *[TransformFromCopy(k, v) for k, v in sorting_dict.items()],
+                lag_ratio=0.1
+            ),
+            run_time=2
+        )
+        self.slide_pause()
+
+        self.animer_median(data_sorted)
+        self.slide_pause()
+
+        i_median = len(data_sorted)//2
+        median = Tex("median", " = ", f"{data_sorted[i_median].get_value():.0f}").next_to(median_text, DOWN, aligned_edge=LEFT)
+        median[0].set_color(cmap["deskriptor"])
+        self.play(
+            Write(median[:2]),
+            ReplacementTransform(data_sorted[i_median].copy(), median[2])
+        )
+        self.slide_pause()
+
+        self.play(
+            median.animate.next_to(middel_udregning[3], RIGHT, buff=0.5),
+            FadeOut(median_text, shift=UP)
+        )
+        self.slide_pause()
+
+        typetal_text = VGroup(
+            Tex("Typetal", " er det tal, "),
+            Tex("som optræder flest gange i ", "datasættet", ".").set_color_by_tex_to_color_map(cmap)
+        ).arrange(DOWN, aligned_edge=LEFT)
+        typetal_text[0][0].set_color(cmap["deskriptor"])
+        self.play(
+            Write(typetal_text)
+        )
+        self.slide_pause()
+
+        typetal = self.animer_typetal(data_sorted)
+        self.slide_pause()
+
+        self.play(
+            typetal[0].animate.set_color(cmap["deskriptor"]),
+            run_time=0.25
+        )
+        self.play(
+            typetal.animate.next_to(median, RIGHT, buff=0.5),
+            FadeOut(typetal_text, shift=UP)
+        )
+        self.slide_pause()
+
+        brace = Brace(
+            VGroup(size_counter, middel_udregning[3], median, typetal), DOWN
+        )
+        centrale_deskriptorer_text = Tex(
+            "De centrale ", "deskriptorer", "."
+        ).set_color_by_tex_to_color_map(cmap).next_to(brace, DOWN)
+        self.play(
+            DrawBorderThenFill(brace),
+            Write(centrale_deskriptorer_text)
+        )
+        self.slide_pause()
 
 
 class PrikOgPindediagrammer(HyppighedsTabel):
