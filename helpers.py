@@ -52,7 +52,11 @@ def interpolate_visible_light(delta, light_dict=VISIBLE_LIGHT):
 def _prep_title(title, close=False):
     if isinstance(title, str):
         title = Tex(title)
-    title_ul = Underline(title, stroke_opacity=[0, 1, 0])
+    title_ul = Underline(
+        title,
+        # stroke_opacity=[0, 1, 0],
+        stroke_width=[0, 3, 3, 3, 0]
+    )
     title_ul_box = Rectangle(
         width=title.width * 1.05,
         height=title.height * 1.6

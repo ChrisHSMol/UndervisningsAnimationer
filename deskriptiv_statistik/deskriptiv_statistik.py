@@ -484,6 +484,109 @@ class Deskriptorer(HyppighedsTabel):
             FadeOut(moving_arrows)
         )
 
+    def animer_kvartil(self, data, indices: tuple[int, int], colors=(GREEN_A, GREEN_E)):
+        i_start, i_end = indices
+        moving_arrows = VGroup(
+            # Arrow(
+            #     start=0.5*LEFT, end=0.5*RIGHT, stroke_color=colors[0],
+            #     max_tip_length_to_length_ratio=1, max_stroke_width_to_length_ratio=1
+            # ).next_to(data[i_start], LEFT, buff=0.1),
+            Arrow(
+                start=0.5*LEFT, end=0.5*RIGHT, stroke_color=colors[0]
+            ).next_to(data[i_start], LEFT, buff=0.1),
+            # Arrow(
+            #     start=0.5*RIGHT, end=0.5*LEFT, stroke_color=colors[1],
+            #     max_tip_length_to_length_ratio=1, max_stroke_width_to_length_ratio=1
+            # ).next_to(data[i_end], RIGHT, buff=0.1),
+            Arrow(
+                start=0.5*RIGHT, end=0.5*LEFT, stroke_color=colors[1]
+            ).next_to(data[i_end], RIGHT, buff=0.1),
+        )
+        # self.add(moving_arrows)
+        self.play(
+            DrawBorderThenFill(moving_arrows, lag_ratio=0.5),
+            run_time=0.5
+        )
+        # self.slide_pause()
+        i = 0
+        while moving_arrows[0].get_y() > moving_arrows[1].get_y():
+            # print(moving_arrows[0].get_y(), moving_arrows[1].get_y())
+            i += 1
+            self.play(
+                moving_arrows[0].animate.next_to(data[i_start + i], LEFT, buff=0.1),
+                moving_arrows[1].animate.next_to(data[i_end - i], RIGHT, buff=0.1),
+            )
+        # self.slide_pause()
+
+        if moving_arrows[0].get_y() < moving_arrows[1].get_y():
+            self.play(
+                data[i_end - i:i_start + i + 1].animate.set_color(color_gradient(colors, 3)),
+                FadeOut(moving_arrows)
+            )
+            self.slide_pause()
+            brace = Brace(data[i_end - i:i_start + i + 1], RIGHT, fill_color=color_gradient(colors, 3))
+            calc = VGroup(
+                MathTex(f"{data[i_end-i].get_value()}", "+", f"{data[i_start + i].get_value()}"),
+                MathTex("2")
+            ).arrange(DOWN, buff=0.25).next_to(brace, RIGHT)
+            calc[0][0].set_color(color_gradient(colors, 3))
+            calc[0][2].set_color(color_gradient(colors, 3))
+            calc.add(
+                Line(start=calc[0].get_left(), end=calc[0].get_right(), stroke_width=2).next_to(calc[0], DOWN, buff=0.125)
+            )
+            numdec = 2
+            if ((data[i_end-i].get_value() + data[i_start + i].get_value())/2).is_integer():
+                numdec = 0
+            calc.add(
+                MathTex(
+                    "=", f"{(data[i_end-i].get_value() + data[i_start + i].get_value())/2:.{numdec}f}"
+                ).next_to(calc[2], RIGHT)
+            )
+            calc[3][1].set_color(color_gradient(colors, 3))
+            calc.scale(0.5).next_to(brace, RIGHT)
+            self.play(
+                LaggedStart(
+                    DrawBorderThenFill(brace),
+                    # FadeIn(calc[:3], shift=0.5*RIGHT),
+                    # FadeIn(calc[3], shift=RIGHT),
+                    # FadeIn(calc, shift=0.5*RIGHT, lag_ratio=0.25),
+                    ReplacementTransform(data[i_end-i].copy(), calc[0][0]),
+                    ReplacementTransform(data[i_start+i].copy(), calc[0][2]),
+                    FadeIn(calc[:3]),
+                    FadeIn(calc[3], shift=RIGHT),
+                    lag_ratio=1
+                )
+            )
+            self.slide_pause()
+
+            self.play(
+                FadeOut(calc[:3], shift=0.5*LEFT),
+                FadeOut(calc[3][0], shift=0.5*LEFT),
+                calc[3][1].animate.next_to(brace, RIGHT)
+            )
+            val = (data[i_end-i].get_value() + data[i_start + i].get_value())/2
+            if val.is_integer():
+                val = int(val)
+            return [brace, calc[3][1], val]
+        else:
+            self.play(
+                data[i].animate.set_color(color_gradient(colors, 3)),
+                FadeOut(moving_arrows)
+            )
+            arrow = Arrow(
+                start=0.5*LEFT, end=0.5*RIGHT, stroke_color=color_gradient(colors, 3)
+            ).next_to(data[i], RIGHT, buff=0.1)
+            tal = data[i].copy().next_to(arrow, RIGHT)
+            self.play(
+                LaggedStart(
+                    DrawBorderThenFill(arrow),
+                    ReplacementTransform(data[i].copy(), tal)
+                )
+            )
+            # self.slide_pause()
+            val = tal.get_value()
+            return [arrow, tal, val]
+
     def animer_typetal(self, data):
         different_numbers = np.unique([d.get_value() for d in data])
         stoerste_tal = VGroup(
@@ -818,7 +921,7 @@ class Deskriptorer(HyppighedsTabel):
         self.slide_pause()
 
 
-class PrikOgPindediagrammer(HyppighedsTabel):
+class PrikOgPindediagrammer(Deskriptorer):
     def construct(self):
         self.slide_pause()
         title = Tex("Prik- og pindediagrammer fra rå data")
@@ -983,26 +1086,24 @@ class SumkurveFraTabel(HyppighedsTabel):
         # self.add(tabel_data, tabel_struktur, col_labels)
 
 
-class UgrupperetData(Slide if slides else Scene):
+class BoksplotOgKvartiler(PrikOgPindediagrammer):
     def construct(self):
-        title = Tex("Ugrupperet", " data")
+        # title = Tex("Ugrupperet", " data")
+        title = Tex("Boksplot", " fra rå data")
         title[0].set_color(YELLOW)
         play_title2(self, title)
-        self.slide_pause(0.5)
+        # self.slide_pause(0.5)
         self.kvartiler()
         self.slide_pause(5)
 
-    def slide_pause(self, t=1.0, slides_bool=slides):
-        return slides_pause(self, t=t, slides_bool=slides_bool)
-
-    def data_to_DecNum(self, data):
-        return VGroup(
-            *[DecimalNumber(
-                    val,
-                    include_sign=False,
-                    num_decimal_places=0,
-                ).scale(0.5) for val in data]
-        ).arrange(DOWN, aligned_edge=RIGHT, buff=0.1)
+    # def data_to_DecNum(self, data):
+    #     return VGroup(
+    #         *[DecimalNumber(
+    #                 val,
+    #                 include_sign=False,
+    #                 num_decimal_places=0,
+    #             ).scale(0.5) for val in data]
+    #     ).arrange(DOWN, aligned_edge=RIGHT, buff=0.1)
 
     def tegn_boksplot(self, kvartiler, kvartiltekst):
         q0, q1, q2, q3, q4 = kvartiler
@@ -1018,10 +1119,7 @@ class UgrupperetData(Slide if slides else Scene):
         self.slide_pause(0.5)
         full_plot = VGroup(plane)
         for q, t in zip([q0, q4], [kvartiltekst[1], kvartiltekst[9]]):
-            line = Line(
-                start=plane.n2p(q) + 0.5*UP,
-                end=plane.n2p(q) + 1*UP
-            )
+            line = Line(start=plane.n2p(q) + 0.5*UP, end=plane.n2p(q) + 1*UP)
             hnum = t.copy().scale(0.75).move_to(plane.n2p(q)+2*UP)
             self.play(
                 DrawBorderThenFill(
@@ -1034,10 +1132,7 @@ class UgrupperetData(Slide if slides else Scene):
             full_plot += line
             self.slide_pause(0.5)
         for q, t in zip([q2, q1, q3], [kvartiltekst[5], kvartiltekst[3], kvartiltekst[7]]):
-            line = Line(
-                start=plane.n2p(q),
-                end=plane.n2p(q) + 1.5*UP
-            )
+            line = Line(start=plane.n2p(q), end=plane.n2p(q) + 1.5*UP)
             hnum = t.copy().scale(0.75).move_to(plane.n2p(q)+2*UP)
             self.play(
                 DrawBorderThenFill(
@@ -1052,8 +1147,8 @@ class UgrupperetData(Slide if slides else Scene):
 
         box = Rectangle(
             height=1.5,
-            width=plane.n2p(q3)[0]-plane.n2p(q1)[0],
-            fill_color=BLUE,
+            width=plane.n2p(q3)[0] - plane.n2p(q1)[0],
+            fill_color=YELLOW,
             fill_opacity=1,
             z_index=-1,
             stroke_width=0.1
@@ -1097,13 +1192,13 @@ class UgrupperetData(Slide if slides else Scene):
             ),
             run_time=2
         )
-        self.slide_pause(0.5)
+        # self.slide_pause(0.5)
 
         steps = VGroup(
             Tex("Trin 1: Sortér data"),
             Tex("Trin 2: Find midterste tal"),
-            Tex("Trin 3: Trin 2, men nederste halvdel"),
-            Tex("Trin 4: Trin 2, men øverste halvdel")
+            Tex("Trin 3: Find midterste tal i nederste halvdel"),
+            Tex("Trin 4: Find midterste tal i øverste halvdel")
         ).scale(0.5).arrange(DOWN, aligned_edge=LEFT).to_edge(UR, buff=1.5)
         self.play(
             Write(steps[0]),
@@ -1111,12 +1206,20 @@ class UgrupperetData(Slide if slides else Scene):
         )
         self.slide_pause(0.5)
 
-        data_ordered = self.data_to_DecNum(sorted(data_raw)).next_to(data, RIGHT, buff=2)
+        # data_ordered = self.data_to_DecNum(sorted(data_raw)).next_to(data, RIGHT, buff=2)
+        data_ordered, sorting_dict = self.one_to_one_sort(data, desc=False)
+        # self.play(
+        #     TransformFromCopy(
+        #         data,
+        #         data_ordered
+        #     )
+        # )
         self.play(
-            TransformFromCopy(
-                data,
-                data_ordered
-            )
+            LaggedStart(
+                *[TransformFromCopy(k, v) for k, v in sorting_dict.items()],
+                lag_ratio=0.1
+            ),
+            run_time=2
         )
         self.slide_pause(0.5)
 
@@ -1127,224 +1230,50 @@ class UgrupperetData(Slide if slides else Scene):
         )
         self.slide_pause(0.5)
 
-        topArrow = Arrow(
-            start=0.5*LEFT,
-            end=0.5*RIGHT,
-            color=BLUE
-        ).next_to(data_ordered[0], LEFT)
-        botArrow = Arrow(
-            start=0.5*RIGHT,
-            end=0.5*LEFT,
-            color=RED
-        ).next_to(data_ordered[-1], RIGHT)
-        self.play(
-            Create(topArrow),
-            Create(botArrow),
+        q0_mob = data_ordered[0].copy()
+        med_arr, med_mob, med_val = self.animer_kvartil(
+            data_ordered, indices=(0, len(data) - 1), colors=(GREEN_A, BLUE_E)
         )
-
-        index_median = 0
-        median = np.median(data_raw)
-        for i in np.arange(len(data)-2)+1:
-            self.play(
-                topArrow.animate.next_to(data_ordered[i], LEFT),
-                botArrow.animate.next_to(data_ordered[-1-i], RIGHT),
-                run_time=2/(0.2*i+1)
-            )
-            if topArrow.get_center()[1] <= botArrow.get_center()[1]:
-                self.play(
-                    data_ordered[i].animate.set_color(YELLOW),
-                    run_time=2
-                )
-                median = data_ordered[i].copy()
-                self.play(
-                    median.animate.next_to(steps[1], RIGHT, buff=1.5),
-                    data_ordered[:i].animate.set_color(topArrow.get_color()),
-                    data_ordered[-i:].animate.set_color(botArrow.get_color()),
-                    # topArrow.animate.next_to(data_ordered[0], LEFT).set_opacity(0),
-                    # botArrow.animate.next_to(data_ordered[i-1], RIGHT).set_opacity(0)
-                    FadeOut(topArrow, botArrow)
-                )
-                # self.remove(topArrow, botArrow)
-                index_median = i
-                break
-
-        # topArrow.set_opacity(1)
-        # botArrow.set_opacity(1)
-        topArrow.next_to(data_ordered[0], LEFT)
-        botArrow.next_to(data_ordered[index_median-1], RIGHT).set_color(BLUE_C)
-
         self.slide_pause(0.5)
         self.play(
             Write(steps[2]),
-            VGroup(steps[1], median).animate.set_opacity(0.25),
+            steps[1].animate.set_opacity(0.25),
             run_time=2
         )
         self.slide_pause(0.5)
 
-        self.play(
-            FadeIn(topArrow),
-            FadeIn(botArrow),
+        q1_arr, q1_mob, q1_val = self.animer_kvartil(
+            data_ordered, indices=(0, len(data) // 2 - 1), colors=(GREEN_A, GREEN_E)
         )
-
-        index_q1 = 0
-        q1 = 0
-        for i in np.arange(index_median) + 1:
-            self.play(
-                topArrow.animate.next_to(data_ordered[i], LEFT),
-                botArrow.animate.next_to(data_ordered[index_median - i - 1], RIGHT),
-                run_time=2/(0.2*i+1)
-            )
-            if topArrow.get_center()[1] == botArrow.get_center()[1]:
-                print("HEJ")
-            if topArrow.get_center()[1] < botArrow.get_center()[1]:
-                self.play(
-                    VGroup(data_ordered[i], data_ordered[i-1]).animate.set_color(YELLOW),
-                    run_time=2
-                )
-                nums = [data_ordered[i-1].get_value(), data_ordered[i].get_value()]
-                calculation_q1 = MathTex(
-                    f"{{{data_ordered[i-1].get_value()}",
-                    "+",
-                    f"{data_ordered[i].get_value()}",
-                    r"\over",
-                    "2}",
-                    "=",
-                    # f"{np.mean(data_ordered[i-1].get_value(), data_ordered[i].get_value())}"
-                    f"{np.mean(nums):.0f}"
-                ).next_to(VGroup(data_ordered[i-1:i+1]), RIGHT).scale(0.5)
-                calculation_q1[0].set_color(YELLOW)
-                calculation_q1[2].set_color(YELLOW)
-                calculation_q1[-1].set_color(YELLOW)
-                q1_brace = Brace(
-                    VGroup(data_ordered[i - 1:i + 1]),
-                    RIGHT,
-                    sharpness=0.1
-                )
-                self.play(
-                    # Write(calculation),
-                    TransformFromCopy(
-                        VGroup(data_ordered[i - 1:i + 1]),
-                        calculation_q1
-                    ),
-                    FadeOut(topArrow, botArrow),
-                    Create(q1_brace),
-                    run_time=1
-                )
-                self.slide_pause(0.5)
-                index_q1 = i
-                q1 = DecimalNumber(
-                    np.mean(nums),
-                    include_sign=False,
-                    num_decimal_places=0,
-                    color=YELLOW
-                ).scale(0.5).next_to(calculation_q1, RIGHT, buff=-0.15)
-                q1num = int(np.mean(nums))
-                self.add(q1)
-                self.play(
-                    q1.animate.next_to(steps[2], RIGHT, buff=0.37),
-                    data_ordered[:i-1].animate.set_color(topArrow.get_color()),
-                    data_ordered[i+1:index_median].animate.set_color(botArrow.get_color()),
-                )
-                break
-
         self.slide_pause(0.5)
         self.play(
             Write(steps[3]),
-            VGroup(steps[2], q1).animate.set_opacity(0.25),
+            steps[2].animate.set_opacity(0.25),
             run_time=2
         )
         self.slide_pause(0.5)
 
-        topArrow.next_to(data_ordered[index_median+1], LEFT).set_color(RED)
-        botArrow.next_to(data_ordered[-1], RIGHT).set_color(RED_C)
-
-        self.play(
-            FadeIn(
-                topArrow,
-                botArrow
-            )
+        q3_arr, q3_mob, q3_val = self.animer_kvartil(
+            data_ordered, indices=(len(data) // 2 + 1, len(data) - 1), colors=(BLUE_A, BLUE_E)
         )
-        self.slide_pause()
-
-        index_q3 = 0
-        q3 = 0
-        for i in np.arange(index_median) + 1:
-            it = index_median + i
-            ib = len(data) - i
-            self.play(
-                topArrow.animate.next_to(data_ordered[it], LEFT),
-                botArrow.animate.next_to(data_ordered[ib], RIGHT),
-                run_time=2/(0.2*i+1)
-            )
-            if topArrow.get_center()[1] == botArrow.get_center()[1]:
-                print("HEJ")
-            if topArrow.get_center()[1] < botArrow.get_center()[1]:
-                self.play(
-                    VGroup(data_ordered[ib], data_ordered[it]).animate.set_color(YELLOW),
-                    run_time=2
-                )
-                nums = [data_ordered[ib].get_value(), data_ordered[it].get_value()]
-                calculation_q3 = MathTex(
-                    f"{{{data_ordered[ib].get_value()}",
-                    "+",
-                    f"{data_ordered[it].get_value()}",
-                    r"\over",
-                    "2}",
-                    "=",
-                    # f"{np.mean(data_ordered[i-1].get_value(), data_ordered[i].get_value())}"
-                    f"{np.mean(nums):.1f}"
-                ).next_to(VGroup(data_ordered[ib:it+1]), RIGHT, buff=0).scale(0.5)
-                calculation_q3[0].set_color(YELLOW)
-                calculation_q3[2].set_color(YELLOW)
-                calculation_q3[-1].set_color(YELLOW)
-                q3_brace = Brace(
-                    VGroup(data_ordered[ib:it+1]),
-                    RIGHT,
-                    sharpness=0.1
-                )#.next_to(VGroup(data_ordered[ib:it]), RIGHT)
-                self.play(
-                    # Write(calculation),
-                    TransformFromCopy(
-                        VGroup(data_ordered[ib:it]),
-                        calculation_q3
-                    ),
-                    FadeOut(topArrow, botArrow),
-                    Create(q3_brace),
-                    run_time=1
-                )
-                self.slide_pause(0.5)
-                index_q3 = ib
-                q3 = DecimalNumber(
-                    np.mean(nums),
-                    include_sign=False,
-                    num_decimal_places=1,
-                    color=YELLOW
-                ).scale(0.5).next_to(calculation_q3, RIGHT, buff=-0.15)
-                q3num = np.mean(nums)
-                self.add(q3)
-                self.play(
-                    q3.animate.next_to(steps[3:], RIGHT, buff=0.25),
-                    # data_ordered[index_median+1:index_q3].animate.set_color(topArrow.get_color()),
-                    # data_ordered[index_q3+1:].animate.set_color(botArrow.get_color()),
-                )
-                break
-
+        q4_mob = data_ordered[-1].copy()
         self.slide_pause(0.5)
 
-        kvartiler = [min(data_raw), q1num, median.get_value(),
-                     q3num, max(data_raw)]
+        kvartiler = VGroup(q1_mob, med_mob, q3_mob)
         kvartil_tekst = Tex(
             "Kvartilsættet er derfor"
         )
         kvartilsaet = MathTex(
-            "\{", q1num, "; ", median.get_value(), "; ", q3num, "\}"
+            r"\{", q1_val, r";\quad", med_val, r";\quad", q3_val, r"\}"
         ).next_to(kvartil_tekst, DOWN)
+        # for i, col in enumerate([q1_mob.get_color(), med_mob.get_color(), q3_mob.get_color()]):
+        #     kvartilsaet[2*i + 1].set_color(col)
         for i in [1, 3, 5]:
             kvartilsaet[i].set_color(YELLOW)
         self.play(
             *[m.animate.set_opacity(0.25) for m in self.mobjects],  # if m not in [median, q1, q3]],
             # *[m.animate.set_opacity(1) for m in [median, q1]],
-            TransformFromCopy(VGroup(median, q1, q3), kvartilsaet),
+            TransformFromCopy(kvartiler, kvartilsaet),
             Write(kvartil_tekst),
             run_time=2
         )
@@ -1354,17 +1283,19 @@ class UgrupperetData(Slide if slides else Scene):
             "Det udvidede kvartilsæt er"
         )
         kvartilsaetu = MathTex(
-            "\{", min(data_raw), "; ", q1num, "; ",
-            median.get_value(), "; ", q3num, "; ", max(data_raw), "\}"
+            r"\{", q0_mob.get_value(), r";\quad", q1_val, r";\quad", med_val, r";\quad",
+            q3_val, r";\quad", q4_mob.get_value(), r"\}"
         ).next_to(kvartil_tekst, DOWN)
         for i in [1, 3, 5, 7, 9]:
             kvartilsaetu[i].set_color(YELLOW)
         self.play(
-            Transform(
+            # ReplacementTransform(
+            TransformMatchingTex(
                 kvartil_tekst,
                 kvartilu_tekst
             ),
-            Transform(
+            # ReplacementTransform(
+            TransformMatchingTex(
                 kvartilsaet,
                 kvartilsaetu
             ),
@@ -1380,7 +1311,8 @@ class UgrupperetData(Slide if slides else Scene):
         )
         self.slide_pause(0.5)
 
-        boksplot = self.tegn_boksplot(kvartiler, kvartilsaetu)
+        box_kvartiler = [q0_mob.get_value(), q1_val, med_val, q3_val, q4_mob.get_value()]
+        boksplot = self.tegn_boksplot(box_kvartiler, kvartilsaetu)
 
 
 class SampleSize(Slide if slides else Scene):
@@ -1436,7 +1368,7 @@ class SampleSize(Slide if slides else Scene):
             # MathTex(f"{len([l for l in locs if l[0] ** 2 + l[1] ** 2 < sam_size.get_value() ** 2])/num_res*100:.2f} \%", color=BLUE)
             # MathTex(f"{len([self.is_in_circle(l, sample) for l in locs])/num_res*100:.2f} \%", color=BLUE)
             MathTex(
-                f"{len([l for l in locs if (l[0]-xt.get_value())**2 + (l[1]-yt.get_value())** 2 < sam_size.get_value() ** 2])/num_res*100:.2f} \%",
+                rf"{len([l for l in locs if (l[0]-xt.get_value())**2 + (l[1]-yt.get_value())** 2 < sam_size.get_value() ** 2])/num_res*100:.2f} \%",
                 color=BLUE
             )
         ).arrange(RIGHT).next_to(disp_sam, DOWN, aligned_edge=LEFT))
@@ -1490,7 +1422,7 @@ class SampleSize(Slide if slides else Scene):
 
 
 if __name__ == "__main__":
-    cls = Deskriptorer
+    cls = BoksplotOgKvartiler
     class_name = cls.__name__
     # transparent = cls.btransparent
     command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"

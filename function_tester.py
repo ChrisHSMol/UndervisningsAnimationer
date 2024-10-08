@@ -10,7 +10,7 @@ slides = False
 if slides:
     import manim_slides
 
-q = "l"
+q = "h"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -375,11 +375,8 @@ class CollisionTester(Scene):
 
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     cls = CollisionTester
-=======
     cls = TestTitelSkrivning
->>>>>>> 048053bf87978cd2a98125146b63547c069b8508
     class_name = cls.__name__
     # transparent = cls.btransparent
     command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
