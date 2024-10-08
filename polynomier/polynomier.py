@@ -1,12 +1,25 @@
 from manim import *
 import sys
 sys.path.append("../")
-from helpers import *
 import numpy as np
+import subprocess
+from helpers import *
 
 slides = True
 if slides:
     from manim_slides import Slide
+
+q = "h"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
 
 width = 14
 graph_col = YELLOW
@@ -401,8 +414,8 @@ class MonotoniForhold(Slide if slides else Scene):
 
     def start_graph(self):
         plane = NumberPlane(
-            x_range=(-5.5, 10.5, 1),
-            y_range=(-8.5, 9.5, 2),
+            x_range=(-25.5, 15.5, 5),
+            y_range=(-15.5, 25.5, 5),
             x_length=width,
             y_length=width / 16 * 9,
             background_line_style={
@@ -412,7 +425,8 @@ class MonotoniForhold(Slide if slides else Scene):
             },
         )
         graph = plane.plot(
-            lambda x: 0.2 * x ** 3 - 2 * x ** 2 + 3 * x + 5,
+            # lambda x: 0.2 * x ** 3 - 2 * x ** 2 + 3 * x + 5,
+            lambda x: 1 / 50 * (x**3 + 3 * x**2 - 144 * x + 140),
             color=BLUE,
             z_index=2,
             stroke_width=6
@@ -439,7 +453,8 @@ class MonotoniForhold(Slide if slides else Scene):
         )
         self.slide_pause()
 
-        top_x = [0.8612671710, 5.805399496]
+        # top_x = [0.8612671710, 5.805399496]
+        top_x = [-8, 6]
         toppunkter = VGroup(*[
             Dot(
                 plane.c2p(x, graph.underlying_function(x)),
@@ -454,8 +469,8 @@ class MonotoniForhold(Slide if slides else Scene):
                 color=p.get_color(), z_index=p.get_z_index()
             ).scale(0.45 if p != toppunkter[-1] else 0.0).next_to(p, UP) for p in toppunkter
         ])
-        xlows = [-3, *top_x]
-        xhighs = [*top_x, 10]
+        xlows = [-25, *top_x]
+        xhighs = [*top_x, 15]
         sub_graphs = VGroup(*[
             plane.plot(
                 lambda x: graph.underlying_function(x),
@@ -877,4 +892,24 @@ class KonstantersBetydning(Slide if slides else Scene):
                 a_tracker.animate.set_value(a),
                 run_time=2
             )
+
+
+
+if __name__ == "__main__":
+    cls = MonotoniForhold
+    class_name = cls.__name__
+    # transparent = cls.btransparent
+    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+    # if transparent:
+    #     command += " --transparent --format=webm"
+    scene_marker(rf"RUNNNING:    {command}")
+    subprocess.run(command)
+    if slides and q == "h":
+        command = rf"manim-slides convert {class_name} {class_name}.html"
+        scene_marker(rf"RUNNNING:    {command}")
+        subprocess.run(command)
+        if class_name+"Thumbnail" in dir():
+            command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+            scene_marker(rf"RUNNNING:    {command}")
+            subprocess.run(command)
 
