@@ -1406,8 +1406,15 @@ class SampleSize(Slide if slides else Scene):
             Tex("Respondenter: "),
             # MathTex(f"{len([l for l in locs if l[0] ** 2 + l[1] ** 2 < sam_size.get_value() ** 2])}", color=BLUE)
             # MathTex(f"{len([self.is_in_circle(l, sample) for l in locs])}", color=BLUE)
-            MathTex(
-                f"{len([l for l in locs if (l[0]-xt.get_value())**2 + (l[1]-yt.get_value())** 2 < sam_size.get_value()**2])}",
+            # MathTex(
+            #     f"{len([l for l in locs if (l[0]-xt.get_value())**2 + (l[1]-yt.get_value())** 2 < sam_size.get_value()**2])}",
+            #     color=BLUE
+            # )
+            DecimalNumber(
+                len(
+                    [l for l in locs if (l[0] - xt.get_value()) ** 2 + (l[1] - yt.get_value()) ** 2 < sam_size.get_value() ** 2]
+                ),
+                num_decimal_places=0,
                 color=BLUE
             )
         ).arrange(RIGHT).next_to(disp_res, DOWN, aligned_edge=LEFT))
@@ -1415,9 +1422,17 @@ class SampleSize(Slide if slides else Scene):
             Tex("Pct.:"),
             # MathTex(f"{len([l for l in locs if l[0] ** 2 + l[1] ** 2 < sam_size.get_value() ** 2])/num_res*100:.2f} \%", color=BLUE)
             # MathTex(f"{len([self.is_in_circle(l, sample) for l in locs])/num_res*100:.2f} \%", color=BLUE)
-            MathTex(
-                rf"{len([l for l in locs if (l[0]-xt.get_value())**2 + (l[1]-yt.get_value())** 2 < sam_size.get_value() ** 2])/num_res*100:.2f} \%",
-                color=BLUE
+            # MathTex(
+            #     rf"{len([l for l in locs if (l[0]-xt.get_value())**2 + (l[1]-yt.get_value())** 2 < sam_size.get_value() ** 2])/num_res*100:.2f} \%",
+            #     color=BLUE
+            # )
+            DecimalNumber(
+                len(
+                    [l for l in locs if (l[0] - xt.get_value()) ** 2 + (l[1] - yt.get_value()) ** 2 < sam_size.get_value() ** 2]
+                ) / num_res * 100,
+                num_decimal_places=2,
+                color=BLUE,
+                unit=r"\%"
             )
         ).arrange(RIGHT).next_to(disp_sam, DOWN, aligned_edge=LEFT))
 
@@ -1470,20 +1485,28 @@ class SampleSize(Slide if slides else Scene):
 
 
 if __name__ == "__main__":
-    cls = BoksplotOgKvartiler
-    class_name = cls.__name__
-    # transparent = cls.btransparent
-    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
-    # if transparent:
-    #     command += " --transparent --format=webm"
-    scene_marker(rf"RUNNNING:    {command}")
-    subprocess.run(command)
-    if slides and q == "h":
-        command = rf"manim-slides convert {class_name} {class_name}.html"
+    classes = [
+        # HyppighedsTabel,
+        # Deskriptorer,
+        # PrikOgPindediagrammer,
+        # SumkurveFraTabel,
+        # BoksplotOgKvartiler,
+        SampleSize
+    ]
+    for cls in classes:
+        class_name = cls.__name__
+        # transparent = cls.btransparent
+        command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+        # if transparent:
+        #     command += " --transparent --format=webm"
         scene_marker(rf"RUNNNING:    {command}")
         subprocess.run(command)
-        if class_name+"Thumbnail" in dir():
-            command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+        if slides and q == "h":
+            command = rf"manim-slides convert {class_name} {class_name}.html"
             scene_marker(rf"RUNNNING:    {command}")
             subprocess.run(command)
+            if class_name+"Thumbnail" in dir():
+                command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+                scene_marker(rf"RUNNNING:    {command}")
+                subprocess.run(command)
 
