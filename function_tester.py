@@ -6,9 +6,9 @@ import sys
 from custom_classes import BohrAtom
 import sys
 
-slides = False
+slides = True
 if slides:
-    import manim_slides
+    from manim_slides import Slide
 
 q = "h"
 _RESOLUTION = {
@@ -275,11 +275,17 @@ class TestBohrAtomOvergange(Scene):
         self.wait(5)
 
 
-class TestTitelSkrivning(Scene):
+class TestTitelSkrivning(Slide):
     def construct(self):
         title = Tex("Dette er en test")
         play_title2(self, title)
-        self.wait()
+        # self.wait()
+        slides_pause(self, t=1, slides_bool=slides)
+        self.wait(1)
+        slides_pause(self)
+        rect = Rectangle(color=BLUE, height=2, width=3)
+        draw_and_fade_in_mob(self, rect)
+        slides_pause(self)
 
 
 class TestVariabelZoomTykkelse(MovingCameraScene):
@@ -363,6 +369,7 @@ class CollisionTester(Scene):
             dir += dt * np.random.uniform(-1, 1) * UP
         m.shift(dir * _FRAMERATE[q]**0.5)
         return m
+
 
 
 

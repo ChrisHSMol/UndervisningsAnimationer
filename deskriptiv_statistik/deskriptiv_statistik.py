@@ -516,6 +516,8 @@ class Deskriptorer(HyppighedsTabel):
                 moving_arrows[0].animate.next_to(data[i_start + i], LEFT, buff=0.1),
                 moving_arrows[1].animate.next_to(data[i_end - i], RIGHT, buff=0.1),
             )
+        if i == 0:
+            i = i_end
         # self.slide_pause()
 
         if moving_arrows[0].get_y() < moving_arrows[1].get_y():
@@ -1105,7 +1107,7 @@ class BoksplotOgKvartiler(PrikOgPindediagrammer):
     #             ).scale(0.5) for val in data]
     #     ).arrange(DOWN, aligned_edge=RIGHT, buff=0.1)
 
-    def tegn_boksplot(self, kvartiler, kvartiltekst):
+    def tegn_boksplot(self, kvartiler, kvartiltekst, box_colour=YELLOW):
         q0, q1, q2, q3, q4 = kvartiler
         plane = NumberLine(
             x_range=(kvartiler[0]-2, kvartiler[-1]+2, 1),
@@ -1148,7 +1150,7 @@ class BoksplotOgKvartiler(PrikOgPindediagrammer):
         box = Rectangle(
             height=1.5,
             width=plane.n2p(q3)[0] - plane.n2p(q1)[0],
-            fill_color=YELLOW,
+            fill_color=box_colour,
             fill_opacity=1,
             z_index=-1,
             stroke_width=0.1
@@ -1256,7 +1258,17 @@ class BoksplotOgKvartiler(PrikOgPindediagrammer):
         q3_arr, q3_mob, q3_val = self.animer_kvartil(
             data_ordered, indices=(len(data) // 2 + 1, len(data) - 1), colors=(BLUE_A, BLUE_E)
         )
+        self.slide_pause(0.5)
+
+        q0_arr, q0_mob, q0_val = self.animer_kvartil(
+            data_ordered, indices=(0, 0), colors=(GREEN_A, GREEN_A)
+        )
+        self.slide_pause(0.5)
+
         q4_mob = data_ordered[-1].copy()
+        q4_arr, q4_mob, q4_val = self.animer_kvartil(
+            data_ordered, indices=(-1, -1), colors=(BLUE_E, BLUE_E)
+        )
         self.slide_pause(0.5)
 
         kvartiler = VGroup(q1_mob, med_mob, q3_mob)
@@ -1303,6 +1315,42 @@ class BoksplotOgKvartiler(PrikOgPindediagrammer):
         )
         self.slide_pause(0.5)
 
+        # label_arrows = VGroup(*[
+        #     Arrow(
+        #         start=0.5*DOWN, end=0.5*UP
+        #     ).scale(i % 2 + 1).next_to(q, DOWN) for i, q in enumerate(
+        #         [kvartilsaetu[1], kvartilsaetu[3], kvartilsaetu[5], kvartilsaetu[7], kvartilsaetu[9]]
+        #     )
+        # ])
+        # labels = VGroup(*[
+        #     Tex(t).next_to(ar, DOWN) for t, ar in zip(
+        #         ["Minimum", "1. kvartil", "Median", "3. kvartil", "Maksimum"], label_arrows
+        #     )
+        # ])
+        # labels = VGroup(
+        #     VGroup(*[Tex(t) for t in ["Minimum", "Median", "Maksimum"]]).arrange(RIGHT, buff=1),
+        #     VGroup(*[Tex(t) for t in ["1. kvartil", "3. kvartil"]]).arrange(RIGHT, buff=1)
+        # ).arrange(DOWN).next_to(kvartilsaetu, DOWN)
+        # srecs = VGroup()
+        # for lg in labels:
+        #     for label in lg:
+        #         srecs.add(get_background_rect(label, buff=0.1, fill_opacity=1, fill_color=BLACK))
+        # label_arrows = VGroup(
+        #     *[
+        #         Arrow(start=label.get_center(), end=q.get_center()) for label, q in zip(
+        #             labels[0],
+        #             [kvartilsaetu[1], kvartilsaetu[5], kvartilsaetu[9]]
+        #         )
+        #     ],
+        #     *[
+        #         Arrow(label.get_center(), end=q.get_center()) for label, q in zip(
+        #             labels[1],
+        #             [kvartilsaetu[3], kvartilsaetu[7]]
+        #         )
+        #     ]
+        # )
+        # self.add(label_arrows, labels, srecs)
+
         self.play(
             kvartilu_tekst.animate.to_edge(UL),
             kvartilsaetu.animate.to_edge(UP).shift(3*RIGHT),
@@ -1312,7 +1360,7 @@ class BoksplotOgKvartiler(PrikOgPindediagrammer):
         self.slide_pause(0.5)
 
         box_kvartiler = [q0_mob.get_value(), q1_val, med_val, q3_val, q4_mob.get_value()]
-        boksplot = self.tegn_boksplot(box_kvartiler, kvartilsaetu)
+        boksplot = self.tegn_boksplot(box_kvartiler, kvartilsaetu, box_colour=YELLOW_D)
 
 
 class SampleSize(Slide if slides else Scene):
