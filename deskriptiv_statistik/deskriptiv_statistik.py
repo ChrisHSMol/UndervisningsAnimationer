@@ -5,11 +5,11 @@ import numpy as np
 import subprocess
 from helpers import *
 
-slides = True
+slides = False
 if slides:
     from manim_slides import Slide
 
-q = "h"
+q = "l"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -1060,7 +1060,7 @@ class PrikOgPindediagrammer(Deskriptorer):
         )
 
 
-class SumkurveFraTabel(HyppighedsTabel):
+class SumkurveFraTabel(PrikOgPindediagrammer):
     def construct(self):
         self.hyppighedstabel_til_sumkurve()
         self.wait(5)
@@ -1086,6 +1086,128 @@ class SumkurveFraTabel(HyppighedsTabel):
             run_time=2
         )
         # self.add(tabel_data, tabel_struktur, col_labels)
+
+
+class TrappediagramFraTabel(SumkurveFraTabel):
+    def construct(self):
+        title = Tex("Trappediagram", " fra hyppighedstabel")
+        title[0].set_color(YELLOW)
+        play_title2(self, title)
+        self.hyppighedstabel_til_trappediagram()
+        self.wait(5)
+
+    def hyppighedstabel_til_trappediagram(self):
+        data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
+        data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=2)
+        sorted_data, sorting_dict = self.one_to_one_sort(data, desc=False)
+        different_numbers = np.unique(data_raw)
+        num_different_numbers = len(different_numbers)
+        tabel_struktur, tabel_data, tabel_data_raw = self.prepare_table(data_raw, include_header_row=True)
+        VGroup(tabel_struktur, tabel_data).to_edge(LEFT)
+        col_labels = VGroup(*[Tex(d, font_size=22).move_to(tabel_struktur[0][i]) for i, d in enumerate([
+            "Observation", "Hyppighed", "Kumuleret\\\\hyppighed", "Frekvens", "Kumuleret\\\\frekvens"
+        ])])
+        self.play(
+            LaggedStart(
+                *[DrawBorderThenFill(r, lag_ratio=0.05) for r in tabel_struktur],
+                *[Write(r) for r in col_labels],
+                *[Write(r, lag_ratio=0.05) for r in tabel_data],
+                lag_ratio=0.05
+            ),
+            run_time=2
+        )
+        self.remove(tabel_data, tabel_struktur, col_labels)
+        self.add(tabel_data, tabel_struktur, col_labels)
+
+        opaque_box = Rectangle(
+            height=tabel_struktur.height, width=tabel_struktur.width * 0.4, fill_color=BLACK, fill_opacity=0.9,
+            stroke_width=0
+        ).next_to(tabel_struktur, RIGHT, buff=-tabel_struktur.width * 0.39)
+        self.play(
+            # tabel_struktur[-2:].animate.set_style(fill_opacity=0.1, stroke_opacity=0.1)
+            FadeIn(opaque_box)
+        )
+
+        # plane = NumberPlane(
+        #     x_range=(0, 20, 1),
+        #     y_range=(0, 30, 2),
+        #     x_length=8,
+        #     y_length=5
+        # ).to_edge(RIGHT)
+        plane = Axes(
+            x_range=(0, 20, 1),
+            y_range=(0, 30, 2),
+            x_length=8,
+            y_length=6.5,
+            tips=False,
+            axis_config={"include_numbers": True, "font_size": 30}
+        ).to_edge(RIGHT, buff=0.15)
+        axhlines = VGroup(*[
+            DashedLine(
+                start=plane.c2p(0, y), end=plane.c2p(20, y), stroke_width=1
+            ) for y in plane[1].get_tick_range()
+        ])
+        self.play(
+            LaggedStart(
+                DrawBorderThenFill(plane),
+                *[Create(l, run_time=0.5) for l in axhlines],
+                lag_ratio=0.2
+            )
+        )
+        self.slide_pause()
+
+        i = 0
+        graph = VGroup()
+        for row_data, row_cells in zip(tabel_data_raw, tabel_struktur[1:]):
+            obs = row_data[0]
+            kumhyp = row_data[2]
+            highlight_boxes = VGroup(
+                *[row_cells[j].copy().set_style(fill_color=BLUE_A, fill_opacity=0.25).set_z_index(5) for j in [0, 2]]
+            )
+
+            # if i == 0:
+            #     self.play(
+            #         FadeIn(highlight_boxes),
+            #         run_time=0.5
+            #     )
+            self.play(
+                FadeIn(highlight_boxes),
+                run_time=0.5
+            )
+            x_min = 0
+            y_min = 0
+            if i > 0:
+                x_min = tabel_data_raw[i-1][0]
+                y_min = tabel_data_raw[i-1][2]
+            line_h = Line(
+                start=plane.c2p(x_min, y_min), end=plane.c2p(obs, y_min), color=BLUE
+            )
+            line_v = Line(
+                start=plane.c2p(obs, y_min), end=plane.c2p(obs, kumhyp), color=BLUE
+            )
+            graph.add(line_h, line_v)
+
+            self.play(
+                LaggedStart(
+                    Create(line_h),
+                    Create(line_v),
+                    lag_ratio=1
+                )
+            )
+            if obs == tabel_data_raw[-1][0]:
+                line_h = Line(
+                    start=plane.c2p(obs, kumhyp), end=plane.c2p(20, kumhyp), color=BLUE
+                )
+                self.play(
+                    Create(line_h)
+                )
+            self.slide_pause()
+
+            self.play(
+                FadeOut(highlight_boxes)
+            )
+            i += 1
+
 
 
 class BoksplotOgKvartiler(PrikOgPindediagrammer):
@@ -1491,7 +1613,8 @@ if __name__ == "__main__":
         # PrikOgPindediagrammer,
         # SumkurveFraTabel,
         # BoksplotOgKvartiler,
-        SampleSize
+        # SampleSize,
+        TrappediagramFraTabel
     ]
     for cls in classes:
         class_name = cls.__name__
