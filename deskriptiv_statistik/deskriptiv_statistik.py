@@ -5,11 +5,11 @@ import numpy as np
 import subprocess
 from helpers import *
 
-slides = False
+slides = True
 if slides:
     from manim_slides import Slide
 
-q = "l"
+q = "h"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -1144,7 +1144,7 @@ class TrappediagramFraTabel(SumkurveFraTabel):
         ).to_edge(RIGHT, buff=0.15)
         axhlines = VGroup(*[
             DashedLine(
-                start=plane.c2p(0, y), end=plane.c2p(20, y), stroke_width=1
+                start=plane.c2p(0, y), end=plane.c2p(20, y), stroke_width=1, stroke_opacity=0.5
             ) for y in plane[1].get_tick_range()
         ])
         self.play(
@@ -1170,15 +1170,24 @@ class TrappediagramFraTabel(SumkurveFraTabel):
             #         FadeIn(highlight_boxes),
             #         run_time=0.5
             #     )
-            self.play(
-                FadeIn(highlight_boxes),
-                run_time=0.5
-            )
+            # self.play(
+            #     FadeIn(highlight_boxes),
+            #     run_time=0.5
+            # )
             x_min = 0
             y_min = 0
             if i > 0:
                 x_min = tabel_data_raw[i-1][0]
                 y_min = tabel_data_raw[i-1][2]
+                self.play(
+                    ReplacementTransform(old_boxes, highlight_boxes),
+                    run_time=0.5
+                )
+            else:
+                self.play(
+                    FadeIn(highlight_boxes),
+                    run_time=0.5
+                )
             line_h = Line(
                 start=plane.c2p(x_min, y_min), end=plane.c2p(obs, y_min), color=BLUE
             )
@@ -1202,12 +1211,13 @@ class TrappediagramFraTabel(SumkurveFraTabel):
                     Create(line_h)
                 )
             self.slide_pause()
+            old_boxes = highlight_boxes
 
-            self.play(
-                FadeOut(highlight_boxes)
-            )
             i += 1
-
+        self.play(
+            FadeOut(highlight_boxes)
+        )
+        self.slide_pause()
 
 
 class BoksplotOgKvartiler(PrikOgPindediagrammer):
