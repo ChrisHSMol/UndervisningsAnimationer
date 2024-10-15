@@ -5,11 +5,11 @@ import numpy as np
 import subprocess
 from helpers import *
 
-slides = True
+slides = False
 if slides:
     from manim_slides import Slide
 
-q = "h"
+q = "l"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -1239,7 +1239,7 @@ class BoksplotOgKvartiler(PrikOgPindediagrammer):
     #             ).scale(0.5) for val in data]
     #     ).arrange(DOWN, aligned_edge=RIGHT, buff=0.1)
 
-    def tegn_boksplot(self, kvartiler, kvartiltekst, box_colour=YELLOW):
+    def tegn_boksplot(self, kvartiler, kvartiltekst, box_colour=YELLOW, fade_out_text=True):
         q0, q1, q2, q3, q4 = kvartiler
         plane = NumberLine(
             x_range=(kvartiler[0]-2, kvartiler[-1]+2, 1),
@@ -1311,9 +1311,10 @@ class BoksplotOgKvartiler(PrikOgPindediagrammer):
         )
         self.slide_pause(0.5)
         self.add(full_plot)
-        self.play(
-            *[FadeOut(m) for m in self.mobjects if m != full_plot]
-        )
+        if fade_out_text:
+            self.play(
+                *[FadeOut(m) for m in self.mobjects if m != full_plot]
+            )
         return full_plot
 
     def kvartiler(self):
@@ -1332,7 +1333,9 @@ class BoksplotOgKvartiler(PrikOgPindediagrammer):
             Tex("Trin 1: Sortér data"),
             Tex("Trin 2: Find midterste tal"),
             Tex("Trin 3: Find midterste tal i nederste halvdel"),
-            Tex("Trin 4: Find midterste tal i øverste halvdel")
+            Tex("Trin 4: Find midterste tal i øverste halvdel"),
+            Tex("Trin 5: Find mindste værdi"),
+            Tex("Trin 5: Find største værdi")
         ).scale(0.5).arrange(DOWN, aligned_edge=LEFT).to_edge(UR, buff=1.5)
         self.play(
             Write(steps[0]),
@@ -1391,9 +1394,21 @@ class BoksplotOgKvartiler(PrikOgPindediagrammer):
             data_ordered, indices=(len(data) // 2 + 1, len(data) - 1), colors=(BLUE_A, BLUE_E)
         )
         self.slide_pause(0.5)
+        self.play(
+            Write(steps[4]),
+            steps[3].animate.set_opacity(0.25),
+            run_time=2
+        )
+        self.slide_pause(0.5)
 
         q0_arr, q0_mob, q0_val = self.animer_kvartil(
             data_ordered, indices=(0, 0), colors=(GREEN_A, GREEN_A)
+        )
+        self.slide_pause(0.5)
+        self.play(
+            Write(steps[5]),
+            steps[4].animate.set_opacity(0.25),
+            run_time=2
         )
         self.slide_pause(0.5)
 
@@ -1493,6 +1508,79 @@ class BoksplotOgKvartiler(PrikOgPindediagrammer):
 
         box_kvartiler = [q0_mob.get_value(), q1_val, med_val, q3_val, q4_mob.get_value()]
         boksplot = self.tegn_boksplot(box_kvartiler, kvartilsaetu, box_colour=YELLOW_D)
+
+
+class OutliersOgBredder(BoksplotOgKvartiler):
+    def construct(self):
+        title = Tex("Kvartilbredde", " og ", "variationsbredde")
+        cmap = self.get_cmap()
+        title[0].set_color(cmap["kb"])
+        title[2].set_color(cmap["vb"])
+        play_title2(self, title)
+        self.bredder_og_outliers()
+        self.slide_pause(5)
+
+    def get_cmap(self):
+        return {"kb": BLUE, "vb": ORANGE}
+
+    def bredder_og_outliers(self):
+        udvidet_kvartil = (4, 6, 8, 10.5, 19)
+        cmap = self.get_cmap()
+        q0 = DecimalNumber(udvidet_kvartil[0], num_decimal_places=0).set_color(YELLOW)
+        q1 = DecimalNumber(udvidet_kvartil[1], num_decimal_places=0).set_color(YELLOW)
+        q2 = DecimalNumber(udvidet_kvartil[2], num_decimal_places=0).set_color(YELLOW)
+        q3 = DecimalNumber(udvidet_kvartil[3], num_decimal_places=1).set_color(YELLOW)
+        q4 = DecimalNumber(udvidet_kvartil[4], num_decimal_places=0).set_color(YELLOW)
+        udv_kvart_text = Tex("Det udvidede kvartilsæt er").to_edge(UL)
+        udv_kvart_mobs = MathTex(
+            r"\{", q0.get_value(), r";\quad", q1.get_value(), r";\quad", q2.get_value(),
+            r";\quad", q3.get_value(), r";\quad", q4.get_value(), r"\}"
+        ).to_edge(UR)
+        for i in [1, 3, 5, 7, 9]:
+            udv_kvart_mobs[i].set_color(YELLOW)
+        self.play(
+            FadeIn(udv_kvart_mobs),
+            FadeIn(udv_kvart_text),
+            run_time=0.5
+        )
+        self.slide_pause()
+
+        boksplot = self.tegn_boksplot(udvidet_kvartil, udv_kvart_mobs, box_colour=YELLOW_D, fade_out_text=False)
+
+        kvartilbredde_brace = Brace(boksplot[3:6], direction=UP, color=cmap["kb"], buff=1)
+        kvartilbredde_tekst = Tex("Kvartilbredde", font_size=32, color=cmap["kb"]).next_to(kvartilbredde_brace, UP)
+        self.play(
+            GrowFromCenter(kvartilbredde_brace),
+            Write(kvartilbredde_tekst)
+        )
+        self.slide_pause()
+
+        kvartilbredde_udr = MathTex(
+            "kb", " = ", q3.get_value(), " - ", q1.get_value(), " = ", f"{udvidet_kvartil[3] - udvidet_kvartil[1]:.1f}"
+        ).next_to(kvartilbredde_tekst, UP)
+        for i in [2, 4]:
+            kvartilbredde_udr[i].set_color(YELLOW)
+        for i in [0, 6]:
+            kvartilbredde_udr[i].set_color(cmap["kb"])
+        self.play(
+            Write(kvartilbredde_udr)
+        )
+        self.slide_pause()
+
+        self.play(
+            FadeOut(kvartilbredde_udr[2:6]),
+            VGroup(kvartilbredde_udr[:2], kvartilbredde_udr[-1]).animate.arrange(RIGHT).next_to(kvartilbredde_tekst, UP)
+        )
+        self.slide_pause()
+
+        kvartilbredde = VGroup(
+            kvartilbredde_udr[:2], kvartilbredde_udr[-1]
+        ).arrange(RIGHT).next_to(kvartilbredde_tekst, UP)
+        self.remove(kvartilbredde_udr)
+        self.add(kvartilbredde)
+
+
+
 
 
 class SampleSize(Slide if slides else Scene):
@@ -1623,8 +1711,9 @@ if __name__ == "__main__":
         # PrikOgPindediagrammer,
         # SumkurveFraTabel,
         # BoksplotOgKvartiler,
+        OutliersOgBredder,
         # SampleSize,
-        TrappediagramFraTabel
+        # TrappediagramFraTabel
     ]
     for cls in classes:
         class_name = cls.__name__
