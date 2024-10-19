@@ -1521,7 +1521,7 @@ class OutliersOgBredder(BoksplotOgKvartiler):
         self.slide_pause(5)
 
     def get_cmap(self):
-        return {"kb": BLUE, "vb": ORANGE}
+        return {"kb": GREEN, "vb": ORANGE, "outlier": RED, "obs": BLUE}
 
     def bredder_og_outliers(self):
         udvidet_kvartil = (4, 6, 8, 10.5, 19)
@@ -1545,7 +1545,10 @@ class OutliersOgBredder(BoksplotOgKvartiler):
         )
         self.slide_pause()
 
-        boksplot = self.tegn_boksplot(udvidet_kvartil, udv_kvart_mobs, box_colour=YELLOW_D, fade_out_text=False)
+        boksplot = self.tegn_boksplot(udvidet_kvartil, udv_kvart_mobs, box_colour=YELLOW_D, fade_out_text=True)
+        self.play(
+            boksplot.animate.to_edge(DOWN)
+        )
 
         kvartilbredde_brace = Brace(boksplot[3:6], direction=UP, color=cmap["kb"], buff=1)
         kvartilbredde_tekst = Tex("Kvartilbredde", font_size=32, color=cmap["kb"]).next_to(kvartilbredde_brace, UP)
@@ -1578,9 +1581,151 @@ class OutliersOgBredder(BoksplotOgKvartiler):
         ).arrange(RIGHT).next_to(kvartilbredde_tekst, UP)
         self.remove(kvartilbredde_udr)
         self.add(kvartilbredde)
+        self.play(
+            kvartilbredde.animate.next_to(udv_kvart_text, DOWN, aligned_edge=LEFT),
+            FadeOut(kvartilbredde_tekst),
+            FadeOut(kvartilbredde_brace)
+        )
+        self.slide_pause()
 
+        variationsbredde_brace = Brace(boksplot[1:3], direction=UP, color=cmap["vb"], buff=1.25)
+        variationsbredde_tekst = Tex("Variationsbredde", font_size=32, color=cmap["vb"]).next_to(variationsbredde_brace, UP)
+        self.play(
+            GrowFromCenter(variationsbredde_brace),
+            Write(variationsbredde_tekst)
+        )
+        self.slide_pause()
 
+        variationsbredde_udr = MathTex(
+            "vb", " = ", q4.get_value(), " - ", q0.get_value(), " = ", f"{udvidet_kvartil[4] - udvidet_kvartil[0]:.0f}"
+        ).next_to(variationsbredde_tekst, UP)
+        for i in [2, 4]:
+            variationsbredde_udr[i].set_color(YELLOW)
+        for i in [0, 6]:
+            variationsbredde_udr[i].set_color(cmap["vb"])
+        self.play(
+            Write(variationsbredde_udr)
+        )
+        self.slide_pause()
 
+        self.play(
+            FadeOut(variationsbredde_udr[2:6]),
+            VGroup(
+                variationsbredde_udr[:2], variationsbredde_udr[-1]
+            ).animate.arrange(RIGHT).next_to(variationsbredde_tekst, UP)
+        )
+        self.slide_pause()
+
+        variationsbredde = VGroup(
+            variationsbredde_udr[:2], variationsbredde_udr[-1]
+        ).arrange(RIGHT).next_to(variationsbredde_tekst, UP)
+        self.remove(variationsbredde_udr)
+        self.add(variationsbredde)
+        self.play(
+            variationsbredde.animate.next_to(kvartilbredde, DOWN, aligned_edge=LEFT),
+            FadeOut(variationsbredde_tekst),
+            FadeOut(variationsbredde_brace)
+        )
+        self.slide_pause()
+
+        outlier_forklaring = VGroup(
+            Tex("En ", "outlier", " er en ", "observation", ","),
+            Tex("som er 1.5 ", "kvartilbredder", " under ", "1. kvartil", ","),
+            Tex("eller 1.5 ", "kvartilbredder", " over ", "3. kvartil", ".")
+        ).arrange(DOWN, aligned_edge=LEFT).set_z_index(5)
+        outlier_forklaring[0][1].set_color(cmap["outlier"])
+        outlier_forklaring[0][3].set_color(cmap["obs"])
+        outlier_forklaring[1][1].set_color(cmap["kb"])
+        outlier_forklaring[1][3].set_color(YELLOW)
+        outlier_forklaring[2][1].set_color(cmap["kb"])
+        outlier_forklaring[2][3].set_color(YELLOW)
+        outlier_box = get_background_rect(
+            outlier_forklaring, buff=1, stroke_colour=RED, stroke_width=2, fill_opacity=1.95
+        )
+        self.play(
+            LaggedStart(
+                FadeIn(outlier_box, run_time=0.5),
+                Write(outlier_forklaring),
+                lag_ratio=0.5
+            )
+        )
+        self.slide_pause()
+
+        _outlier_border = 1.5*(udvidet_kvartil[3] - udvidet_kvartil[1])
+        outlier_border = VGroup(
+            MathTex(r"1.5 \cdot "), kvartilbredde[-1].copy(), Tex(" = "),
+            DecimalNumber(_outlier_border, num_decimal_places=2, color=cmap["outlier"])
+        ).arrange(RIGHT).next_to(kvartilbredde, RIGHT, buff=1)
+        self.play(
+            Write(outlier_border),
+            FadeOut(outlier_box, run_time=0.5),
+            Unwrite(outlier_forklaring, run_time=0.5)
+        )
+        self.slide_pause()
+
+        print(*boksplot)
+
+        outlier_line_high = DashedLine(
+            start=boksplot[0].n2p(q3.get_value()),
+            end=boksplot[0].n2p(q3.get_value()) + 3*UP,
+            stroke_color=cmap["outlier"],
+            stroke_width=6
+        )
+        outlier_line_dist = always_redraw(lambda:
+            DashedLine(
+                start=boksplot[0].n2p(q3.get_value()) + 1.5*UP,
+                end=outlier_line_high.get_center(),
+                stroke_color=cmap["outlier"],
+                stroke_width=3
+            )
+        )
+        outlier_line_tracker = always_redraw(lambda:
+            DecimalNumber(
+                # number=boksplot[0].n2p(outlier_line_dist.get_end()[0])[0] - boksplot[0].n2p(outlier_line_dist.get_start()[0])[0],
+                number=boksplot[0].p2n(outlier_line_dist.get_end()) - boksplot[0].p2n(outlier_line_dist.get_start()),
+                num_decimal_places=2,
+                color=cmap["outlier"]
+            ).scale(0.75).next_to(outlier_line_dist, UP)
+        )
+        outlier_line_place = always_redraw(lambda:
+            DecimalNumber(
+                number=boksplot[0].p2n(outlier_line_high.get_start()),
+                num_decimal_places=2,
+                color=cmap["outlier"]
+            ).next_to(outlier_line_high, UP)
+        )
+        self.play(
+            Create(outlier_line_high),
+            Create(outlier_line_dist),
+            Write(outlier_line_tracker),
+            Write(outlier_line_place),
+            run_time=0.5
+        )
+        self.slide_pause()
+
+        self.play(
+            outlier_line_high.animate.shift(
+                (boksplot[0].n2p(q3.get_value() + _outlier_border)[0] - boksplot[0].n2p(q3.get_value())[0]) * RIGHT
+            ),
+            run_time=_outlier_border/2
+        )
+        self.slide_pause()
+
+        outliers = Tex("Alle {{observationer}} over {{17.25}} er {{outliers}}.").set_z_index(5)
+        outliers[1].set_color(cmap["obs"])
+        outliers[3].set_color(cmap["outlier"])
+        outliers[5].set_color(cmap["outlier"])
+        outliers_box = get_background_rect(
+            outliers, buff=1, stroke_colour=RED, stroke_width=2, fill_opacity=1.95
+        )
+        self.play(
+            LaggedStart(
+                FadeIn(outliers_box),
+                Write(outliers),
+                lag_ratio=0.5
+            )
+        )
+        self.slide_pause()
 
 
 class SampleSize(Slide if slides else Scene):
@@ -1711,16 +1856,13 @@ if __name__ == "__main__":
         # PrikOgPindediagrammer,
         # SumkurveFraTabel,
         # BoksplotOgKvartiler,
-        OutliersOgBredder,
+        # OutliersOgBredder,
         # SampleSize,
         # TrappediagramFraTabel
     ]
     for cls in classes:
         class_name = cls.__name__
-        # transparent = cls.btransparent
         command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
-        # if transparent:
-        #     command += " --transparent --format=webm"
         scene_marker(rf"RUNNNING:    {command}")
         subprocess.run(command)
         if slides and q == "h":
