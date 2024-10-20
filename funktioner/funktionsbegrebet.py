@@ -103,7 +103,8 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
         _par = (
             0.17619047619, -1.47142857143, 2.32380952381, 3.97142857143 # (-1, 0) (1, 5) (4, 1) (6, 3)
         )
-        x_low, x_high = ValueTracker(-3), ValueTracker(8)
+        # x_low, x_high = ValueTracker(-3), ValueTracker(8)
+        x_low, x_high = ValueTracker(xmin), ValueTracker(xmax)
         f_opacity = ValueTracker(1)
         f = always_redraw(lambda:
             plane.plot(
@@ -118,6 +119,8 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
             Create(f)
         )
         self.slide_pause()
+
+        self.begreber(plane, f, f_opacity, x_low, x_high, (xmin, xmax, ymin, ymax))
 
         scan_tracker = ValueTracker(-4)
         scanning_line = always_redraw(lambda:
@@ -157,7 +160,8 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
         )
         self.slide_pause()
 
-        # self.ikke_funktion()
+        self.ikke_funktion()
+
         self.play(
             x_low.animate.set_value(-1),
             x_high.animate.set_value(6),
@@ -170,7 +174,201 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
         self.vaerdimaengde(plane, f, f_opacity, x_low, x_high)
         self.opsamlet(f, x_low, x_high)
 
+    def begreber(self, plane, f, f_opacity, x_low, x_high, lims):
+        scene_marker("Begreber")
+        cmap = self.get_cmap()
+        xmin, xmax, ymin, ymax = lims
+        dm_tekst = VGroup(
+            Tex("{{Definitionsmængden, Dm,}} er alle de").set_color_by_tex_to_color_map(cmap),
+            Tex("{{$x$}}-værdier, som har en {{$y$}}-værdi").set_color_by_tex_to_color_map(cmap)
+        ).arrange(DOWN, aligned_edge=LEFT).set_z_index(5)
+        dm_tekst_box = get_background_rect(dm_tekst)
+        VGroup(dm_tekst_box, dm_tekst).to_edge(DR, buff=0)
+        self.play(
+            *[FadeIn(m) for m in [dm_tekst, dm_tekst_box]]
+        )
+
+        dots = VGroup(
+            *[
+                Dot(plane.c2p(x, 0), fill_color=cmap["x"], radius=0.08) for x in np.arange(
+                    x_low.get_value(), x_high.get_value()+0.01, 0.25
+                )
+            ]
+        )
+        _dots = VGroup(
+            *[
+                Dot(plane.c2p(x, f.underlying_function(x)), fill_color=cmap["x"], radius=0.08) for x in np.arange(
+                    x_low.get_value(), x_high.get_value()+0.01, 0.25
+                )
+            ]
+        )
+        dotlines = always_redraw(lambda:
+            VGroup(*[
+                DashedLine(
+                    start=(dot.get_x(), plane.c2p(0, 0)[1], 0),
+                    end=dot.get_center(),
+                    stroke_color=color_gradient((cmap["x"], cmap["f"]), 3),
+                    stroke_width=2,
+                    dashed_ratio=0.5
+                ) for dot in dots
+            ])
+        )
+        self.add(dotlines)
+        self.play(
+            Create(dots)
+        )
+        self.play(
+            LaggedStart(
+                *[
+                    dot.animate.move_to(_dot).set_style(fill_color=cmap["f"]) for dot, _dot in zip(dots, _dots)
+                ],
+                lag_ratio=0.1
+            ),
+            run_time=10
+        )
+        self.slide_pause()
+
+        dm_tekst_fuld = VGroup(
+            Tex("Selvom grafen her kun er vist i intervallet [-4; 12],"),
+            Tex(r"er {{Dm}} her alle tal, dvs. intervallet {{$]-\infty; \infty[$}}."),
+            Tex(r"Dette kan også skrives {{$\mathbb{R}$}}.")
+        ).arrange(DOWN, aligned_edge=LEFT).set_z_index(5)
+        dm_tekst_fuld[1][1].set_color(cmap["Dm"])
+        dm_tekst_fuld[1][3].set_color(cmap["Dm"])
+        dm_tekst_fuld[2][1].set_color(cmap["Dm"])
+        dm_tekst_fuld_box = get_background_rect(dm_tekst_fuld)
+        VGroup(dm_tekst_fuld_box, dm_tekst_fuld).to_edge(DR, buff=0)
+        self.play(
+            *[FadeIn(m) for m in [dm_tekst_fuld, dm_tekst_fuld_box]],
+            *[FadeOut(m) for m in [dm_tekst, dm_tekst_box]],
+            run_time=0.5
+        )
+        self.slide_pause()
+
+        self.play(
+            LaggedStart(
+                *[FadeOut(m) for m in [*dots, *dotlines]],
+                lag_ratio=0.1
+            ),
+            run_time=2
+        )
+        self.slide_pause()
+
+        dm_hul = VGroup(
+            Tex("Hvis der er et hul i grafen, fjerner man"),
+            Tex("{{$x$}}-værdier fra {{Dm}}")
+        ).arrange(DOWN, aligned_edge=LEFT).set_z_index(5)
+        dm_hul[1][0].set_color(cmap["x"])
+        dm_hul[1][2].set_color(cmap["Dm"])
+        dm_hul_box = get_background_rect(dm_hul)
+        VGroup(dm_hul_box, dm_hul).to_edge(DR, buff=0)
+        self.play(
+            *[FadeIn(m) for m in [dm_hul, dm_hul_box]],
+            *[FadeOut(m) for m in [dm_tekst_fuld, dm_tekst_fuld_box]],
+            run_time=0.5
+        )
+        self.slide_pause()
+
+        f_hul = plane.plot(
+            lambda x: f.underlying_function(x),
+            stroke_color=cmap["f"],
+            x_range=(x_low.get_value(), x_high.get_value()),
+            discontinuities=[4.5],
+            dt=0.5
+        )
+        self.play(
+            f_opacity.animate.set_value(0),
+            FadeIn(f_hul),
+            run_time=0.5
+        )
+        self.slide_pause()
+
+        dm_tekst_hul = VGroup(
+            Tex(r"{{Dm}} er alle tal undtagen intervallet {{$[4; 5]$}}."),
+            Tex(r"Det skrives enten som {{$]-\infty; 4[ \quad\wedge\quad ]5; \infty[$}}"),
+            Tex(r"eller som {{$\mathbb{R} \setminus [4; 5]$}}.")
+        ).arrange(DOWN, aligned_edge=LEFT).set_z_index(5)
+        dm_tekst_hul[0][0].set_color(cmap["Dm"])
+        dm_tekst_hul[0][2].set_color(cmap["Dm"])
+        dm_tekst_hul[1][1].set_color(cmap["Dm"])
+        dm_tekst_hul[2][1].set_color(cmap["Dm"])
+        dm_tekst_hul_box = get_background_rect(dm_tekst_hul)
+        VGroup(dm_tekst_hul_box, dm_tekst_hul).to_edge(DR, buff=0)
+        self.play(
+            *[FadeOut(m) for m in [dm_hul, dm_hul_box]],
+            *[FadeIn(m) for m in [dm_tekst_hul, dm_tekst_hul_box]],
+            run_time=0.5
+        )
+        self.slide_pause()
+
+        self.play(
+            *[
+                FadeOut(m) for m in [dm_tekst_hul, dm_tekst_hul_box, f_hul]
+            ],
+            f_opacity.animate.set_value(1),
+            run_time=0.5
+        )
+        self.slide_pause()
+
+        vm_tekst = VGroup(
+            Tex("{{Værdimængden, Vm,}} er alle de").set_color_by_tex_to_color_map(cmap),
+            Tex("{{$y$}}-værdier, som {{$f$}} kan producere").set_color_by_tex_to_color_map(cmap)
+        ).arrange(DOWN, aligned_edge=LEFT).set_z_index(5)
+        vm_tekst_box = get_background_rect(vm_tekst)
+        VGroup(vm_tekst_box, vm_tekst).to_edge(DR, buff=0)
+        self.play(
+            *[FadeIn(m) for m in [vm_tekst, vm_tekst_box]]
+        )
+        self.slide_pause()
+
+        self.play(
+            *[FadeOut(m) for m in [vm_tekst, vm_tekst_box]]
+        )
+
+        # _xs = []
+        # _ys = []
+        # for x in np.arange(xmin, xmax + 0.01, 0.25):
+        #     if f.underlying_function(x) not in _ys:
+        #         _xs.append(x)
+        #         _ys.append(f.underlying_function(x))
+        # dots = VGroup(
+        #     *[
+        #         Dot(plane.c2p(0, y), fill_color=cmap["y"], radius=0.08) for y in _ys
+        #     ]
+        # )
+        # _dots = VGroup(
+        #     *[
+        #         Dot(plane.c2p(x, y)) for x, y in zip(_xs, _ys)
+        #     ]
+        # )
+        # dotlines = always_redraw(lambda:
+        #     VGroup(*[
+        #         DashedLine(
+        #             start=(plane.c2p(0, 0)[0], dot.get_y(), 0),
+        #             end=dot.get_center(),
+        #             stroke_color=color_gradient((cmap["y"], cmap["f"]), 3),
+        #             stroke_width=2,
+        #             dashed_ratio=0.5
+        #         ) for dot in dots
+        #     ])
+        # )
+        # self.add(dotlines)
+        # self.play(
+        #     Create(dots)
+        # )
+        # self.play(
+        #     LaggedStart(
+        #         *[
+        #             dot.animate.move_to(_dot).set_style(fill_color=cmap["f"]) for dot, _dot in zip(dots, _dots)
+        #         ],
+        #         lag_ratio=0.1
+        #     ),
+        #     run_time=10
+        # )
+        # self.slide_pause()
+
     def definitionsmaengde(self, plane, f, f_opacity, x_low, x_high):
+        scene_marker("Definitionsmængde")
         cmap = self.get_cmap()
         begr_dm_tekst = Tex(r"Når {{definitionsmængden}} er begrænset\\tegner man prikker for enden").set_z_index(5)
         begr_dm_tekst[1].set_color(cmap["Dm"])
@@ -315,6 +513,7 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
         )
 
     def vaerdimaengde(self, plane, f, f_opacity, x_low, x_high):
+        scene_marker("Værdimængde")
         cmap = self.get_cmap()
         end_opacities = (ValueTracker(1), ValueTracker(1))
         endpoints = always_redraw(lambda:
@@ -438,6 +637,7 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
         )
 
     def opsamlet(self, f, x_low, x_high):
+        scene_marker("Opsamling")
         smallest_rectangle = always_redraw(lambda:
             SurroundingRectangle(f, buff=0)
         )
@@ -446,14 +646,10 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
         )
         self.slide_pause()
 
-        n_rands = 4
-        for xl, xh in zip(
-                [(np.random.rand()-0.5) * 4 for _ in range(n_rands)],
-                [(np.random.rand()-0.5) * 6 + 3 for _ in range(n_rands)],
-        ):
+        for xl, xh in zip([0, 2, -2, -1], [2, 4, 7, 6]):
             if xl > xh:
                 xl, xh = xh, xl
-            print(xl, xh)
+            # print(xl, xh)
             self.play(
                 x_low.animate.set_value(xl),
                 x_high.animate.set_value(xh),
@@ -473,7 +669,7 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
 
     def ikke_funktion(self):
         cmap = self.get_cmap()
-        xmin, xmax, xstep = -4, 12, 1
+        xmin, xmax, xstep = -8, 8, 1
         ymin, ymax, ystep = -4.5, 4.5, 1
         width = 14
         plane = self.get_plane(
@@ -483,16 +679,15 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
         ).shift(18*RIGHT)
         self.add(plane)
 
-        # f = ParametricFunction(
-        #     lambda u: (np.cos(u), np.sin(u), 0),
-        #     stroke_color=RED,
-        #     t_range=(0, TAU)
-        # ).move_to(plane.c2p(0, 0))
-        f = Circle(
-            radius=(plane.c2p(1, 0) - plane.c2p(0, 0))[0],
+        f = ImplicitFunction(
+            lambda x, y: x * y**2 - x**2 * y - 2,
+            # lambda x, y: x**2 + y**2 - 10,
             stroke_color=RED,
-            fill_opacity=0
-        ).move_to(plane.c2p(0, 0))
+            x_range=(xmin, xmax),
+            y_range=(ymin, ymax)
+        ).move_to(plane.c2p(0, 0)).scale(
+            (plane.c2p(1, 0) - plane.c2p(0, 0))[0]
+        )
 
         self.camera.frame.save_state()
         cam_width = self.camera.frame.get_width()
@@ -513,7 +708,7 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
         )
         self.slide_pause()
 
-        scan_tracker = ValueTracker(-1)
+        scan_tracker = ValueTracker(xmin)
         scanning_line = always_redraw(lambda:
             DashedLine(
                 start=plane.c2p(scan_tracker.get_value(), -9),
@@ -522,34 +717,52 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
             )
         )
         scanning_points = always_redraw(lambda:
-            VGroup(
-                Dot(fill_color=cmap["f"], radius=0.1).move_to(
-                    f.point_at_angle(PI * (1 - np.sin(PI * (scan_tracker.get_value() - 0))))
-                )
-            )
+            # VGroup(
+            #     Dot(fill_color=cmap["f"], radius=0.1).move_to(
+            #         f.point_at_angle(PI * (1 - np.sin(PI * (scan_tracker.get_value() - 0))))
+            #     )
+            # )
             # Intersection(f, scanning_line)
+            VGroup(
+                *[
+                    Dot(
+                        radius=0.1, fill_color=BLUE
+                    ).move_to(plane.c2p(scan_tracker.get_value(), y)) for y in np.arange(
+                        ymin, ymax, 0.0001
+                    ) if np.abs(f.function(scan_tracker.get_value(), y)) <= 1E-2
+                ]
+            )
         )
-        self.add(scanning_line, scanning_points)
+        # self.add(scanning_line, scanning_points)
         self.play(
-            scan_tracker.animate.set_value(1),
-            run_time=8,
+            Create(scanning_line),
+            DrawBorderThenFill(scanning_points)
+        )
+        self.slide_pause()
+
+        self.play(
+            scan_tracker.animate.set_value(xmax),
+            run_time=32,
             rate_func=rate_functions.linear
         )
+        self.play(
+            *[FadeOut(m) for m in (scanning_points, scanning_line)],
+            run_time=0.5
+        )
 
-        # scanning_point = always_redraw(lambda:
-        #     Dot(
-        #         plane.c2p(scan_tracker.get_value(), f.underlying_function(scan_tracker.get_value())),
-        #         fill_color=cmap["f"],
-        #         radius=0.1
-        #     ),
-        #     VGroup(
-        #         *[
-        #             Dot(fill_color=cmap["f"], radius=0.1).move_to(
-        #
-        #             )
-        #         ]
-        #     )
-        # )
+        self.play(
+            self.camera.frame.animate.set(width=cam_width * 1.25),
+            run_time=0.5
+        )
+        self.play(
+            self.camera.frame.animate.move_to(ORIGIN),
+            run_time=1
+        )
+        self.play(
+            self.camera.frame.animate.set(width=cam_width),
+            run_time=0.5
+        )
+        self.remove(plane, f)
 
 
 
