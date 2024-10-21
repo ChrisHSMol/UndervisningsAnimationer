@@ -1873,4 +1873,3 @@ if __name__ == "__main__":
                 command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
                 scene_marker(rf"RUNNNING:    {command}")
                 subprocess.run(command)
-
