@@ -262,13 +262,6 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
         dm_hul[1][2].set_color(cmap["Dm"])
         dm_hul_box = get_background_rect(dm_hul)
         VGroup(dm_hul_box, dm_hul).to_edge(DR, buff=0)
-        self.play(
-            *[FadeIn(m) for m in [dm_hul, dm_hul_box]],
-            *[FadeOut(m) for m in [dm_tekst_fuld, dm_tekst_fuld_box]],
-            run_time=0.5
-        )
-        self.slide_pause()
-
         f_hul = plane.plot(
             lambda x: f.underlying_function(x),
             stroke_color=cmap["f"],
@@ -277,6 +270,8 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
             dt=0.5
         )
         self.play(
+            *[FadeIn(m) for m in [dm_hul, dm_hul_box]],
+            *[FadeOut(m) for m in [dm_tekst_fuld, dm_tekst_fuld_box]],
             f_opacity.animate.set_value(0),
             FadeIn(f_hul),
             run_time=0.5
@@ -308,7 +303,6 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
             f_opacity.animate.set_value(1),
             run_time=0.5
         )
-        self.slide_pause()
 
         vm_tekst = VGroup(
             Tex("{{Værdimængden, Vm,}} er alle de").set_color_by_tex_to_color_map(cmap),
@@ -492,7 +486,6 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
                 lag_ratio=0.5
             )
         )
-        self.slide_pause()
 
         self.play(
             end_opacities[1].animate.set_value(0),
@@ -703,10 +696,6 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
             self.camera.frame.animate.set(width=cam_width),
             run_time=0.5
         )
-        self.play(
-            Create(f)
-        )
-        self.slide_pause()
 
         scan_tracker = ValueTracker(xmin)
         scanning_line = always_redraw(lambda:
@@ -735,6 +724,7 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
         )
         # self.add(scanning_line, scanning_points)
         self.play(
+            Create(f),
             Create(scanning_line),
             DrawBorderThenFill(scanning_points)
         )
@@ -742,9 +732,10 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
 
         self.play(
             scan_tracker.animate.set_value(xmax),
-            run_time=32,
+            run_time=10,
             rate_func=rate_functions.linear
         )
+        self.slide_pause()
         self.play(
             *[FadeOut(m) for m in (scanning_points, scanning_line)],
             run_time=0.5
