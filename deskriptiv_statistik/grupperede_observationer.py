@@ -1,3 +1,4 @@
+from PIL.ImImagePlugin import number
 from manim import *
 import sys
 sys.path.append("../")
@@ -5,11 +6,11 @@ import numpy as np
 import subprocess
 from helpers import *
 
-slides = False
+slides = True
 if slides:
     from manim_slides import Slide
 
-q = "l"
+q = "h"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -24,10 +25,11 @@ _FRAMERATE = {
 
 class GrupperingAfData(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
-        title = Tex("")
-        play_title2(self, title)
-        self.gruppering_af_data()
-        # print(np.arange(0, 10, 2))
+        # title = Tex("")
+        # play_title2(self, title)
+        self.interval_notation()
+        # self.gruppering_af_data()
+        self.wait(5)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t=t, slides_bool=slides_bool)
@@ -139,6 +141,294 @@ class GrupperingAfData(MovingCameraScene, Slide if slides else Scene):
             ]) for j, row in enumerate(_tabel)
         ])
         return tabel_struktur, tabel_data, tabel_data_raw
+
+    def interval_notation(self):
+        cmap = {
+            "x": YELLOW,
+            "mindre": BLUE,
+            "større": RED,
+            "tal": GREEN
+        }
+        intro_tekst = VGroup(
+            Tex("Før vi inddeler data i grupper, "),
+            Tex("skal vi se, hvordan man skriver intervaller.")
+        ).arrange(DOWN, aligned_edge=LEFT)
+        x_lt_4 = VGroup(
+            MathTex("x", " < ", "4").scale(1.5),
+            VGroup(
+                Tex("Her kan {{$x$}} være alle tal, som er {{mindre end}} {{4}},"),
+                Tex("og kan ikke være {{4}}.")
+            ).scale(0.75).arrange(DOWN, aligned_edge=LEFT)
+        ).arrange(DOWN, buff=1).shift(DOWN)
+        self.play(
+            Write(intro_tekst),
+            run_time=2
+        )
+        self.play(
+            intro_tekst.animate.scale(0.75).arrange(RIGHT).to_edge(UP),
+            FadeIn(x_lt_4, shift=0.5*DOWN),
+            run_time=2
+        )
+        self.slide_pause()
+
+        self.play(
+            Circumscribe(x_lt_4[0][0], color=cmap["x"], fade_out=True),
+            Circumscribe(x_lt_4[1][0][1], color=cmap["x"], fade_out=True),
+            x_lt_4[0][0].animate.set_color(cmap["x"]),
+            x_lt_4[1][0][1].animate.set_color(cmap["x"]),
+            run_time=2
+        )
+        self.play(
+            Circumscribe(x_lt_4[0][1], color=cmap["mindre"], fade_out=True),
+            Circumscribe(x_lt_4[1][0][3], color=cmap["mindre"], fade_out=True),
+            x_lt_4[0][1].animate.set_color(cmap["mindre"]),
+            x_lt_4[1][0][3].animate.set_color(cmap["mindre"]),
+            run_time=2
+        )
+        self.play(
+            Circumscribe(x_lt_4[0][2], color=cmap["tal"], fade_out=True),
+            Circumscribe(x_lt_4[1][0][5], color=cmap["tal"], fade_out=True),
+            Circumscribe(x_lt_4[1][1][1], color=cmap["tal"], fade_out=True),
+            x_lt_4[0][2].animate.set_color(cmap["tal"]),
+            x_lt_4[1][0][5].animate.set_color(cmap["tal"]),
+            x_lt_4[1][1][1].animate.set_color(cmap["tal"]),
+            run_time=2
+        )
+        self.slide_pause()
+
+        x_leq_4 = VGroup(
+            MathTex("x", r" \leq ", "4").scale(1.5),
+            Tex("Her kan {{$x$}} være alle tal, som er {{mindre end eller lig med}} {{4}}").scale(0.75)
+        ).arrange(DOWN, buff=1).shift(DOWN)
+        x_leq_4[0][0].set_color(cmap["x"])
+        x_leq_4[0][1].set_color(cmap["mindre"])
+        x_leq_4[0][2].set_color(cmap["tal"])
+        x_leq_4[1][1].set_color(cmap["x"])
+        x_leq_4[1][3].set_color(cmap["mindre"])
+        x_leq_4[1][5].set_color(cmap["tal"])
+        self.play(
+            TransformMatchingTex(x_lt_4[0], x_leq_4[0], transform_mismatches=True),
+            TransformMatchingTex(x_lt_4[1], x_leq_4[1], transform_mismatches=True),
+            run_time=1
+        )
+        self.slide_pause()
+
+        x_gt_2 = VGroup(
+            MathTex("x", " > ", "2").scale(1.5),
+            VGroup(
+                Tex("Her kan {{$x$}} være alle tal, som er {{større end}} {{2}},"),
+                Tex("og kan ikke være {{2}}.")
+            ).scale(0.75).arrange(DOWN, aligned_edge=LEFT)
+        ).arrange(DOWN, buff=1).shift(DOWN)
+        x_gt_2[0][0].set_color(cmap["x"])
+        x_gt_2[1][0][1].set_color(cmap["x"])
+        x_gt_2[0][1].set_color(cmap["større"])
+        x_gt_2[1][0][3].set_color(cmap["større"])
+        x_gt_2[0][2].set_color(cmap["tal"])
+        x_gt_2[1][0][5].set_color(cmap["tal"])
+        x_gt_2[1][1][1].set_color(cmap["tal"])
+        self.play(
+            TransformMatchingTex(x_leq_4[0], x_gt_2[0], transform_mismatches=True),
+            TransformMatchingTex(x_leq_4[1], x_gt_2[1], transform_mismatches=True),
+            run_time=1
+        )
+        self.slide_pause()
+
+        x_geq_2 = VGroup(
+            MathTex("x", r" \geq ", "2").scale(1.5),
+            Tex("Her kan {{$x$}} være alle tal, som er {{større end eller lig med}} {{2}}").scale(0.75)
+        ).arrange(DOWN, buff=1).shift(DOWN)
+        x_geq_2[0][0].set_color(cmap["x"])
+        x_geq_2[0][1].set_color(cmap["større"])
+        x_geq_2[0][2].set_color(cmap["tal"])
+        x_geq_2[1][1].set_color(cmap["x"])
+        x_geq_2[1][3].set_color(cmap["større"])
+        x_geq_2[1][5].set_color(cmap["tal"])
+        self.play(
+            TransformMatchingTex(x_gt_2[0], x_geq_2[0], transform_mismatches=True),
+            TransformMatchingTex(x_gt_2[1], x_geq_2[1], transform_mismatches=True),
+            run_time=1
+        )
+        self.slide_pause()
+
+        x_in_2_4_excl_ineq = VGroup(
+            MathTex("2", "<", "x", "<", "4").scale(1.5),
+            VGroup(
+                Tex("Her kan {{$x$}} være alle tal, som er {{større end}} {{2}}, men ikke {{2}},"),
+                Tex("og som samtidig er {{mindre end}} {{4}}, men ikke {{4}}.")
+            ).scale(0.75).arrange(DOWN, aligned_edge=LEFT)
+        ).arrange(DOWN, buff=1).shift(DOWN)
+        x_in_2_4_excl_ineq[0][2].set_color(cmap["x"])
+        x_in_2_4_excl_ineq[1][0][1].set_color(cmap["x"])
+        x_in_2_4_excl_ineq[0][1].set_color(cmap["større"])
+        x_in_2_4_excl_ineq[1][0][3].set_color(cmap["større"])
+        x_in_2_4_excl_ineq[0][3].set_color(cmap["mindre"])
+        x_in_2_4_excl_ineq[1][1][1].set_color(cmap["mindre"])
+        x_in_2_4_excl_ineq[0][0].set_color(cmap["tal"])
+        x_in_2_4_excl_ineq[0][4].set_color(cmap["tal"])
+        x_in_2_4_excl_ineq[1][0][5].set_color(cmap["tal"])
+        x_in_2_4_excl_ineq[1][0][7].set_color(cmap["tal"])
+        x_in_2_4_excl_ineq[1][1][3].set_color(cmap["tal"])
+        x_in_2_4_excl_ineq[1][1][5].set_color(cmap["tal"])
+        self.play(
+            LaggedStart(
+                FadeOut(x_geq_2, shift=UP),
+                FadeIn(x_in_2_4_excl_ineq, shift=UP)
+            )
+        )
+        self.slide_pause()
+
+        x_in_2_4_incl_ineq = VGroup(
+            MathTex("2", r"\leq", "x", r"\leq", "4").scale(1.5),
+            VGroup(
+                Tex("Her kan {{$x$}} være alle tal, som er {{større end eller lig med}} {{2}},"),
+                Tex("og som samtidig er {{mindre end eller lig med}} {{4}}.")
+            ).scale(0.75).arrange(DOWN, aligned_edge=LEFT)
+        ).arrange(DOWN, buff=1).shift(DOWN)
+        x_in_2_4_incl_ineq[0][2].set_color(cmap["x"])
+        x_in_2_4_incl_ineq[1][0][1].set_color(cmap["x"])
+        x_in_2_4_incl_ineq[0][1].set_color(cmap["større"])
+        x_in_2_4_incl_ineq[1][0][3].set_color(cmap["større"])
+        x_in_2_4_incl_ineq[0][3].set_color(cmap["mindre"])
+        x_in_2_4_incl_ineq[1][1][1].set_color(cmap["mindre"])
+        x_in_2_4_incl_ineq[0][0].set_color(cmap["tal"])
+        x_in_2_4_incl_ineq[0][4].set_color(cmap["tal"])
+        x_in_2_4_incl_ineq[1][0][5].set_color(cmap["tal"])
+        x_in_2_4_incl_ineq[1][1][3].set_color(cmap["tal"])
+        self.play(
+            x_in_2_4_excl_ineq[0].animate.scale(0.8).next_to(intro_tekst, DOWN, aligned_edge=LEFT),
+            FadeOut(x_in_2_4_excl_ineq[1], shift=UP),
+            FadeIn(x_in_2_4_incl_ineq, shift=UP)
+        )
+        self.slide_pause()
+
+        self.play(
+            x_in_2_4_incl_ineq[0].animate.scale(0.8).next_to(intro_tekst, DOWN, aligned_edge=RIGHT),
+            FadeOut(x_in_2_4_incl_ineq[1], shift=UP)
+        )
+        self.slide_pause()
+
+        x_in_2_4_inex_ineq = MathTex(
+            "2", r"\leq", "x", r"<", "4"
+        ).scale(1.5*0.8).next_to(x_in_2_4_excl_ineq[0], RIGHT, buff=0.5)
+        x_in_2_4_exin_ineq = MathTex(
+            "2", r"<", "x", r"\leq", "4"
+        ).scale(1.5*0.8).next_to(x_in_2_4_incl_ineq[0], LEFT, buff=0.5)
+        for i, col in enumerate([cmap["tal"], cmap["større"], cmap["x"], cmap["mindre"], cmap["tal"]]):
+            x_in_2_4_inex_ineq[i].set_color(col)
+            x_in_2_4_exin_ineq[i].set_color(col)
+        self.play(
+            ReplacementTransform(x_in_2_4_excl_ineq[0].copy(), x_in_2_4_inex_ineq),
+            ReplacementTransform(x_in_2_4_incl_ineq[0].copy(), x_in_2_4_exin_ineq)
+        )
+        self.slide_pause()
+
+        ineqs = VGroup(
+            x_in_2_4_excl_ineq[0], x_in_2_4_inex_ineq, x_in_2_4_exin_ineq, x_in_2_4_incl_ineq[0]
+        ).next_to(intro_tekst, DOWN)
+        self.play(
+            ineqs.animate.scale(0.8).arrange(RIGHT, buff=1).next_to(intro_tekst, DOWN),
+            run_time=0.5
+        )
+        dividers = VGroup(
+            *[
+                DashedLine(
+                    start=between_mobjects(ineqs[i], ineqs[i+1]) + 0.5*ineqs.get_height()*UP,
+                    end=between_mobjects(ineqs[i], ineqs[i+1]) + 3*DOWN,
+                    stroke_width=0.5
+                ) for i in range(len(ineqs) - 1)
+            ]
+        )
+        self.play(
+            Create(dividers),
+            run_time=0.5
+        )
+        self.slide_pause()
+
+        numberline = NumberLine(
+            x_range=(0, 6, 1),
+            length=7,
+            include_tip=True,
+            include_numbers=True,
+        ).to_edge(DOWN).shift(UP)
+        numberline.numbers[2].set_color(cmap["tal"])
+        numberline.numbers[4].set_color(cmap["tal"])
+        self.play(
+            DrawBorderThenFill(numberline)
+        )
+        self.slide_pause()
+
+        intervals = VGroup()
+        dotlines = VGroup()
+        for i, ineq in enumerate(ineqs):
+            incs = []
+            for c in [ineq[1].get_tex_string(), ineq[3].get_tex_string()]:
+                if "\\" in c:
+                    incs.append(True)
+                else:
+                    incs.append(False)
+            dots = VGroup(
+                Dot(
+                    numberline.n2p(int(ineq[0].get_tex_string())), stroke_color=ineq[1].get_color(), stroke_width=2,
+                    fill_color=ineq[1].get_color() if incs[0] else BLACK, fill_opacity=1, radius=0.1
+                ),
+                Dot(
+                    numberline.n2p(int(ineq[4].get_tex_string())), stroke_color=ineq[-2].get_color(), stroke_width=2,
+                    fill_color=ineq[-2].get_color() if incs[1] else BLACK, fill_opacity=1, radius=0.1
+                )
+            )
+            line = Line(
+                start=dots[0], end=dots[1], stroke_color=ineq[2].get_color(), stroke_width=4
+            )
+            dotline = VGroup(dots[0], line, dots[1])
+            dotlines.add(dotline)
+            icop = ineq.copy()
+            self.play(
+                icop.animate.next_to(dots, UP, buff=1)
+            )
+            self.play(
+                LaggedStart(
+                    DrawBorderThenFill(dots[0]),
+                    Create(line),
+                    DrawBorderThenFill(dots[1]),
+                    lag_ratio=0.75
+                )
+            )
+            self.slide_pause()
+
+            interval = MathTex(
+                "[" if incs[0] else "]",
+                f"{int(ineq[0].get_tex_string()):.0f}",
+                "; ",
+                f"{int(ineq[4].get_tex_string()):.0f}",
+                "]" if incs[1] else "["
+            ).next_to(numberline, DOWN)
+            interval[0].set_color(ineq[1].get_color())
+            interval[1].set_color(ineq[0].get_color())
+            interval[3].set_color(ineq[4].get_color())
+            interval[4].set_color(ineq[3].get_color())
+            intervals.add(interval)
+            self.play(
+                Write(interval)
+            )
+            self.slide_pause()
+
+            self.play(
+                FadeOut(icop, shift=ineq.get_center() - icop.get_center()),
+                dotline.animate.next_to(ineq, DOWN, buff=0.5),
+                interval.animate.next_to(ineq, DOWN, buff=1)
+            )
+
+        forklaring = Tex(
+            "De 3 formuleringer i hver kolonne\\\\"
+            "beskriver præcist det samme,\\\\"
+            "og er derfor 3 forskellige måder at skrive det samme."
+        ).to_edge(DOWN)
+        self.play(
+            Uncreate(numberline),
+            Write(forklaring)
+        )
+        self.slide_pause()
 
     def gruppering_af_data(self):
         data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
