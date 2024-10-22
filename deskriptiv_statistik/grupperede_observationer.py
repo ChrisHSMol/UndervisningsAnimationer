@@ -6,11 +6,11 @@ import numpy as np
 import subprocess
 from helpers import *
 
-slides = False
+slides = True
 if slides:
     from manim_slides import Slide
 
-q = "ul"
+q = "h"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -25,14 +25,21 @@ _FRAMERATE = {
 
 class GrupperingAfData(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
-        # title = Tex("")
-        # play_title2(self, title)
-        # self.interval_notation()
+        title = Tex("Gruppering", " af data")
+        title[0].set_color(YELLOW)
+        play_title2(self, title)
+        self.interval_notation()
         self.gruppering_af_data()
         self.wait(5)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t=t, slides_bool=slides_bool)
+
+    def get_cmap(self):
+        cmap = {
+            "observation": BLUE
+        }
+        return cmap
 
     def data_to_DecNum(self, data, numdec=0, bsign=False):
         return VGroup(
@@ -76,12 +83,12 @@ class GrupperingAfData(MovingCameraScene, Slide if slides else Scene):
         index_start, index_end = 0, len(data) - 1
         # print(interval_starts)
         for st, en in zip(interval_starts, interval_ends):
-            if st > max([x.get_value() for x in data]):
-                index_end += 1
-                continue
-            if en <= min([x.get_value() for x in data]):
-                index_start += 1
-                continue
+            # if st > max([x.get_value() for x in data]):
+            #     index_end += 1
+            #     continue
+            # if en <= min([x.get_value() for x in data]):
+            #     index_start += 1
+            #     continue
             label = f"[{st}; {en}["
             hyps = len(
                 [x for x in data if st <= x.get_value() < en]
@@ -401,7 +408,7 @@ class GrupperingAfData(MovingCameraScene, Slide if slides else Scene):
                     lag_ratio=0.75
                 )
             )
-            self.slide_pause()
+            # self.slide_pause()
 
             interval = MathTex(
                 "[" if incs[0] else "]",
@@ -432,20 +439,18 @@ class GrupperingAfData(MovingCameraScene, Slide if slides else Scene):
             "og er derfor 3 forskellige måder at skrive det samme."
         ).to_edge(DOWN)
         self.play(
-            Uncreate(numberline),
+            FadeOut(numberline),
             Write(forklaring)
         )
         self.slide_pause()
 
         self.play(
-            LaggedStart(
-                *[FadeOut(m) for m in self.mobjects],
-                lag_ratio=0.1
-            ),
+            *[FadeOut(m) for m in self.mobjects],
             run_time=1
         )
 
     def gruppering_af_data(self):
+        cmap = self.get_cmap()
         data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
         data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=0.5)
         sorted_data, sorting_dict = self.one_to_one_sort(data, desc=False)
@@ -469,47 +474,76 @@ class GrupperingAfData(MovingCameraScene, Slide if slides else Scene):
         )
         self.slide_pause()
 
-        print([VGroup(*[ds for ds in sorted_data if l <= ds.get_value() < h]) for l, h in zip(interval_starts, interval_ends)])
-        braces = VGroup(
-            *[
-                Brace(
-                    VGroup(*[ds for ds in sorted_data if l <= ds.get_value() < h]),
-                    fill_color=YELLOW, stroke_color=YELLOW, direction=RIGHT
-                ) for l, h in zip(interval_starts, interval_ends)
-            ]
-        )
-        interval_str_tekst = Tex("Intervalstørrelse: 2").to_edge(UR)
-
-        intervaller = VGroup(
-            *[
-                VGroup(MathTex(l), Integer(v)).arrange(RIGHT, buff=1) for l, v in grupperinger.items()
-            ]
-        )
-        [interval.next_to(brace, RIGHT) for interval, brace in zip(intervaller, braces)]
+        tabel_struktur = VGroup()
+        for j in range(len(grupperinger) + 1):
+            row = VGroup()
+            # for i in range(5):
+            for i in range(2):
+                row.add(
+                    VGroup(
+                        Rectangle(width=1.5, height=0.65, stroke_width=1),
+                        Rectangle(
+                            width=1.5 - 0.05, height=0.65 - 0.05, fill_opacity=0,
+                            stroke_width=3,
+                            stroke_color=[BLACK, BLUE, BLUE, YELLOW, YELLOW][i],
+                            stroke_opacity=[0, 0.5, 0.75, 0.5, 0.75][i]
+                        )
+                    )
+                )
+            row.arrange(RIGHT, buff=0)
+            tabel_struktur.add(row)
+        tabel_struktur.arrange(DOWN, buff=0).to_edge(RIGHT)
         self.play(
             LaggedStart(
-                Write(interval_str_tekst),
-                DrawBorderThenFill(braces[0]),
-                Write(intervaller[0][0]),
-                Write(intervaller[0][1]),
-                run_time=0.75
+                *[DrawBorderThenFill(r, lag_ratio=0.05) for r in tabel_struktur],
+                lag_ratio=0.05
             )
+        )
+        col_labels = VGroup(*[Tex(d, font_size=22).move_to(tabel_struktur[0][i]) for i, d in enumerate([
+            "Interval", "Hyppighed"#, "Kumuleret\\\\hyppighed", "Frekvens", "Kumuleret\\\\frekvens"
+        ])])
+        self.play(
+            Write(col_labels, lag_ratio=0.1)
         )
         self.slide_pause()
 
-        i = 0
-        # TODO: indskriv de forskellige intervaller i en hyppighedstabel. For hvert interval
-        # TODO: skal der så laves en "scanning" gennem data og highlightes dem, som passer ind i intervallet.
-        # TODO: forslag: kort indikation af data (á la i animationen om begreber), hvor tallet forbliver
-        # TODO: farvet, hvis det ligger i intervallet.
-        for interval, brace in zip(intervaller[1:], braces[1:]):
+        intervaller = VGroup(
+            *[
+                VGroup(MathTex(l), Integer(v)).scale(0.8).arrange(RIGHT, buff=1) for l, v in grupperinger.items()
+            ]
+        )
+        for i, interval in enumerate(intervaller):
+            interval[0].move_to(tabel_struktur[i+1][0])
+            interval[1].move_to(tabel_struktur[i+1][1])
+
+        for interval, low, high in zip(intervaller, interval_starts, interval_ends):
+            self.play(
+                Write(interval[0])
+            )
+            self.slide_pause()
+
             self.play(
                 LaggedStart(
-                    ReplacementTransform(braces[i], brace),
-                    FadeIn(interval, shift=intervaller[i].get_center() - interval.get_center()),
-                    lag_ratio=0.5
-                )
+                    *[Indicate(m, scale_factor=1.5, color=cmap["observation"]) for m in sorted_data],
+                    *[m.animate.set_color(cmap["observation"]) for m in sorted_data if low <= m.get_value() < high],
+                    lag_ratio=0.25
+                ),
+                run_time=2
             )
+            self.slide_pause()
+
+            if interval[1].get_value() == 0:
+                self.play(
+                    FadeIn(interval[1]),
+                    *[m.animate.set_color(WHITE) for m in sorted_data]
+                )
+            else:
+                self.play(
+                    ReplacementTransform(
+                        VGroup(*[m.copy() for m in sorted_data if low <= m.get_value() < high]), interval[1]
+                    ),
+                    *[m.animate.set_color(WHITE) for m in sorted_data]
+                )
             self.slide_pause()
 
 
