@@ -280,7 +280,7 @@ class FunktionsBegrebet(MovingCameraScene, Slide if slides else Scene):
 
         dm_tekst_hul = VGroup(
             Tex(r"{{Dm}} er alle tal undtagen intervallet {{$[4; 5]$}}."),
-            Tex(r"Det skrives enten som {{$]-\infty; 4[ \quad\wedge\quad ]5; \infty[$}}"),
+            Tex(r"Det skrives enten som {{$]-\infty; 4[ \quad\cup\quad ]5; \infty[$}}"),
             Tex(r"eller som {{$\mathbb{R} \setminus [4; 5]$}}.")
         ).arrange(DOWN, aligned_edge=LEFT).set_z_index(5)
         dm_tekst_hul[0][0].set_color(cmap["Dm"])
