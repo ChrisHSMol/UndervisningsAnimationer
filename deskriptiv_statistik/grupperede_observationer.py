@@ -6,11 +6,11 @@ import numpy as np
 import subprocess
 from helpers import *
 
-slides = True
+slides = False
 if slides:
     from manim_slides import Slide
 
-q = "h"
+q = "ul"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -27,8 +27,8 @@ class GrupperingAfData(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
         # title = Tex("")
         # play_title2(self, title)
-        self.interval_notation()
-        # self.gruppering_af_data()
+        # self.interval_notation()
+        self.gruppering_af_data()
         self.wait(5)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
@@ -73,15 +73,22 @@ class GrupperingAfData(MovingCameraScene, Slide if slides else Scene):
         grupperinger = {}
         interval_starts = np.arange(start, end, size)
         interval_ends = interval_starts + size
+        index_start, index_end = 0, len(data) - 1
         # print(interval_starts)
         for st, en in zip(interval_starts, interval_ends):
+            if st > max([x.get_value() for x in data]):
+                index_end += 1
+                continue
+            if en <= min([x.get_value() for x in data]):
+                index_start += 1
+                continue
             label = f"[{st}; {en}["
             hyps = len(
                 [x for x in data if st <= x.get_value() < en]
             )
             grupperinger[label] = hyps
         # print(grupperinger)
-        return grupperinger
+        return grupperinger, interval_starts[index_start:index_end], interval_ends[index_start:index_end]
 
     def prepare_table(
             self,
@@ -430,11 +437,19 @@ class GrupperingAfData(MovingCameraScene, Slide if slides else Scene):
         )
         self.slide_pause()
 
+        self.play(
+            LaggedStart(
+                *[FadeOut(m) for m in self.mobjects],
+                lag_ratio=0.1
+            ),
+            run_time=1
+        )
+
     def gruppering_af_data(self):
         data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
         data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=0.5)
         sorted_data, sorting_dict = self.one_to_one_sort(data, desc=False)
-        grupperinger = self.inddel_i_grupper(data, start=0, end=20, size=2)
+        grupperinger, interval_starts, interval_ends = self.inddel_i_grupper(data, start=0, end=20, size=2)
 
         self.play(
             LaggedStart(
@@ -454,19 +469,48 @@ class GrupperingAfData(MovingCameraScene, Slide if slides else Scene):
         )
         self.slide_pause()
 
+        print([VGroup(*[ds for ds in sorted_data if l <= ds.get_value() < h]) for l, h in zip(interval_starts, interval_ends)])
+        braces = VGroup(
+            *[
+                Brace(
+                    VGroup(*[ds for ds in sorted_data if l <= ds.get_value() < h]),
+                    fill_color=YELLOW, stroke_color=YELLOW, direction=RIGHT
+                ) for l, h in zip(interval_starts, interval_ends)
+            ]
+        )
+        interval_str_tekst = Tex("Intervalstørrelse: 2").to_edge(UR)
+
         intervaller = VGroup(
             *[
-                VGroup(
-                    MathTex(l), Integer(v)
-                ).arrange(RIGHT) for l, v in grupperinger.items()
+                VGroup(MathTex(l), Integer(v)).arrange(RIGHT, buff=1) for l, v in grupperinger.items()
             ]
-        ).arrange(DOWN).to_edge(RIGHT)
+        )
+        [interval.next_to(brace, RIGHT) for interval, brace in zip(intervaller, braces)]
         self.play(
             LaggedStart(
-                *[DrawBorderThenFill(m) for m in intervaller]
+                Write(interval_str_tekst),
+                DrawBorderThenFill(braces[0]),
+                Write(intervaller[0][0]),
+                Write(intervaller[0][1]),
+                run_time=0.75
             )
         )
         self.slide_pause()
+
+        i = 0
+        # TODO: indskriv de forskellige intervaller i en hyppighedstabel. For hvert interval
+        # TODO: skal der så laves en "scanning" gennem data og highlightes dem, som passer ind i intervallet.
+        # TODO: forslag: kort indikation af data (á la i animationen om begreber), hvor tallet forbliver
+        # TODO: farvet, hvis det ligger i intervallet.
+        for interval, brace in zip(intervaller[1:], braces[1:]):
+            self.play(
+                LaggedStart(
+                    ReplacementTransform(braces[i], brace),
+                    FadeIn(interval, shift=intervaller[i].get_center() - interval.get_center()),
+                    lag_ratio=0.5
+                )
+            )
+            self.slide_pause()
 
 
 if __name__ == "__main__":
