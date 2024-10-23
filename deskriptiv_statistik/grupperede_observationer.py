@@ -6,11 +6,11 @@ import numpy as np
 import subprocess
 from helpers import *
 
-slides = True
+slides = False
 if slides:
     from manim_slides import Slide
 
-q = "h"
+q = "l"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -547,9 +547,169 @@ class GrupperingAfData(MovingCameraScene, Slide if slides else Scene):
             self.slide_pause()
 
 
+class Histogrammer(GrupperingAfData):
+    def construct(self):
+        self.histogram_fra_hyppighedstabel()
+        self.wait(5)
+
+    def get_cmap(self):
+        return None
+
+    def histogram_fra_hyppighedstabel(self):
+        cmap = self.get_cmap()
+        data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
+        data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=0.5)
+        sorted_data, sorting_dict = self.one_to_one_sort(data, desc=False)
+        grupperinger, interval_starts, interval_ends = self.inddel_i_grupper(data, start=0, end=20, size=2)
+        tabel_struktur, tabel_data, tabel_data_raw = self.prepare_table(data_raw, include_header_row=True)
+        col_labels = VGroup(*[Tex(d, font_size=22).move_to(tabel_struktur[0][i]) for i, d in enumerate([
+            "Interval", "Hyppighed", "Kumuleret\\\\hyppighed", "Frekvens", "Kumuleret\\\\frekvens"
+        ])])
+
+        self.play(
+            LaggedStart(
+                *[DrawBorderThenFill(r, lag_ratio=0.05) for r in tabel_struktur],
+                Write(col_labels, lag_ratio=0.1),
+                lag_ratio=0.05
+            )
+        )
+        # self.slide_pause()
+
+        intervaller = VGroup(
+            *[MathTex(l).scale(0.8).move_to(tabel_struktur[i+1][0]) for i, l in enumerate(grupperinger.keys())]
+        )
+        hyppigheder = VGroup(
+            *[Integer(v).move_to(tabel_struktur[i+1][1]) for i, v in enumerate(grupperinger.values())]
+        )
+        self.play(
+            LaggedStart(
+                *[
+                    Write(i) for i in intervaller
+                ],
+                *[
+                    Write(i) for i in hyppigheder
+                ],
+                lag_ratio=0.25
+            ),
+            run_time=1
+        )
+        self.slide_pause()
+
+        kumhyppigheder = VGroup()
+        kumhyp = 0
+        for i, start in enumerate(interval_starts):
+            kumhyp += list(grupperinger.values())[i]
+            khtex = Integer(kumhyp).move_to(tabel_struktur[i+1][2])
+            kumhyppigheder.add(khtex)
+            if i == 0:
+                self.play(
+                    LaggedStart(
+                        Indicate(
+                            tabel_struktur[i+1][1], scale_factor=1.2, color=tabel_struktur[i+1][1][1].get_color()
+                        ),
+                        Write(khtex),
+                        lag_ratio=0.5
+                    )
+                )
+            else:
+                self.play(
+                    Indicate(tabel_struktur[i][2], scale_factor=1.2, color=tabel_struktur[i][2][1].get_color()),
+                    Indicate(tabel_struktur[i + 1][1], scale_factor=1.2, color=tabel_struktur[i + 1][1][1].get_color()),
+                    Write(khtex)
+                )
+        self.slide_pause()
+
+        frekvenser = VGroup()
+        for i, start in enumerate(interval_starts):
+            hyp = list(grupperinger.values())[i]
+            fretex = Integer(100 * hyp / kumhyppigheder[-1].get_value(), unit=r" \%").move_to(tabel_struktur[i+1][3])
+            frekvenser.add(fretex)
+            self.play(
+                Indicate(
+                    tabel_struktur[-1][2], scale_factor=1.2, color=tabel_struktur[-1][2][1].get_color()
+                ),
+                Indicate(
+                    tabel_struktur[i+1][1], scale_factor=1.2, color=tabel_struktur[i+1][1][1].get_color()
+                ),
+                Write(fretex)
+            )
+        self.slide_pause()
+
+        kumfrekvenser = VGroup()
+        kumfre = 0
+        for i, start in enumerate(interval_starts):
+            kumfre += frekvenser[i].get_value()
+            kftex = Integer(kumfre, unit=r" \%").move_to(tabel_struktur[i+1][4])
+            kumfrekvenser.add(kftex)
+            if i == 0:
+                self.play(
+                    Indicate(tabel_struktur[i+1][3], scale_factor=1.2, color=tabel_struktur[i+1][3][1].get_color()),
+                    Write(kftex)
+                )
+            else:
+                self.play(
+                    Indicate(tabel_struktur[i][4], scale_factor=1.2, color=tabel_struktur[i][4][1].get_color()),
+                    Indicate(tabel_struktur[i + 1][3], scale_factor=1.2, color=tabel_struktur[i + 1][3][1].get_color()),
+                    Write(kftex)
+                )
+        self.slide_pause()
+
+        relevant_tabel = VGroup(
+            *[
+                VGroup(row[0], row[3]) for row in tabel_struktur
+            ],
+            VGroup(col_labels[0], col_labels[3])
+        )
+        values = VGroup(
+            *[
+                VGroup(interval, frek) for interval, frek in zip(intervaller, frekvenser)
+            ]
+        )
+        self.play(
+            *[FadeOut(m) for m in [
+                *[row[1:3] for row in tabel_struktur],
+                *[row[-1] for row in tabel_struktur],
+                col_labels[1:3], col_labels[-1], hyppigheder, kumhyppigheder, kumfrekvenser
+            ]]
+        )
+        self.slide_pause()
+
+        self.play(
+            *[VGroup(row[0], interval).animate.to_edge(
+                LEFT, buff=0.5
+            ) for row, interval in zip(tabel_struktur, col_labels[0].add(*intervaller))],
+            *[VGroup(row[3], frek).animate.to_edge(
+                LEFT, buff=0.5+row[0].get_width()
+            ) for row, frek in zip(tabel_struktur, col_labels[3].add(*frekvenser))],
+        )
+
+        xmin, xmax, xstep = 0, 20, 1
+        ymin, ymax, ystep = 0, 40, 5
+        plane = Axes(
+            x_range=(xmin, xmax+xstep, xstep),
+            y_range=(ymin, ymax+ystep, ystep),
+            x_length=9,
+            y_length=6,
+            axis_config={
+                'tip_shape': StealthTip
+            },
+            x_axis_config={
+                "numbers_to_include": np.arange(xmin, xmax+xstep, xstep),
+            },
+            y_axis_config={
+                # "numbers_to_include": np.arange(ymin, ymax+ystep, ystep),
+            }
+        ).to_edge(RIGHT)
+        plane[1].add_labels({v: Integer(v, unit=r" \%") for v in plane[1].get_tick_range()})
+        self.play(
+            DrawBorderThenFill(plane)
+        )
+
+
 if __name__ == "__main__":
     classes = [
-        GrupperingAfData
+        # GrupperingAfData,
+        Histogrammer
     ]
     for cls in classes:
         class_name = cls.__name__
