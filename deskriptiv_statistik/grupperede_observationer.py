@@ -1,4 +1,3 @@
-from PIL.ImImagePlugin import number
 from manim import *
 import sys
 sys.path.append("../")
@@ -549,7 +548,11 @@ class GrupperingAfData(MovingCameraScene, Slide if slides else Scene):
 
 class Histogrammer(GrupperingAfData):
     def construct(self):
-        self.histogram_fra_hyppighedstabel()
+        # title = Tex("Histogram", " fra tabel")
+        # title[0].set_color(YELLOW)
+        # play_title2(self, title)
+        # self.histogram_fra_hyppighedstabel()
+        self.varierende_intervalbredde()
         self.wait(5)
 
     def get_cmap(self):
@@ -654,17 +657,6 @@ class Histogrammer(GrupperingAfData):
                 )
         self.slide_pause()
 
-        relevant_tabel = VGroup(
-            *[
-                VGroup(row[0], row[3]) for row in tabel_struktur
-            ],
-            VGroup(col_labels[0], col_labels[3])
-        )
-        values = VGroup(
-            *[
-                VGroup(interval, frek) for interval, frek in zip(intervaller, frekvenser)
-            ]
-        )
         self.play(
             *[FadeOut(m) for m in [
                 *[row[1:3] for row in tabel_struktur],
@@ -699,11 +691,226 @@ class Histogrammer(GrupperingAfData):
             y_axis_config={
                 # "numbers_to_include": np.arange(ymin, ymax+ystep, ystep),
             }
-        ).to_edge(RIGHT)
+        ).set_z_index(5).to_edge(RIGHT)
         plane[1].add_labels({v: Integer(v, unit=r" \%") for v in plane[1].get_tick_range()})
         self.play(
             DrawBorderThenFill(plane)
         )
+        self.slide_pause()
+
+        axvlines = VGroup(
+            *[
+                DashedLine(
+                    start=plane.c2p(x, 0), end=plane.c2p(x, ymax+ystep), stroke_width=0.375
+                ).set_z_index(plane.get_z_index() - 1) for x in plane[0].get_tick_range()
+            ]
+        )
+        axhlines = VGroup(
+            *[
+                DashedLine(
+                    start=plane.c2p(0, y), end=plane.c2p(xmax+xstep, y), stroke_width=0.375
+                ).set_z_index(plane.get_z_index() - 1) for y in plane[1].get_tick_range()
+            ]
+        )
+        self.play(
+            LaggedStart(
+                *[
+                    LaggedStart(
+                        *[Create(line) for line in lines],
+                        lag_ratio=0.05
+                    ) for lines in [axhlines, axvlines]
+                ],
+                lag_ratio=0.1
+            ),
+            run_time=1
+        )
+
+        _dots = VGroup(
+            *[
+                VGroup(
+                    Dot(plane.c2p(start, 0)),
+                    Dot(plane.c2p(start, frek.get_value())),
+                    Dot(plane.c2p(end, 0)),
+                    Dot(plane.c2p(end, frek.get_value())),
+                ) for start, end, frek in zip(interval_starts, interval_ends, frekvenser)
+            ]
+        )
+
+        hist_bars = VGroup(
+            *[
+                Rectangle(
+                    # width=plane.c2p(end, 0)[0] - plane.c2p(start, 0)[0],
+                    # height=plane.c2p(0, hyp.get_value())[1] - plane.c2p(0, 0)[1],
+                    width=dots[2].get_x() - dots[0].get_x(),
+                    height=dots[3].get_y() - dots[2].get_y(),
+                    stroke_color=row[3][1].get_color(),
+                    fill_color=row[3][1].get_color(),
+                    fill_opacity=0.5
+                ).set_z_index(plane.get_z_index() - 3).move_to(
+                    # plane.c2p(np.mean((start, end)), 0.5*(plane.c2p(0, hyp.get_value())[1] - plane.c2p(0, 0)[1]))
+                # ) for start, end, hyp, row in zip(interval_starts, interval_ends, hyppigheder, tabel_struktur[1:])
+                    dots
+                ) for dots, row in zip(_dots, tabel_struktur[1:])
+            ]
+        )
+        brect = get_background_rect(plane, fill_opacity=1, buff=0).next_to(plane[0][0], DOWN, buff=-0.5)
+        self.add(brect)
+        bar_labels = VGroup(
+            *[frek.copy().scale(0.75).set_style(fill_color=bar.get_color()).next_to(bar, UP) for frek, bar in zip(frekvenser, hist_bars)]
+        )
+        for dots, bar, frek, label in zip(_dots, hist_bars, frekvenser, bar_labels):
+            _line = Line(
+                start=dots[0].get_center(), end=dots[2].get_center(), stroke_color=bar.get_color()
+            ).set_z_index(plane.get_z_index() + 1)
+            self.play(
+                Create(_line),
+                run_time=0.5
+            )
+            bar.shift(bar.get_height() * DOWN)
+            self.play(
+                LaggedStart(
+                    # GrowFromEdge(bar, DOWN),
+                    bar.animate.shift(bar.get_height() * UP),
+                    ReplacementTransform(frek.copy(), label),
+                    FadeOut(_line),
+                    lag_ratio=0.25
+                ),
+                run_time=1
+            )
+        self.remove(brect)
+        self.slide_pause()
+
+        self.play(
+            *[VGroup(row[0], row[3], interval, frek).animate.shift(
+                4 * LEFT
+            ) for row, interval, frek in zip(
+                tabel_struktur, col_labels[0].add(*intervaller), col_labels[3].add(frekvenser)
+            )],
+            VGroup(plane, hist_bars, bar_labels, axvlines, axhlines).animate.to_edge(DOWN)
+        )
+        overskrift = Tex("Histogram").set_color(YELLOW).next_to(plane, UP, buff=0)
+        self.play(
+            Write(overskrift),
+            run_time=0.5
+        )
+        self.slide_pause()
+        self.play(
+            LaggedStart(
+                *[
+                    FadeOut(m) for m in [*bar_labels, *hist_bars, *axvlines, *axhlines, plane]
+                ],
+                lag_ratio=0.05
+            ),
+            run_time=1
+        )
+        # self.remove(self.mobjects)
+
+    def varierende_intervalbredde(self):
+        data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
+        data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=0.5)
+
+        first_start = 0
+        last_end = 20
+        bredde_tracker = ValueTracker(2)
+
+        interval_starts = always_redraw(lambda:
+            VGroup(
+                *[
+                    DecimalNumber(x, num_decimal_places=2) for x in np.arange(
+                        first_start, last_end, bredde_tracker.get_value()
+                    )
+                ]
+            )
+        )
+        interval_ends = always_redraw(lambda:
+            VGroup(
+                *[
+                    DecimalNumber(x, num_decimal_places=2) for x in np.arange(
+                        first_start + bredde_tracker.get_value(), last_end + bredde_tracker.get_value(), bredde_tracker.get_value()
+                    )
+                ]
+            )
+        )
+        frekvenser = always_redraw(lambda:
+            VGroup(
+                *[
+                    Integer(
+                        100 * len([x for x in data if start.get_value() <= x.get_value() < end.get_value()]) / len(data),
+                        unit=r" \%"
+                    ) for start, end in zip(interval_starts, interval_ends)
+                ]
+            )
+        )
+
+        xmin, xmax, xstep = 0, 20, 1
+        ymin, ymax, ystep = 0, 40, 5
+        plane = Axes(
+            x_range=(xmin, xmax+xstep, xstep),
+            y_range=(ymin, ymax+ystep, ystep),
+            x_length=9,
+            y_length=6,
+            axis_config={
+                'tip_shape': StealthTip
+            },
+            x_axis_config={
+                "numbers_to_include": np.arange(xmin, xmax+xstep, xstep),
+            },
+            y_axis_config={
+                # "numbers_to_include": np.arange(ymin, ymax+ystep, ystep),
+            }
+        ).set_z_index(5).to_edge(DOWN)
+        plane[1].add_labels({v: Integer(v, unit=r" \%") for v in plane[1].get_tick_range()})
+
+        axvlines = VGroup(
+            *[
+                DashedLine(
+                    start=plane.c2p(x, 0), end=plane.c2p(x, ymax+ystep), stroke_width=0.375
+                ).set_z_index(plane.get_z_index() - 1) for x in plane[0].get_tick_range()
+            ]
+        )
+        axhlines = VGroup(
+            *[
+                DashedLine(
+                    start=plane.c2p(0, y), end=plane.c2p(xmax+xstep, y), stroke_width=0.375
+                ).set_z_index(plane.get_z_index() - 1) for y in plane[1].get_tick_range()
+            ]
+        )
+
+        _dots = always_redraw(lambda: VGroup(
+            *[
+                VGroup(
+                    Dot(plane.c2p(start.get_value(), 0)),
+                    Dot(plane.c2p(start.get_value(), frek.get_value())),
+                    Dot(plane.c2p(end.get_value(), 0)),
+                    Dot(plane.c2p(end.get_value(), frek.get_value())),
+                ) for start, end, frek in zip(interval_starts, interval_ends, frekvenser)
+            ]
+        ))
+
+        hist_bars = always_redraw(lambda: VGroup(
+            *[
+                Rectangle(
+                    width=dots[2].get_x() - dots[0].get_x(),
+                    height=dots[3].get_y() - dots[2].get_y(),
+                    stroke_color=YELLOW,
+                    fill_color=YELLOW,
+                    fill_opacity=0.5
+                ).set_z_index(plane.get_z_index() - 3).move_to(
+                    dots
+                ) for dots in _dots
+            ]
+        ))
+        bar_labels = always_redraw(lambda: VGroup(
+            *[frek.copy().scale(0.75).set_style(fill_color=bar.get_color()).next_to(bar, UP) for frek, bar in zip(frekvenser, hist_bars)]
+        ))
+
+        self.add(plane, hist_bars, bar_labels, axvlines, axhlines)
+        print(*[s.get_value() for s in interval_starts])
+        self.play(
+            bredde_tracker.animate.set_value(5),
+            run_time=5
+        )
+        print(*[s.get_value() for s in interval_starts])
 
 
 if __name__ == "__main__":
