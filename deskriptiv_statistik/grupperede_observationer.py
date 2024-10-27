@@ -5,11 +5,11 @@ import numpy as np
 import subprocess
 from helpers import *
 
-slides = True
+slides = False
 if slides:
     from manim_slides import Slide
 
-q = "h"
+q = "ul"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -39,6 +39,9 @@ class GrupperingAfData(MovingCameraScene, Slide if slides else Scene):
             "observation": BLUE
         }
         return cmap
+
+    def get_data(self):
+        return [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 3, 8, 11, 8, 9, 6, 9, 10, 12, 8, 14, 4, 6, 7, 10]
 
     def data_to_DecNum(self, data, numdec=0, bsign=False):
         return VGroup(
@@ -450,7 +453,8 @@ class GrupperingAfData(MovingCameraScene, Slide if slides else Scene):
 
     def gruppering_af_data(self):
         cmap = self.get_cmap()
-        data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
+        # data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
+        data_raw = self.get_data()
         data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=0.5)
         sorted_data, sorting_dict = self.one_to_one_sort(data, desc=False)
         grupperinger, interval_starts, interval_ends = self.inddel_i_grupper(data, start=0, end=20, size=2)
@@ -560,7 +564,8 @@ class Histogrammer(GrupperingAfData):
 
     def histogram_fra_hyppighedstabel(self):
         cmap = self.get_cmap()
-        data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
+        # data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
+        data_raw = self.get_data()
         data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=0.5)
         sorted_data, sorting_dict = self.one_to_one_sort(data, desc=False)
         grupperinger, interval_starts, interval_ends = self.inddel_i_grupper(data, start=0, end=20, size=2)
@@ -929,6 +934,166 @@ class Sumkurver(Histogrammer):
 
     def sumkurve_fra_tabel(self):
         cmap = self.get_cmap()
+        # data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
+        data_raw = self.get_data()
+        data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=0.5)
+        sorted_data, sorting_dict = self.one_to_one_sort(data, desc=False)
+        grupperinger, interval_starts, interval_ends = self.inddel_i_grupper(data_raw, start=0, end=20, size=2)
+        tabel_struktur, tabel_data, tabel_data_raw = self.prepare_table(data_raw, include_header_row=True)
+        col_labels = VGroup(*[Tex(d, font_size=22).move_to(tabel_struktur[0][i]) for i, d in enumerate([
+            "Interval", "Hyppighed", "Kumuleret\\\\hyppighed", "Frekvens", "Kumuleret\\\\frekvens"
+        ])])
+        intervaller = VGroup(
+            *[MathTex(l).scale(0.8).move_to(tabel_struktur[i+1][0]) for i, l in enumerate(grupperinger.keys())]
+        )
+        hyppigheder = VGroup(
+            *[Integer(v).move_to(tabel_struktur[i+1][1]) for i, v in enumerate(grupperinger.values())]
+        )
+        kumhyppigheder = VGroup()
+        kumhyp = 0
+        for i, start in enumerate(interval_starts):
+            kumhyp += list(grupperinger.values())[i]
+            kumhyppigheder.add(Integer(kumhyp).move_to(tabel_struktur[i+1][2]))
+
+        _frekvenser = []
+        frekvenser = VGroup()
+        for i, start in enumerate(interval_starts):
+            hyp = list(grupperinger.values())[i]
+            fretex = Integer(100 * hyp / kumhyppigheder[-1].get_value(), unit=r" \%").move_to(
+                tabel_struktur[i + 1][3]
+            )
+            _frekvenser.append(100 * hyp / kumhyp)
+            frekvenser.add(fretex)
+
+        kumfrekvenser = VGroup()
+        kumfre = 0
+        for i, start in enumerate(interval_starts):
+            kumfre += frekvenser[i].get_value()
+            kumfrekvenser.add(Integer(kumfre, unit=r" \%").move_to(tabel_struktur[i+1][4]))
+
+        # self.add(tabel_struktur, col_labels, intervaller, hyppigheder, kumhyppigheder, frekvenser, kumfrekvenser)
+        self.play(
+            LaggedStart(
+                *[
+                    FadeIn(m) for m in [
+                        *tabel_struktur, col_labels, intervaller, hyppigheder, kumhyppigheder, frekvenser, kumfrekvenser
+                    ]
+                ],
+                lag_ratio=0.05
+            )
+        )
+        self.slide_pause()
+
+        self.play(
+            *[VGroup(row[0], interval).animate.to_edge(
+                LEFT, buff=0.5
+            ) for row, interval in zip(tabel_struktur, col_labels[0].add(*intervaller))],
+            *[VGroup(row[4], frek).animate.to_edge(
+                LEFT, buff=0.5+row[0].get_width()
+            ) for row, frek in zip(tabel_struktur, col_labels[4].add(*kumfrekvenser))],
+            *[FadeOut(m) for m in [col_labels[1:4], hyppigheder, kumhyppigheder, frekvenser]],
+            *[FadeOut(row[1:4]) for row in tabel_struktur]
+        )
+        self.slide_pause()
+
+        xmin, xmax, xstep = 0, 20, 1
+        ymin, ymax, ystep = 0, 100, 10
+        plane = Axes(
+            x_range=(xmin, xmax+xstep, xstep),
+            y_range=(ymin, ymax+ystep, ystep),
+            x_length=9,
+            y_length=6,
+            axis_config={
+                'tip_shape': StealthTip
+            },
+            x_axis_config={
+                "numbers_to_include": np.arange(xmin, xmax+xstep, xstep),
+            },
+        ).set_z_index(5).to_edge(RIGHT)
+        plane[1].add_labels({v: Integer(v, unit=r" \%") for v in plane[1].get_tick_range()})
+        axvlines = VGroup(
+            *[
+                DashedLine(
+                    start=plane.c2p(x, 0), end=plane.c2p(x, ymax+ystep), stroke_width=0.375
+                ).set_z_index(plane.get_z_index() - 1) for x in plane[0].get_tick_range()
+            ]
+        )
+        axhlines = VGroup(
+            *[
+                DashedLine(
+                    start=plane.c2p(0, y), end=plane.c2p(xmax+xstep, y), stroke_width=0.375
+                ).set_z_index(plane.get_z_index() - 1) for y in plane[1].get_tick_range()
+            ]
+        )
+        self.play(
+            DrawBorderThenFill(plane),
+            run_time=0.5
+        )
+        self.play(
+            LaggedStart(
+                *[
+                    LaggedStart(
+                        *[Create(line) for line in lines],
+                        lag_ratio=0.05
+                    ) for lines in [axhlines, axvlines]
+                ],
+                lag_ratio=0.1
+            ),
+            run_time=1
+        )
+        self.slide_pause()
+
+        sumkurve_linje = VGroup()
+        prev_kumfrek = 0
+        for start, end, kumfrek, row in zip(interval_starts, interval_ends, kumfrekvenser, tabel_struktur[1:]):
+            linje = Line(
+                start=plane.c2p(start, prev_kumfrek),
+                end=plane.c2p(end, kumfrek.get_value()),
+                stroke_color=row[4][1].get_color()
+            )
+            sumkurve_linje.add(linje)
+            self.play(
+                Create(linje),
+                Indicate(row[4], scale_factor=1.2, color=row[4][1].get_color())
+            )
+            prev_kumfrek = kumfrek.get_value()
+        self.slide_pause()
+
+        sumkurve_tekst = Tex("Sumkurve").set_color_by_tex_to_color_map(cmap).next_to(plane, UP, buff=0)
+        self.play(
+            sumkurve_linje.animate.set_style(stroke_color=cmap["Sumkurve"]),
+            Write(sumkurve_tekst)
+        )
+        self.slide_pause()
+
+        self.play(
+            LaggedStart(
+                *[FadeOut(m) for m in sumkurve_linje],
+                *[
+                    FadeOut(m) for m in [
+                        # *tabel_struktur, col_labels[0], col_labels[4], intervaller, kumfrekvenser, *sumkurve_linje,
+                        # axvlines, axhlines, plane
+                        *self.mobjects
+                    ] if m not in [sumkurve_linje]
+                ],
+                lag_ratio=0.05
+            ),
+            run_time=2
+        )
+
+
+class SumkurveFraHistogram(Sumkurver):
+    def construct(self):
+        cmap = self.get_cmap()
+        # title = Tex("Sumkurve", " fra ", "histogram").set_color_by_tex_to_color_map(cmap)
+        # play_title2(self, title)
+        self.sumkurve_fra_histogram()
+
+    def get_cmap(self):
+        return {"umkurve": GREEN, "istogram": YELLOW}
+
+    def sumkurve_fra_histogram(self):
+        cmap = self.get_cmap()
         data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
         data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=0.5)
         sorted_data, sorting_dict = self.one_to_one_sort(data, desc=False)
@@ -1077,7 +1242,8 @@ if __name__ == "__main__":
     classes = [
         # GrupperingAfData,
         # Histogrammer,
-        Sumkurver
+        Sumkurver,
+        # SumkurveFraHistogram
     ]
     for cls in classes:
         class_name = cls.__name__
