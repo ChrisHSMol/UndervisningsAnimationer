@@ -5,11 +5,11 @@ import numpy as np
 import subprocess
 from helpers import *
 
-slides = False
+slides = True
 if slides:
     from manim_slides import Slide
 
-q = "ul"
+q = "h"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -569,7 +569,25 @@ class Histogrammer(GrupperingAfData):
         data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=0.5)
         sorted_data, sorting_dict = self.one_to_one_sort(data, desc=False)
         grupperinger, interval_starts, interval_ends = self.inddel_i_grupper(data, start=0, end=20, size=2)
-        tabel_struktur, tabel_data, tabel_data_raw = self.prepare_table(data_raw, include_header_row=True)
+        # tabel_struktur, tabel_data, tabel_data_raw = self.prepare_table(data_raw, include_header_row=True)
+        tabel_struktur = VGroup()
+        for j in range(len(interval_starts) + 1):
+            row = VGroup()
+            for i in range(5):
+                row.add(
+                    VGroup(
+                        Rectangle(width=1.5, height=0.65, stroke_width=1),
+                        Rectangle(
+                            width=1.5 - 0.05, height=0.65 - 0.05, fill_opacity=0,
+                            stroke_width=3,
+                            stroke_color=[BLACK, BLUE, BLUE, YELLOW, YELLOW][i],
+                            stroke_opacity=[0, 0.5, 0.75, 0.5, 0.75][i]
+                        )
+                    )
+                )
+            row.arrange(RIGHT, buff=0)
+            tabel_struktur.add(row)
+        tabel_struktur.arrange(DOWN, buff=0)
         col_labels = VGroup(*[Tex(d, font_size=22).move_to(tabel_struktur[0][i]) for i, d in enumerate([
             "Interval", "Hyppighed", "Kumuleret\\\\hyppighed", "Frekvens", "Kumuleret\\\\frekvens"
         ])])
@@ -791,7 +809,7 @@ class Histogrammer(GrupperingAfData):
             ) for row, interval, frek in zip(
                 tabel_struktur, col_labels[0].add(*intervaller), col_labels[3].add(frekvenser)
             )],
-            VGroup(plane, hist_bars, bar_labels, axvlines, axhlines).animate.to_edge(DOWN)
+            VGroup(plane, hist_bars, bar_labels, axvlines, axhlines).animate.move_to(ORIGIN)
         )
         overskrift = Tex("Histogram").set_color(YELLOW).next_to(plane, UP, buff=0)
         self.play(
@@ -802,7 +820,7 @@ class Histogrammer(GrupperingAfData):
         self.play(
             LaggedStart(
                 *[
-                    FadeOut(m) for m in [*bar_labels, *hist_bars, *axvlines, *axhlines, plane]
+                    FadeOut(m) for m in [*bar_labels, *hist_bars, *axvlines, *axhlines, plane, overskrift]
                 ],
                 lag_ratio=0.05
             ),
@@ -938,8 +956,26 @@ class Sumkurver(Histogrammer):
         data_raw = self.get_data()
         data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=0.5)
         sorted_data, sorting_dict = self.one_to_one_sort(data, desc=False)
-        grupperinger, interval_starts, interval_ends = self.inddel_i_grupper(data_raw, start=0, end=20, size=2)
-        tabel_struktur, tabel_data, tabel_data_raw = self.prepare_table(data_raw, include_header_row=True)
+        grupperinger, interval_starts, interval_ends = self.inddel_i_grupper(data, start=0, end=20, size=2)
+        # tabel_struktur, tabel_data, tabel_data_raw = self.prepare_table(data_raw, include_header_row=True)
+        tabel_struktur = VGroup()
+        for j in range(len(interval_starts) + 1):
+            row = VGroup()
+            for i in range(5):
+                row.add(
+                    VGroup(
+                        Rectangle(width=1.5, height=0.65, stroke_width=1),
+                        Rectangle(
+                            width=1.5 - 0.05, height=0.65 - 0.05, fill_opacity=0,
+                            stroke_width=3,
+                            stroke_color=[BLACK, BLUE, BLUE, YELLOW, YELLOW][i],
+                            stroke_opacity=[0, 0.5, 0.75, 0.5, 0.75][i]
+                        )
+                    )
+                )
+            row.arrange(RIGHT, buff=0)
+            tabel_struktur.add(row)
+        tabel_struktur.arrange(DOWN, buff=0)
         col_labels = VGroup(*[Tex(d, font_size=22).move_to(tabel_struktur[0][i]) for i, d in enumerate([
             "Interval", "Hyppighed", "Kumuleret\\\\hyppighed", "Frekvens", "Kumuleret\\\\frekvens"
         ])])
@@ -1085,72 +1121,39 @@ class Sumkurver(Histogrammer):
 class SumkurveFraHistogram(Sumkurver):
     def construct(self):
         cmap = self.get_cmap()
-        # title = Tex("Sumkurve", " fra ", "histogram").set_color_by_tex_to_color_map(cmap)
-        # play_title2(self, title)
-        self.sumkurve_fra_histogram()
+        title = Tex("Sammenhæng mellem ", "sumkurve", " og ", "histogram").set_color_by_tex_to_color_map(cmap)
+        play_title2(self, title)
+        plane, linjer = self.sumkurve_fra_histogram(shorten_animations=False)
+        self.histogram_fra_sumkurve(plane, linjer)
+        # self.wait(5)
 
     def get_cmap(self):
         return {"umkurve": GREEN, "istogram": YELLOW}
 
-    def sumkurve_fra_histogram(self):
+    def sumkurve_fra_histogram(self, shorten_animations=False):
         cmap = self.get_cmap()
-        data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
+        _rt = 1/_FRAMERATE[q] if shorten_animations else 1  # 1 frame or 1 second
+        # data_raw = [8, 4, 16, 8, 9, 6, 16, 19, 7, 6, 4, 8, 11, 8, 9, 6, 9, 10, 11, 8, 14, 4, 6, 7, 10]
+        data_raw = self.get_data()
         data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=0.5)
-        sorted_data, sorting_dict = self.one_to_one_sort(data, desc=False)
         grupperinger, interval_starts, interval_ends = self.inddel_i_grupper(data, start=0, end=20, size=2)
-        tabel_struktur, tabel_data, tabel_data_raw = self.prepare_table(data_raw, include_header_row=True)
-        col_labels = VGroup(*[Tex(d, font_size=22).move_to(tabel_struktur[0][i]) for i, d in enumerate([
-            "Interval", "Hyppighed", "Kumuleret\\\\hyppighed", "Frekvens", "Kumuleret\\\\frekvens"
-        ])])
-        intervaller = VGroup(
-            *[MathTex(l).scale(0.8).move_to(tabel_struktur[i+1][0]) for i, l in enumerate(grupperinger.keys())]
-        )
-        hyppigheder = VGroup(
-            *[Integer(v).move_to(tabel_struktur[i+1][1]) for i, v in enumerate(grupperinger.values())]
-        )
         kumhyppigheder = VGroup()
         kumhyp = 0
         for i, start in enumerate(interval_starts):
             kumhyp += list(grupperinger.values())[i]
-            kumhyppigheder.add(Integer(kumhyp).move_to(tabel_struktur[i+1][2]))
+            kumhyppigheder.add(Integer(kumhyp))
 
         frekvenser = VGroup()
         for i, start in enumerate(interval_starts):
             hyp = list(grupperinger.values())[i]
-            fretex = Integer(100 * hyp / kumhyppigheder[-1].get_value(), unit=r" \%").move_to(
-                tabel_struktur[i + 1][3])
+            fretex = Integer(100 * hyp / kumhyppigheder[-1].get_value(), unit=r" \%")
             frekvenser.add(fretex)
 
         kumfrekvenser = VGroup()
         kumfre = 0
         for i, start in enumerate(interval_starts):
             kumfre += frekvenser[i].get_value()
-            kumfrekvenser.add(Integer(kumfre, unit=r" \%").move_to(tabel_struktur[i+1][4]))
-
-        # self.add(tabel_struktur, col_labels, intervaller, hyppigheder, kumhyppigheder, frekvenser, kumfrekvenser)
-        self.play(
-            LaggedStart(
-                *[
-                    FadeIn(m) for m in [
-                        *tabel_struktur, col_labels, intervaller, hyppigheder, kumhyppigheder, frekvenser, kumfrekvenser
-                    ]
-                ],
-                lag_ratio=0.05
-            )
-        )
-        self.slide_pause()
-
-        self.play(
-            *[VGroup(row[0], interval).animate.to_edge(
-                LEFT, buff=0.5
-            ) for row, interval in zip(tabel_struktur, col_labels[0].add(*intervaller))],
-            *[VGroup(row[4], frek).animate.to_edge(
-                LEFT, buff=0.5+row[0].get_width()
-            ) for row, frek in zip(tabel_struktur, col_labels[4].add(*kumfrekvenser))],
-            *[FadeOut(m) for m in [col_labels[1:4], hyppigheder, kumhyppigheder, frekvenser]],
-            *[FadeOut(row[1:4]) for row in tabel_struktur]
-        )
-        self.slide_pause()
+            kumfrekvenser.add(Integer(kumfre, unit=r" \%"))
 
         xmin, xmax, xstep = 0, 20, 1
         ymin, ymax, ystep = 0, 100, 10
@@ -1165,7 +1168,7 @@ class SumkurveFraHistogram(Sumkurver):
             x_axis_config={
                 "numbers_to_include": np.arange(xmin, xmax+xstep, xstep),
             },
-        ).set_z_index(5).to_edge(RIGHT)
+        ).set_z_index(5)
         plane[1].add_labels({v: Integer(v, unit=r" \%") for v in plane[1].get_tick_range()})
         axvlines = VGroup(
             *[
@@ -1181,9 +1184,13 @@ class SumkurveFraHistogram(Sumkurver):
                 ).set_z_index(plane.get_z_index() - 1) for y in plane[1].get_tick_range()
             ]
         )
+        hist_tekst = Tex("Histogram", color=cmap["istogram"]).next_to(plane, UP)
+        sumk_tekst = Tex("Sumkurve", color=cmap["umkurve"]).next_to(plane, UP)
+        bliv_pil = Arrow(start=LEFT, end=RIGHT).next_to(plane, UP)
+        VGroup(hist_tekst, bliv_pil, sumk_tekst).arrange(RIGHT).next_to(plane, UP)
         self.play(
             DrawBorderThenFill(plane),
-            run_time=0.5
+            run_time=0.5 * _rt
         )
         self.play(
             LaggedStart(
@@ -1195,55 +1202,613 @@ class SumkurveFraHistogram(Sumkurver):
                 ],
                 lag_ratio=0.1
             ),
-            run_time=1
+            run_time=1 * _rt
         )
-        self.slide_pause()
+        self.slide_pause(1 * _rt)
+
+        _dots = VGroup(
+            *[
+                VGroup(
+                    Dot(plane.c2p(start, 0)),
+                    Dot(plane.c2p(start, frek.get_value())),
+                    Dot(plane.c2p(end, 0)),
+                    Dot(plane.c2p(end, frek.get_value())),
+                ) for start, end, frek in zip(interval_starts, interval_ends, frekvenser)
+            ]
+        )
+
+        hist_bars = VGroup(
+            *[
+                Rectangle(
+                    width=dots[2].get_x() - dots[0].get_x(),
+                    height=dots[3].get_y() - dots[2].get_y(),
+                    stroke_color=cmap["istogram"],
+                    fill_color=cmap["istogram"],
+                    fill_opacity=0.5
+                ).set_z_index(plane.get_z_index() - 3).move_to(
+                    dots
+                ) for dots in _dots
+            ]
+        )
 
         sumkurve_linje = VGroup()
         prev_kumfrek = 0
-        for start, end, kumfrek, row in zip(interval_starts, interval_ends, kumfrekvenser, tabel_struktur[1:]):
+        for start, end, kumfrek in zip(interval_starts, interval_ends, kumfrekvenser):
             linje = Line(
                 start=plane.c2p(start, prev_kumfrek),
                 end=plane.c2p(end, kumfrek.get_value()),
-                stroke_color=row[4][1].get_color()
+                stroke_color=cmap["umkurve"]
             )
             sumkurve_linje.add(linje)
-            self.play(
-                Create(linje),
-                Indicate(row[4], scale_factor=1.2, color=row[4][1].get_color())
-            )
             prev_kumfrek = kumfrek.get_value()
-        self.slide_pause()
 
-        sumkurve_tekst = Tex("Sumkurve").set_color_by_tex_to_color_map(cmap).next_to(plane, UP, buff=0)
+        hist_tekst.next_to(plane, UP)
         self.play(
-            sumkurve_linje.animate.set_style(stroke_color=cmap["Sumkurve"]),
-            Write(sumkurve_tekst)
+            LaggedStart(
+                *[FadeIn(bar, shift=UP) for bar in hist_bars],
+                lag_ratio=0.1
+            ),
+            FadeIn(hist_tekst),
+            run_time=1 * _rt
+        )
+        self.slide_pause(1 * _rt)
+
+        _yscale = (plane.c2p(0, 100)[1] - plane.c2p(0, 0)[1])/100
+        _offsets = [d.get_value() for d in kumfrekvenser]
+        for i, bar in enumerate(hist_bars[1:]):
+            self.play(
+                bar.animate.shift(_offsets[i] * _yscale * UP),
+                run_time=0.5 * _rt
+            )
+            if 0 < i <= 3:
+                self.slide_pause(1 * _rt)
+        self.play(
+            FadeIn(bliv_pil, shift=LEFT),
+            hist_tekst.animate.next_to(bliv_pil, LEFT),
+            run_time=0.5
+        )
+        self.slide_pause(1 * _rt)
+
+        sumkurve_linjer = VGroup(
+            *[
+                Line(
+                    start=bar.get_corner(DL),
+                    end=bar.get_corner(UR),
+                    stroke_color=cmap["umkurve"]
+                ) for bar in hist_bars
+            ]
+        )
+        for bar, lin in zip(hist_bars, sumkurve_linjer):
+            self.play(
+                bar.animate.set_style(fill_opacity=0.25, stroke_opacity=0.25),
+                FadeIn(lin),
+                run_time=1 * _rt
+            )
+            if bar in hist_bars[1:4]:
+                self.slide_pause(1 * _rt)
+        self.play(
+            FadeIn(sumk_tekst, shift=RIGHT),
+            run_time=0.5
+        )
+        self.slide_pause(1 * _rt)
+
+        self.play(
+            FadeOut(hist_bars),
+            sumkurve_linjer.animate.set_style(stroke_color=cmap["umkurve"]),
+            sumk_tekst.animate.next_to(plane, UP),
+            FadeOut(hist_tekst, shift=LEFT),
+            FadeOut(bliv_pil, shift=LEFT),
+            run_time=0.5 * _rt
+        )
+        self.slide_pause()
+        self.remove(*self.mobjects)
+        return VGroup(plane, axvlines, axhlines), sumkurve_linjer
+
+    def histogram_fra_sumkurve(self, plane, sumkurve_linjer):
+        self.add(plane, sumkurve_linjer)
+        plane, axvlines, axhlines = plane
+        cmap = self.get_cmap()
+
+        hist_tekst = Tex("Histogram", color=cmap["istogram"]).next_to(plane, UP)
+        sumk_tekst = Tex("Sumkurve", color=cmap["umkurve"]).next_to(plane, UP)
+        bliv_pil = Arrow(start=LEFT, end=RIGHT).next_to(plane, UP)
+        VGroup(sumk_tekst, bliv_pil, hist_tekst).arrange(RIGHT).next_to(plane, UP)
+        sumk_tekst.next_to(plane, UP)
+        self.add(sumk_tekst)
+
+        hist_bars = VGroup(
+            *[
+                Rectangle(
+                    width=line.get_end()[0] - line.get_start()[0],
+                    height=line.get_end()[1] - line.get_start()[1],
+                    fill_color=cmap["istogram"],
+                    fill_opacity=0.25,
+                    stroke_color=cmap["istogram"],
+                    stroke_opacity=0.25
+                ).move_to(line) for line in sumkurve_linjer
+            ]
+        )
+        self.play(
+            LaggedStart(
+                *[
+                    FadeIn(bar) for bar in hist_bars
+                ],
+                lag_ratio=0.5
+            ),
+            sumk_tekst.animate.next_to(bliv_pil, LEFT),
+            FadeIn(bliv_pil, shift=LEFT),
+            run_time=1
         )
         self.slide_pause()
 
         self.play(
             LaggedStart(
-                *[FadeOut(m) for m in sumkurve_linje],
                 *[
-                    FadeOut(m) for m in [
-                        # *tabel_struktur, col_labels[0], col_labels[4], intervaller, kumfrekvenser, *sumkurve_linje,
-                        # axvlines, axhlines, plane
-                        *self.mobjects
-                    ] if m not in [sumkurve_linje]
+                    bar.animate.set_style(stroke_opacity=1, fill_opacity=0.5) for bar in hist_bars
+                ],
+                lag_ratio=0.25
+            ),
+            LaggedStart(
+                *[
+                    FadeOut(line) for line in sumkurve_linjer
+                ],
+                lag_ratio=0.25
+            ),
+            FadeIn(hist_tekst, shift=RIGHT),
+            run_time=2
+        )
+        # self.remove(sumkurve_linjer)
+        self.slide_pause()
+
+        self.play(
+            LaggedStart(
+                *[
+                    bar.animate.move_to(
+                        plane.c2p(plane.p2c(bar.get_center())[0], 0)
+                    ).shift(bar.get_height() * 0.5 * UP) for bar in hist_bars
+                ],
+                lag_ratio=0.5
+            ),
+            FadeOut(sumk_tekst, shift=LEFT),
+            FadeOut(bliv_pil, shift=LEFT),
+            hist_tekst.animate.next_to(plane, UP),
+            run_time=2
+        )
+        self.slide_pause()
+
+
+class DeskriptorerGrupperet(SumkurveFraHistogram):
+    def construct(self):
+        cmap = self.get_cmap()
+        title = Tex("Centrale deskriptorer", " for grupperede ", "observationer").set_color_by_tex_to_color_map(cmap)
+        play_title2(self, title)
+        self.deskriptorer_grupperet(shorten_animations=False)
+        self.wait(5)
+
+    def get_cmap(self):
+        return {
+            "datasæt": YELLOW,
+            "observation": BLUE,
+            "deskriptor": RED,
+            "hyppighed": BLUE_A,
+            "tørrelse": RED
+        }
+
+    def deskriptorer_grupperet(self, shorten_animations=False):
+        _rt = 1/_FRAMERATE[q] if shorten_animations else 1
+        cmap = self.get_cmap()
+        data_raw = self.get_data()
+        data = self.data_to_DecNum(data_raw).to_edge(LEFT, buff=0.5)
+        sorted_data, sorting_dict = self.one_to_one_sort(data, desc=False)
+        grupperinger, interval_starts, interval_ends = self.inddel_i_grupper(data, start=0, end=20, size=2)
+        # tabel_struktur, tabel_data, tabel_data_raw = self.prepare_table(data_raw, include_header_row=True)
+        tabel_struktur = VGroup()
+        for j in range(len(interval_starts) + 1):
+            row = VGroup()
+            for i in range(2):
+                row.add(
+                    VGroup(
+                        Rectangle(width=1.5, height=0.65, stroke_width=1),
+                        Rectangle(
+                            width=1.5 - 0.05, height=0.65 - 0.05, fill_opacity=0,
+                            stroke_width=3,
+                            stroke_color=[BLACK, BLUE, BLUE, YELLOW, YELLOW][i],
+                            stroke_opacity=[0, 0.5, 0.75, 0.5, 0.75][i]
+                        )
+                    )
+                )
+            row.arrange(RIGHT, buff=0)
+            tabel_struktur.add(row)
+        tabel_struktur.arrange(DOWN, buff=0).to_edge(LEFT, buff=1)
+        col_labels = VGroup(*[Tex(d, font_size=22).move_to(tabel_struktur[0][i]) for i, d in enumerate([
+            "Interval", "Hyppighed"  #, "Kumuleret\\\\hyppighed", "Frekvens", "Kumuleret\\\\frekvens"
+        ])])
+        intervaller = VGroup(
+            *[MathTex(l).scale(0.8).move_to(tabel_struktur[i+1][0]) for i, l in enumerate(grupperinger.keys())]
+        )
+        hyppigheder = VGroup(
+            *[Integer(v).move_to(tabel_struktur[i+1][1]) for i, v in enumerate(grupperinger.values())]
+        )
+        # kumhyppigheder = VGroup()
+        # kumhyp = 0
+        # for i, start in enumerate(interval_starts):
+        #     kumhyp += list(grupperinger.values())[i]
+        #     kumhyppigheder.add(Integer(kumhyp).move_to(tabel_struktur[i+1][2]))
+        #
+        # _frekvenser = []
+        # frekvenser = VGroup()
+        # for i, start in enumerate(interval_starts):
+        #     hyp = list(grupperinger.values())[i]
+        #     fretex = Integer(100 * hyp / kumhyppigheder[-1].get_value(), unit=r" \%").move_to(
+        #         tabel_struktur[i + 1][3]
+        #     )
+        #     _frekvenser.append(100 * hyp / kumhyp)
+        #     frekvenser.add(fretex)
+        #
+        # kumfrekvenser = VGroup()
+        # kumfre = 0
+        # for i, start in enumerate(interval_starts):
+        #     kumfre += frekvenser[i].get_value()
+        #     kumfrekvenser.add(Integer(kumfre, unit=r" \%").move_to(tabel_struktur[i+1][4]))
+
+        # self.add(tabel_struktur, col_labels, intervaller, hyppigheder, kumhyppigheder, frekvenser, kumfrekvenser)
+        self.play(
+            LaggedStart(
+                *[
+                    FadeIn(m) for m in [
+                        *tabel_struktur, col_labels, intervaller, hyppigheder  #, kumhyppigheder, frekvenser, kumfrekvenser
+                    ]
                 ],
                 lag_ratio=0.05
             ),
-            run_time=2
+            run_time=1 * _rt
         )
+        self.slide_pause()
+
+        storrelse_tekst = VGroup(
+            Tex("Størrelsen", " af et grupperet ", "datasæt").set_color_by_tex_to_color_map(cmap),
+            Tex("er summen af ", "hyppighederne", ":").set_color_by_tex_to_color_map(cmap)
+        ).arrange(DOWN, aligned_edge=LEFT).next_to(tabel_struktur, RIGHT, buff=1)
+        storrelse_udr = VGroup(
+            VGroup(
+                *[
+                    hyp.copy() for hyp in hyppigheder
+                ]
+            ).scale(0.75).arrange(RIGHT, buff=0.5).next_to(storrelse_tekst, DOWN, aligned_edge=LEFT),
+            VGroup(*[MathTex("+").scale(0.75) for _ in hyppigheder[:-1]]),
+        )
+        [p.move_to(between_mobjects(storrelse_udr[0][i], storrelse_udr[0][i+1])) for i, p in enumerate(storrelse_udr[1])]
+        storrelse_resultat = VGroup(
+            MathTex(" = "), Integer(sum([h.get_value() for h in hyppigheder]), color=cmap["tørrelse"])
+        ).scale(0.75).arrange(RIGHT).next_to(storrelse_udr, RIGHT)
+        # self.add(storrelse_tekst, storrelse_udr, storrelse_resultat)
+        self.play(
+            Write(storrelse_tekst),
+            run_time=1 * _rt
+        )
+        self.slide_pause(1 * _rt)
+
+        self.play(
+            ReplacementTransform(hyppigheder[0].copy(), storrelse_udr[0][0]),
+            run_time=1 * _rt
+        )
+        self.slide_pause()
+        for p, udr, hyp in zip(storrelse_udr[1], storrelse_udr[0][1:], hyppigheder[1:]):
+            self.play(
+                LaggedStart(
+                    ReplacementTransform(hyp.copy(), udr),
+                    FadeIn(p, shift=0.5*RIGHT),
+                    lag_ratio=0.25
+                ),
+                run_time=1 * _rt
+            )
+        self.slide_pause()
+
+        self.play(
+            LaggedStart(
+                *[FadeIn(m, shift=0.5*RIGHT) for m in storrelse_resultat],
+                lag_ratio=0.25
+            ),
+            run_time=1 * _rt
+        )
+        self.slide_pause()
+
+        storrelse = VGroup(
+            storrelse_tekst[0][0][:-1].copy(), storrelse_resultat[1].copy().scale(4/3)
+        ).arrange(RIGHT).next_to(tabel_struktur, RIGHT, aligned_edge=UP)
+        self.play(
+            ReplacementTransform(
+                VGroup(storrelse_tekst[0][0].copy(), storrelse_resultat[1].copy()),
+                storrelse
+            ),
+            FadeOut(storrelse_tekst),
+            FadeOut(storrelse_resultat),
+            FadeOut(storrelse_udr),
+            run_time=1 * _rt
+        )
+        self.slide_pause(1 * _rt)
+
+        sum_tekst = VGroup(
+            Tex("Summen", " af ", "observationerne", " kan vi ikke udregne med sikkerhed."),
+            Tex("På grund af intervallerne, skal vi vælge en af følgende 3 måder:"),
+            Tex("Vil vi bruge ", "start", "-, ", "midt", "- eller ", "slut", "punkterne?")
+        ).scale(0.7).arrange(DOWN, aligned_edge=LEFT).next_to(tabel_struktur, RIGHT)
+        sum_tekst[0][0].set_color(cmap["deskriptor"])
+        sum_tekst[0][2].set_color(cmap["observation"])
+        sum_tekst[2][1].set_color(interpolate_color(WHITE, RED, 0.5))
+        sum_tekst[2][3].set_color(interpolate_color(WHITE, GREEN, 0.5))
+        sum_tekst[2][5].set_color(interpolate_color(WHITE, RED, 0.5))
+        self.play(
+            Write(sum_tekst),
+            run_time=3 * _rt
+        )
+
+        sum_udr_start = VGroup(
+            VGroup(*[Integer(st).scale(0.7) for st in interval_starts]).arrange(RIGHT, buff=0.75),
+            VGroup(*[MathTex(fr"\cdot {hyp.get_value():.0f}") for hyp in hyppigheder]).scale(0.7),
+            VGroup(*[MathTex("+").scale(0.7) for _ in interval_starts[:-1]])
+        ).next_to(sum_tekst, DOWN, aligned_edge=LEFT)
+        [g.next_to(st, RIGHT, buff=0.5*DEFAULT_MOBJECT_TO_MOBJECT_BUFFER) for g, st in zip(sum_udr_start[1], sum_udr_start[0])]
+        [p.move_to(between_mobjects(sum_udr_start[1][i], sum_udr_start[0][i+1])) for i, p in enumerate(sum_udr_start[2])]
+        self.play(
+            LaggedStart(
+                Indicate(intervaller[0][0][1:len(str(sum_udr_start[0][0].get_value())) + 1]),
+                Indicate(hyppigheder[0]),
+                ReplacementTransform(
+                    intervaller[0][0][1:len(str(sum_udr_start[0][0].get_value())) + 1].copy(),
+                    sum_udr_start[0][0]
+                ),
+                ReplacementTransform(
+                    hyppigheder[0].copy(),
+                    sum_udr_start[1][0]
+                ),
+                lag_ratio=0.5
+            ),
+            run_time=1 * _rt
+        )
+        self.slide_pause(1 * _rt)
+
+        for i, interval in enumerate(intervaller[1:]):
+            self.play(
+                LaggedStart(
+                    Indicate(interval[0][1:len(str(sum_udr_start[0][i+1].get_value())) + 1]),
+                    Indicate(hyppigheder[i + 1]),
+                    ReplacementTransform(
+                        interval[0][1:len(str(sum_udr_start[0][i+1].get_value())) + 1].copy(),
+                        sum_udr_start[0][i+1]
+                    ),
+                    ReplacementTransform(
+                        hyppigheder[i+1].copy(),
+                        sum_udr_start[1][i+1]
+                    ),
+                    FadeIn(sum_udr_start[2][i], shift=0.5*RIGHT),
+                    lag_ratio=0.5
+                ),
+                run_time=1 * _rt
+            )
+        self.slide_pause(1 * _rt)
+
+        sum_res_start = Integer(
+            sum([st * hyp.get_value() for st, hyp in zip(interval_starts, hyppigheder)])
+        ).move_to(sum_udr_start[2][0])
+        self.play(
+            ReplacementTransform(sum_udr_start, sum_res_start),
+            run_time=1 * _rt
+        )
+        self.slide_pause(1 * _rt)
+
+        sum_start_tekst = VGroup(
+            sum_tekst[0][0][:3].copy().scale(1/0.7), sum_res_start.copy().set_color(cmap["deskriptor"]),
+            Tex("(start-værdi)")
+        ).arrange(RIGHT).next_to(storrelse, DOWN, aligned_edge=LEFT)
+        self.play(
+            ReplacementTransform(sum_tekst[0][0][:3].copy(), sum_start_tekst[0]),
+            ReplacementTransform(sum_res_start, sum_start_tekst[1]),
+            ReplacementTransform(sum_tekst[2][1].copy(), sum_start_tekst[2]),
+            run_time=1 * _rt
+        )
+        self.slide_pause(1 * _rt)
+
+        # ---------------------------------------------------------------------------------------------
+
+        sum_udr_midt = VGroup(
+            VGroup(*[DecimalNumber(
+                np.mean([st, sl]), num_decimal_places=0 if np.mean([st, sl]).is_integer() else 2
+            ).scale(0.7) for st, sl in zip(interval_starts, interval_ends)]).arrange(RIGHT, buff=0.75),
+            VGroup(*[MathTex(fr"\cdot {hyp.get_value():.0f}") for hyp in hyppigheder]).scale(0.7),
+            VGroup(*[MathTex("+").scale(0.7) for _ in interval_starts[:-1]])
+        ).next_to(sum_tekst, DOWN, aligned_edge=LEFT)
+        [g.next_to(st, RIGHT, buff=0.5*DEFAULT_MOBJECT_TO_MOBJECT_BUFFER) for g, st in zip(sum_udr_midt[1], sum_udr_midt[0])]
+        [p.move_to(between_mobjects(sum_udr_midt[1][i], sum_udr_midt[0][i+1])) for i, p in enumerate(sum_udr_midt[2])]
+        self.play(
+            LaggedStart(
+                Indicate(intervaller[0][0][1:-1]),
+                Indicate(hyppigheder[0]),
+                ReplacementTransform(
+                    intervaller[0][0][1:-1].copy(),
+                    sum_udr_midt[0][0]
+                ),
+                ReplacementTransform(
+                    hyppigheder[0].copy(),
+                    sum_udr_midt[1][0]
+                ),
+                lag_ratio=0.5
+            ),
+            run_time=1 * _rt
+        )
+        self.slide_pause(1 * _rt)
+
+        for i, interval in enumerate(intervaller[1:]):
+            self.play(
+                LaggedStart(
+                    Indicate(interval[0][1:-1]),
+                    Indicate(hyppigheder[i + 1]),
+                    ReplacementTransform(
+                        interval[0][1:-1].copy(),
+                        sum_udr_midt[0][i+1]
+                    ),
+                    ReplacementTransform(
+                        hyppigheder[i+1].copy(),
+                        sum_udr_midt[1][i+1]
+                    ),
+                    FadeIn(sum_udr_midt[2][i], shift=0.5*RIGHT),
+                    lag_ratio=0.5
+                ),
+                run_time=1 * _rt
+            )
+        self.slide_pause(1 * _rt)
+
+        sum_res_midt = Integer(
+            sum([midt.get_value() * hyp.get_value() for midt, hyp in zip(sum_udr_midt[0], hyppigheder)])
+        ).move_to(sum_udr_midt[2][0])
+        self.play(
+            ReplacementTransform(sum_udr_midt, sum_res_midt),
+            run_time=1 * _rt
+        )
+        self.slide_pause(1 * _rt)
+
+        sum_midt_tekst = VGroup(
+            sum_res_midt.copy().set_color(cmap["deskriptor"]), Tex("(midt-værdi)")
+        ).arrange(RIGHT).next_to(sum_start_tekst[1], DOWN, aligned_edge=LEFT)
+        self.play(
+            ReplacementTransform(sum_res_midt, sum_midt_tekst[0]),
+            ReplacementTransform(sum_tekst[2][3].copy(), sum_midt_tekst[1]),
+            run_time=1 * _rt
+        )
+        self.slide_pause(1 * _rt)
+
+        # ---------------------------------------------------------------------------------------------
+
+        sum_udr_slut = VGroup(
+            VGroup(*[Integer(sl).scale(0.7) for sl in interval_ends]).arrange(RIGHT, buff=0.75),
+            VGroup(*[MathTex(fr"\cdot {hyp.get_value():.0f}") for hyp in hyppigheder]).scale(0.7),
+            VGroup(*[MathTex("+").scale(0.7) for _ in interval_starts[:-1]])
+        ).next_to(sum_tekst, DOWN, aligned_edge=LEFT)
+        [g.next_to(st, RIGHT, buff=0.5*DEFAULT_MOBJECT_TO_MOBJECT_BUFFER) for g, st in zip(sum_udr_slut[1], sum_udr_slut[0])]
+        [p.move_to(between_mobjects(sum_udr_slut[1][i], sum_udr_slut[0][i+1])) for i, p in enumerate(sum_udr_slut[2])]
+        self.play(
+            LaggedStart(
+                Indicate(intervaller[0][0][len(str(sum_udr_slut[0][0].get_value())) + 2:-1]),
+                Indicate(hyppigheder[0]),
+                ReplacementTransform(
+                    intervaller[0][0][len(str(sum_udr_slut[0][0].get_value())) + 2:-1].copy(),
+                    sum_udr_slut[0][0]
+                ),
+                ReplacementTransform(
+                    hyppigheder[0].copy(),
+                    sum_udr_slut[1][0]
+                ),
+                lag_ratio=0.5
+            ),
+            run_time=1 * _rt
+        )
+        self.slide_pause(1 * _rt)
+
+        for i, interval in enumerate(intervaller[1:]):
+            self.play(
+                LaggedStart(
+                    Indicate(interval[0][len(str(sum_udr_slut[0][i+1].get_value())) + 2:-1]),
+                    Indicate(hyppigheder[i + 1]),
+                    ReplacementTransform(
+                        interval[0][len(str(sum_udr_slut[0][i+1].get_value())) + 2:-1].copy(),
+                        sum_udr_slut[0][i+1]
+                    ),
+                    ReplacementTransform(
+                        hyppigheder[i+1].copy(),
+                        sum_udr_slut[1][i+1]
+                    ),
+                    FadeIn(sum_udr_slut[2][i], shift=0.5*RIGHT),
+                    lag_ratio=0.5
+                ),
+                run_time=1 * _rt
+            )
+        self.slide_pause(1 * _rt)
+
+        sum_res_slut = Integer(
+            sum([slut * hyp.get_value() for slut, hyp in zip(interval_ends, hyppigheder)])
+        ).move_to(sum_udr_slut[2][0])
+        self.play(
+            ReplacementTransform(sum_udr_slut, sum_res_slut),
+            run_time=1 * _rt
+        )
+        self.slide_pause(1 * _rt)
+
+        sum_slut_tekst = VGroup(
+            sum_res_slut.copy().set_color(cmap["deskriptor"]), Tex("(slut-værdi)")
+        ).arrange(RIGHT).next_to(sum_midt_tekst[0], DOWN, aligned_edge=LEFT)
+        self.play(
+            ReplacementTransform(sum_res_slut, sum_slut_tekst[0]),
+            ReplacementTransform(sum_tekst[2][5].copy(), sum_slut_tekst[1]),
+            Unwrite(sum_tekst, reverse=False),
+            run_time=1 * _rt
+        )
+        self.slide_pause(1 * _rt)
+
+        # -------------------------------------------------------------------------------------------
+
+        middel_tekst = VGroup(
+            Tex("Middelværdien", " af ", "observationerne"),
+            Tex("kan vi heller ikke udregne med sikkerhed."),
+            Tex("Vil skal bruge ", "start", "-, ", "midt", "- eller ", "slut", "punkternes summer")
+        ).scale(0.7).arrange(DOWN, aligned_edge=LEFT).next_to(tabel_struktur, RIGHT)
+        middel_tekst[0][0].set_color(cmap["deskriptor"])
+        middel_tekst[0][2].set_color(cmap["observation"])
+        middel_tekst[2][1].set_color(interpolate_color(WHITE, RED, 0.5))
+        middel_tekst[2][3].set_color(interpolate_color(WHITE, GREEN, 0.5))
+        middel_tekst[2][5].set_color(interpolate_color(WHITE, RED, 0.5))
+        self.play(
+            Write(middel_tekst),
+            run_time=3 * _rt
+        )
+        self.slide_pause(1 * _rt)
+
+        middel_label = Tex("Middel", color=cmap["deskriptor"])
+        middel_tal = VGroup(
+            *[
+                DecimalNumber(
+                    s.get_value() / storrelse[1].get_value(), num_decimal_places=2, color=cmap["deskriptor"]
+                ).next_to(p, RIGHT) for s, p in zip(
+                    [sum_start_tekst[1], sum_midt_tekst[0], sum_slut_tekst[0]],
+                    [sum_start_tekst[2], sum_midt_tekst[1], sum_slut_tekst[1]],
+                )
+            ]
+        )
+        middel_label.next_to(middel_tal[0], RIGHT)
+        middel_udregninger = VGroup(
+            *[
+                MathTex(
+                    rf"\frac{{{s.get_value():.0f}}}{{{storrelse[1].get_value():.0f}}}",
+                    " = ", f"{s.get_value()/storrelse[1].get_value():.2f}"
+                ) for s in [
+                    sum_start_tekst[1], sum_midt_tekst[0], sum_slut_tekst[0]
+                ]
+            ]
+        ).arrange(RIGHT, buff=1.25).next_to(sum_tekst, DOWN, aligned_edge=LEFT)
+        for i in range(len(middel_udregninger)):
+            middel_udregninger[i][2].set_color(cmap["deskriptor"])
+        self.play(
+            Write(middel_udregninger, lag_ratio=0.5),
+            run_time=1 * _rt
+        )
+        self.slide_pause(1 * _rt)
+
+        self.play(
+            # Write(middel_tal, lag_ratio=0.25),
+            Write(middel_label),
+            *[ReplacementTransform(middel_udregninger[i], middel_tal[i]) for i in range(len(middel_tal))],
+            Unwrite(middel_tekst, reverse=False),
+            run_time=1 * _rt
+        )
+        self.slide_pause(1 * _rt)
 
 
 if __name__ == "__main__":
     classes = [
         # GrupperingAfData,
         # Histogrammer,
-        Sumkurver,
+        # Sumkurver,
         # SumkurveFraHistogram
+        DeskriptorerGrupperet
     ]
     for cls in classes:
         class_name = cls.__name__
