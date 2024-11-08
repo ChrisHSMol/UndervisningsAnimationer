@@ -1046,6 +1046,8 @@ class Sumkurver(Histogrammer):
                 "numbers_to_include": np.arange(xmin, xmax+xstep, xstep),
             },
         ).set_z_index(5).to_edge(RIGHT)
+        # plane[0].add_labels({v: Integer(v) for v in plane[0].get_tick_range()})
+        # plane[0].add_numbers()
         plane[1].add_labels({v: Integer(v, unit=r" \%") for v in plane[1].get_tick_range()})
         axvlines = VGroup(
             *[
@@ -1090,7 +1092,15 @@ class Sumkurver(Histogrammer):
             sumkurve_linje.add(linje)
             self.play(
                 Create(linje),
-                Indicate(row[4], scale_factor=1.2, color=row[4][1].get_color())
+                Indicate(row[4], scale_factor=1.2, color=row[4][1].get_color()),
+                *[
+                    Indicate(
+                        plane[0].get_number_mobject(x), scale_factor=1.2, color=row[4][1].get_color()
+                    ) for x in plane[0].get_tick_range() if start <= x < end
+                ]
+                # Indicate(VGroup(*[
+                #     x for x in plane[0].get_labels() if start <= x.get_value() < end
+                # ]), scale_factor=1.2, color=row[4][1].get_color())
             )
             prev_kumfrek = kumfrek.get_value()
         self.slide_pause()
@@ -1801,14 +1811,64 @@ class DeskriptorerGrupperet(SumkurveFraHistogram):
         )
         self.slide_pause(1 * _rt)
 
+        # -------------------------------------------------------------------------------------------
+
+        median_tekst = VGroup(
+            Tex("Medianen", " af et grupperet ", "datasæt").set_color_by_tex_to_color_map(cmap),
+            Tex("kan man godt finde, men det kræver en kompliceret udregning.").set_color_by_tex_to_color_map(cmap),
+            Tex("Her viser jeg, hvordan man finder medianens interval:").set_color_by_tex_to_color_map(cmap)
+        ).scale(0.7).arrange(DOWN, aligned_edge=LEFT).next_to(tabel_struktur, RIGHT)
+        self.play(
+            Write(median_tekst),
+            run_time=1 * _rt
+        )
+        self.slide_pause(1 * _rt)
+
+        pile = VGroup(
+            *[
+                Arrow(
+                    start=LEFT, end=RIGHT, stroke_color=GREEN, fill_color=GREEN
+                ).next_to(hyp, LEFT) for hyp in [hyppigheder[0], hyppigheder[-1]]
+            ]
+        )
+        kasser = always_redraw(lambda:
+            VGroup(*[
+                cell.copy().set_style(
+                    stroke_width=0, fill_color=p.get_color(), fill_opacity=0.5
+                ).next_to(p, LEFT, buff=0) for cell, p in zip(
+                    (tabel_struktur[1][1], tabel_struktur[-1][1]), pile
+                )
+            ])
+        )
+        self.add(pile, kasser)
+        self.play(
+            pile[0].animate.shift(DOWN),
+            pile[1].animate.shift(UP),
+        )
+
+        # storrelse = VGroup(
+        #     storrelse_tekst[0][0][:-1].copy(), storrelse_resultat[1].copy().scale(4/3)
+        # ).arrange(RIGHT).next_to(tabel_struktur, RIGHT, aligned_edge=UP)
+        # self.play(
+        #     ReplacementTransform(
+        #         VGroup(storrelse_tekst[0][0].copy(), storrelse_resultat[1].copy()),
+        #         storrelse
+        #     ),
+        #     FadeOut(storrelse_tekst),
+        #     FadeOut(storrelse_resultat),
+        #     FadeOut(storrelse_udr),
+        #     run_time=1 * _rt
+        # )
+        # self.slide_pause(1 * _rt)
+
 
 if __name__ == "__main__":
     classes = [
         # GrupperingAfData,
         # Histogrammer,
-        # Sumkurver,
+        Sumkurver,
         # SumkurveFraHistogram
-        DeskriptorerGrupperet
+        # DeskriptorerGrupperet
     ]
     for cls in classes:
         class_name = cls.__name__
