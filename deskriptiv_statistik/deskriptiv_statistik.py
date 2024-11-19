@@ -5,11 +5,11 @@ import numpy as np
 import subprocess
 from helpers import *
 
-slides = False
+slides = True
 if slides:
     from manim_slides import Slide
 
-q = "l"
+q = "h"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -1849,6 +1849,152 @@ class SampleSize(Slide if slides else Scene):
             return point
 
 
+class PrikVsPind(OutliersOgBredder):
+    def construct(self):
+        np.random.seed(42)
+        self.wait(1)
+        lille_data = self.lille_dataset()
+        stor_data = self.stort_dataset()
+        self.wait(5)
+
+    def lille_dataset(self):
+        data = [np.random.randint(1, 11) for _ in range(30)]
+        prikline = NumberLine(
+            x_range=(0, 11, 1),
+            include_numbers=True
+        ).scale(0.5).to_edge(DL).shift(2*UP)
+        pindline = Axes(
+            x_range=(0, 11, 1),
+            y_range=(0, 10, 1),
+            axis_config={"include_numbers": True}
+        ).scale(0.5).to_edge(DR).shift(2*UP)
+        axhlines = VGroup(*[
+            DashedLine(
+                start=pindline.c2p(0, y), end=pindline.c2p(11, y), stroke_width=0.5
+            ) for y in pindline[1].get_tick_range()
+        ])
+        # self.add(prikline, pindline, axhlines)
+        self.play(
+            LaggedStart(
+                DrawBorderThenFill(prikline),
+                DrawBorderThenFill(pindline),
+                Create(axhlines),
+                lag_ratio=0.5
+            ),
+            run_time=2
+        )
+        self.slide_pause()
+
+        unikke_tal = np.unique(data)
+        _r = 0.15
+        dataprikke = VGroup(*[
+            VGroup(
+                *[
+                    Dot(radius=_r, fill_color=RED, stroke_width=0) for x in data if x == num
+                ]
+            ).arrange(UP, buff=0).move_to(prikline.n2p(num)) for num in unikke_tal
+        ])
+        [stabel.shift(0.5*stabel.get_height()*UP) for stabel in dataprikke]
+        # self.add(dataprikke)
+        self.play(
+            FadeIn(dataprikke, lag_ratio=0.1),
+            run_time=1
+        )
+        self.slide_pause()
+
+        datapinde = VGroup(*[
+            Rectangle(
+                width=_r, fill_color=BLUE, stroke_width=0, fill_opacity=1,
+                height=pindline.c2p(num, len([n for n in data if n == num]))[1]-pindline.c2p(num, 0)[1]
+            ) for num in unikke_tal
+        ])
+        [pind.move_to(pindline.c2p(n, 0)).shift(0.5*pind.get_height()*UP) for n, pind in zip(unikke_tal, datapinde)]
+        # self.add(datapinde)
+        self.play(
+            FadeIn(datapinde, lag_ratio=0.1),
+            run_time=1
+        )
+        self.slide_pause()
+        lille_data = VGroup(
+            VGroup(prikline, dataprikke),
+            VGroup(pindline, axhlines, datapinde)
+        )
+        # self.remove(pindline, prikline, dataprikke, axhlines, datapinde)
+        self.play(
+            *[FadeOut(m) for m in [pindline, prikline, dataprikke, axhlines, datapinde]]
+        )
+        self.slide_pause()
+        return lille_data
+
+    def stort_dataset(self):
+        data = [np.random.randint(1, 11) for _ in range(500)]
+        prikline = NumberLine(
+            x_range=(0, 11, 1),
+            include_numbers=True
+        ).scale(0.5).to_edge(DL)
+        pindline = Axes(
+            x_range=(0, 11, 1),
+            y_range=(0, 70, 10),
+            y_length=10,
+            axis_config={"include_numbers": True}
+        ).scale(0.5).to_edge(DR)
+        axhlines = VGroup(*[
+            DashedLine(
+                start=pindline.c2p(0, y), end=pindline.c2p(11, y), stroke_width=0.5
+            ) for y in pindline[1].get_tick_range()
+        ])
+        # self.add(prikline, pindline, axhlines)
+        self.play(
+            # LaggedStart(
+            #     DrawBorderThenFill(prikline),
+            #     DrawBorderThenFill(pindline),
+            #     Create(axhlines),
+            #     lag_ratio=0.5
+            # ),
+            # run_time=2
+            *[FadeIn(m) for m in [pindline, prikline, axhlines]]
+        )
+        self.slide_pause()
+
+        unikke_tal = np.unique(data)
+        _r = 0.025
+        dataprikke = VGroup(*[
+            VGroup(
+                *[
+                    Dot(radius=_r, fill_color=RED, stroke_width=0) for x in data if x == num
+                ]
+            ).arrange(UP, buff=0).move_to(prikline.n2p(num)) for num in unikke_tal
+        ])
+        [stabel.shift(0.5*stabel.get_height()*UP) for stabel in dataprikke]
+        # self.add(dataprikke)
+        self.play(
+            FadeIn(dataprikke, lag_ratio=0.1),
+            run_time=1
+        )
+        self.slide_pause()
+
+        datapinde = VGroup(*[
+            Rectangle(
+                width=0.15, fill_color=BLUE, stroke_width=0, fill_opacity=1,
+                height=pindline.c2p(num, len([n for n in data if n == num]))[1]-pindline.c2p(num, 0)[1]
+            ) for num in unikke_tal
+        ])
+        [pind.move_to(pindline.c2p(n, 0)).shift(0.5*pind.get_height()*UP) for n, pind in zip(unikke_tal, datapinde)]
+        # self.add(datapinde)
+        self.play(
+            FadeIn(datapinde, lag_ratio=0.1),
+            run_time=1
+        )
+        self.slide_pause()
+
+        stor_data = VGroup(
+            VGroup(prikline, dataprikke),
+            VGroup(pindline, axhlines, datapinde),
+        )
+        self.remove(prikline, pindline, dataprikke, datapinde, axhlines)
+        return stor_data
+
+
 if __name__ == "__main__":
     classes = [
         # HyppighedsTabel,
@@ -1858,7 +2004,8 @@ if __name__ == "__main__":
         # BoksplotOgKvartiler,
         # OutliersOgBredder,
         # SampleSize,
-        # TrappediagramFraTabel
+        # TrappediagramFraTabel,
+        PrikVsPind
     ]
     for cls in classes:
         class_name = cls.__name__

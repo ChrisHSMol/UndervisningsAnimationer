@@ -1866,9 +1866,9 @@ if __name__ == "__main__":
     classes = [
         # GrupperingAfData,
         # Histogrammer,
-        Sumkurver,
+        # Sumkurver,
         # SumkurveFraHistogram
-        # DeskriptorerGrupperet
+        DeskriptorerGrupperet
     ]
     for cls in classes:
         class_name = cls.__name__
