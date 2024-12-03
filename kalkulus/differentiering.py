@@ -1,11 +1,25 @@
 from manim import *
 import sys
 sys.path.append("../")
+import numpy as np
+import subprocess
 from helpers import *
 
 slides = True
 if slides:
     from manim_slides import Slide
+
+q = "h"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
 
 
 class IntroTilDiff(MovingCameraScene, Slide if slides else Scene):
@@ -607,3 +621,276 @@ class TreTrinThumbnail(TreTrinsRegel):
             stroke_colour=color_gradient([RED, BLUE_A, BLUE_B, BLUE_C], 4)
         )
         self.add(title, tretrinsregel_trin, tretrinsregel_ligninger, brect)
+
+
+class SekantOgTangent(IntroTilDiff):
+    def construct(self):
+        self.slide_pause()
+        plot = self.geometrisk_sekant_og_tangent()
+        self.haeldning(plot)
+        # self.wait(5)
+
+    def geometrisk_sekant_og_tangent(self):
+        np.random.seed(42)
+        epsilon = 1E-3
+        circ = Circle(
+            radius=2, stroke_color=WHITE, stroke_width=2,
+        ).set_z_index(1).rotate(PI/2)
+        p1_tracker, p2_tracker = ValueTracker(0), ValueTracker(PI)
+        points = always_redraw(lambda: VGroup(*[
+            Dot(
+                point=circ.point_at_angle(a), fill_color=RED, fill_opacity=1, stroke_color=RED
+            ).set_z_index(3) for a in [p1_tracker.get_value(), p2_tracker.get_value()]
+        ]))
+        line = always_redraw(lambda: Line(
+            start=circ.point_at_angle(p1_tracker.get_value()), end=circ.point_at_angle(p2_tracker.get_value()), stroke_width=4,
+            stroke_color=YELLOW if np.abs(p1_tracker.get_value() - p2_tracker.get_value()) > 2*epsilon else GREEN
+        ).set_z_index(2).set_length(circ.radius * 3))
+        tekst = always_redraw(lambda: Tex(
+            "Sekant" if np.abs(p1_tracker.get_value() - p2_tracker.get_value()) > 2*epsilon else "Tangent",
+            font_size=42
+        ).to_edge(UL))
+
+        self.play(
+            # LaggedStart(
+            DrawBorderThenFill(circ),
+            FadeIn(points),
+            Create(line),
+            Write(tekst),
+                # lag_ratio=0.5
+            # ),
+            run_time=2
+        )
+        self.remove(circ, line, points, tekst)
+        self.add(circ, line, points, tekst)
+        self.slide_pause()
+        for i in range(3):
+            self.play(
+                LaggedStart(
+                    p1_tracker.animate.set_value(np.random.random()*PI),
+                    p2_tracker.animate.set_value(np.random.random()*PI + PI),
+                    lag_ratio=0.25
+                ),
+                run_time=5
+            )
+            # self.slide_pause()
+        self.play(
+            p2_tracker.animate.set_value(p1_tracker.get_value()+epsilon),
+            run_time=2
+        )
+        self.slide_pause()
+
+        plane = NumberPlane(
+            x_range=(-3, 3, 1),
+            y_range=(-8, 8, 1),
+            x_length=8,
+            y_length=16,
+            background_line_style={
+                "stroke_color": TEAL,
+                "stroke_width": 2,
+                "stroke_opacity": 0.15
+            },
+            axis_config={
+                "include_numbers": True,
+                "include_ticks": True,
+                "font_size": 24,
+                "line_to_number_buff": 0.15
+            },
+            x_axis_config={
+                "label_direction": DOWN,
+                "decimal_number_config": {
+                    "num_decimal_places": 0
+                },
+            },
+            y_axis_config={
+                "label_direction": LEFT,
+                "decimal_number_config": {
+                    "num_decimal_places": 0
+                }
+            }
+        ).shift(circ.radius * DOWN)
+        parab = plane.plot(lambda x: x**2)
+        self.play(
+            ReplacementTransform(circ, parab),
+            p1_tracker.animate.set_value(-PI/2),
+            FadeIn(plane),
+            run_time=3
+        )
+        self.slide_pause()
+
+        self.play(
+            p2_tracker.animate.set_value(p1_tracker.get_value() + epsilon),
+            run_time=5
+        )
+        self.slide_pause()
+        points.clear_updaters()
+        line.clear_updaters()
+        self.remove(*[m for m in self.mobjects])
+        return VGroup(plane, parab, points, line)
+
+    def haeldning(self, plot):
+        epsilon = 1E-3
+        plane, parab, points, line = plot
+        x1_tracker = ValueTracker(plane.p2c(points[0].get_center())[0])
+        x2_tracker = ValueTracker(plane.p2c(points[1].get_center())[0])
+        scale_tracker = ValueTracker(1.0)
+
+        line = always_redraw(lambda: Line(
+            start=plane.c2p(x1_tracker.get_value(), parab.underlying_function(x1_tracker.get_value())),
+            end=plane.c2p(x2_tracker.get_value(), parab.underlying_function(x2_tracker.get_value())),
+            stroke_width=4 * scale_tracker.get_value(),
+            stroke_color=YELLOW if np.abs(x1_tracker.get_value() - x2_tracker.get_value()) > 2*epsilon else GREEN
+        ).set_z_index(2).set_length(line.get_length()))
+
+        self.add(plane, parab, points, line)
+        points[0].add_updater(
+            lambda m: m.move_to(plane.c2p(x1_tracker.get_value(), parab.underlying_function(x1_tracker.get_value())))
+        )
+        points[1].add_updater(
+            lambda m: m.move_to(plane.c2p(x2_tracker.get_value(), parab.underlying_function(x2_tracker.get_value())))
+        )
+        parab.add_updater(
+            lambda m: m.set_style(stroke_width=4 * scale_tracker.get_value())
+        )
+        # line.add_updater(
+        #     # lambda m: m.set_start(points[0]).set_end(points[1])
+        #     lambda m: m.move_to(between_mobjects(*points))
+        # )
+        self.play(
+            x1_tracker.animate.set_value(1),
+            x2_tracker.animate.set_value(2),
+            VGroup(
+                plane, parab
+            ).animate.to_edge(LEFT),
+            run_time=3
+        )
+        lines = always_redraw(lambda:
+            VGroup(
+                DashedLine(
+                    start=plane.c2p(x1_tracker.get_value(), parab.underlying_function(x1_tracker.get_value())),
+                    end=plane.c2p(x2_tracker.get_value(), parab.underlying_function(x1_tracker.get_value())),
+                    stroke_color=points[0].get_color(), stroke_width=3
+                ),
+                DashedLine(
+                    start=plane.c2p(x2_tracker.get_value(), parab.underlying_function(x2_tracker.get_value())),
+                    end=plane.c2p(x2_tracker.get_value(), parab.underlying_function(x1_tracker.get_value())),
+                    stroke_color=points[1].get_color(), stroke_width=3
+                )
+            )
+        )
+        labels = always_redraw(lambda:
+            VGroup(
+                DecimalNumber(
+                    x2_tracker.get_value() - x1_tracker.get_value(),
+                    num_decimal_places=8,
+                    stroke_color=lines[0].get_color(), fill_color=lines[0].get_color()
+                ).next_to(lines[0], DOWN).scale(0.75),
+                DecimalNumber(
+                    parab.underlying_function(x2_tracker.get_value()) - parab.underlying_function(x1_tracker.get_value()),
+                    num_decimal_places=8,
+                    stroke_color=lines[1].get_color(), fill_color=lines[0].get_color()
+                ).next_to(lines[1], RIGHT).scale(0.75)
+            )
+        )
+        calculation = always_redraw(lambda:
+            VGroup(
+                VGroup(
+                    labels[1].copy(),
+                    Line(),
+                    labels[0].copy()
+                ).arrange(DOWN),
+                Tex("="),
+                # DecimalNumber(labels[1].get_value()/labels[0].get_value())
+                DecimalNumber(
+                    (parab.underlying_function(x2_tracker.get_value()) - parab.underlying_function(x1_tracker.get_value()))/(x2_tracker.get_value() - x1_tracker.get_value()),
+                    num_decimal_places=8
+                )
+            ).arrange(RIGHT).to_edge(UR)
+        )
+        self.play(
+            FadeIn(lines),
+            FadeIn(labels),
+            FadeIn(calculation)
+        )
+        self.slide_pause()
+        self.play(
+            x2_tracker.animate.set_value(x1_tracker.get_value() + epsilon),
+            run_time=5
+        )
+        self.slide_pause()
+        for f in range(4):
+            self.play(
+                x2_tracker.animate.set_value(x1_tracker.get_value() + 10**(-(f+1)) * epsilon)
+            )
+            self.slide_pause()
+
+        self.play(
+            x1_tracker.animate.set_value(-2),
+            run_time=3
+        )
+        self.slide_pause()
+        for f in range(5):
+            self.play(
+                x2_tracker.animate.set_value(x1_tracker.get_value() + 10**(-(f+1)) * epsilon),
+                run_time=8 if not f else 1
+            )
+            self.slide_pause()
+
+        # self.add_fixed_in_frame_mobjects(calculation)
+        self.camera.frame.save_state()
+        self.play(
+            self.camera.frame.animate.set(
+                width=self.camera.frame.width * 1/10
+            ).move_to(points),
+            points.animate.scale(1/10),
+            # parab.animate.set_style(stroke_width=0.25),
+            # line.animate.set_style(stroke_width=0.25),
+            scale_tracker.animate.set_value(1/10),
+            run_time=5
+        )
+        # self.play(
+        #     VGroup(
+        #         plane, parab
+        #     # ).animate.scale(25).shift(75*RIGHT + 100*DOWN)
+        #     ).animate.scale(10).shift(25*RIGHT + 35*DOWN)
+        # )
+        self.slide_pause()
+
+        self.play(
+            self.camera.frame.animate.set(
+                width=self.camera.frame.width * 1/10
+            ).move_to(points),
+            points.animate.scale(1/10),
+            scale_tracker.animate.set_value(1/100),
+            run_time=5
+        )
+        self.slide_pause()
+
+        self.play(
+            Restore(self.camera.frame),
+            points.animate.scale(100),
+            scale_tracker.animate.set_value(1),
+            run_time=5
+        )
+        self.slide_pause()
+
+
+if __name__ == "__main__":
+    classes = [
+        # IntroTilDiff,
+        # TreTrinsRegel,
+        SekantOgTangent
+    ]
+    for cls in classes:
+        class_name = cls.__name__
+        command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+        scene_marker(rf"RUNNNING:    {command}")
+        subprocess.run(command)
+        if slides and q == "h":
+            command = rf"manim-slides convert {class_name} {class_name}.html"
+            scene_marker(rf"RUNNNING:    {command}")
+            subprocess.run(command)
+            if class_name+"Thumbnail" in dir():
+                command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+                scene_marker(rf"RUNNNING:    {command}")
+                subprocess.run(command)
