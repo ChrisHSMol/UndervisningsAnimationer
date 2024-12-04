@@ -24,6 +24,27 @@
           color: #c03;
           text-align: center;
       }
+      .btn,.btnC,.btnB,.btnA {
+          color: black;
+          background-color: #38CC77;
+          height: 20px;
+          width: 200px;
+          padding: 20px 30px;
+          border: 2px solid black;
+          text-decoration: none;
+          text-align: center;
+          display: inline-block;
+          font-size: 16px
+      }
+      .btnC {
+          background-color: #80C4E9
+      }
+      .btnB {
+          background-color: #FFF6E9
+      }
+      .btnA {
+          background-color: #FF7F3E
+      }
     </style>
   </head>
   <body>
@@ -34,49 +55,74 @@
           </span>
       </span>
       <div class="nav">
-          <a href="#deskriptiv_statistik" class="btn">Deskriptiv Statistik</a>
+          <a href="#lineære_funktioner" class="btnC">Lineære Funktioner</a>
+          <a href="#eksponentielle_funktioner" class="btnC">Eksponentielle Funktioner</a>
+          <a href="#andre_funktioner" class="btnC">Andre Funktioner</a>
+          <a href="#regressioner" class="btnC">Regressioner</a>
+          <a href="#geometri" class="btnC">Geometri</a>
+          <a href="#sandsynlighedsregning" class="btnC">Sandsynlighedsregning</a>
+          <a href="#polynomier" class="btnB">Polynomier</a>
+          <a href="#deskriptiv_statistik" class="btnC">Deskriptiv Statistik</a>
+          <a href="#to_punkt_formler" class="btnC">To-punkt-formler</a>
+          <a href="#trigonometri" class="btnB">Trigonometri</a>
+          <a href="#differentialregning" class="btnB">Differentialregning</a>
+          <a href="#beviser" class="btnB">Beviser</a>
       </div>
 
+      <div class="Lineære Funktioner" id="lineære_funktioner">
       <h3>Lineære Funktioner</h3>
 <!--      <a href="funktioner/ToPunktLin.html">To-punkt-formel for lineære funktioner</a><br>-->
       <a href="funktioner/ToPunktLin.html"><img src="funktioner/media/images/to_punkt_lin/ToPunktLinThumbnail.png" style="width:400px;"></a>
 <!--      <a href="funktioner/StykFunk.html">Stykkevist definerede funktioner</a><br>-->
       <a href="funktioner/StykFunk.html"><img src="funktioner/media/images/stykvise_funktioner/StykFunkThumbnail.png" style="width:400px;"></a>
+      </div>
 
+      <div class="Eksponentielle Funktioner" id="eksponentielle_funktioner">
       <h3>Eksponentielle Funktioner</h3>
 <!--      <a href="funktioner/ToPunktExp.html">To-punkt-formel for eksponentielle funktioner</a><br>-->
       <a href="funktioner/ToPunktExp.html"><img src="funktioner/media/images/eksponentielleFunktioner/ToPunktExpThumbnail.png" style="width:400px;"></a>
       <a href="funktioner/FordoblingOgHalvering.html">Fordoblings- og Halveringskonstant</a><br>
+      </div>
 
-      <h3>Potensfunktioner</h3>
+<!--      <h3>Potensfunktioner</h3>-->
 
+      <div class="Andre Funktioner" id="andre_funktioner">
       <h3>Andre funktioner</h3>
       <a href="funktioner/FunktionsBegrebet.html">Funktionsbegrebet, definitionsmængde og værdimængde</a><br>
 <!--      <a href="funktioner/SpejledeFunktioner.html">Inverse funktioner</a><br>-->
       <a href="funktioner/SpejledeFunktioner.html"><img src="funktioner/media/images/inverse_funktioner/SpejledeFunktionerThumbnail.png" style="width:400px;"></a>
 <!--      <a href="funktioner/StykFunk.html">Stykkevist definerede funktioner</a><br>-->
       <a href="funktioner/StykFunk.html"><img src="funktioner/media/images/stykvise_funktioner/StykFunkThumbnail.png" style="width:400px;"></a>
+      </div>
 
+      <div class="Regressioner" id="regressioner">
       <h3>Regressioner</h3>
 <!--      <a href="funktioner/LeastSquares.html">Mindste kvadraters metode</a><br>-->
       <a href="funktioner/LeastSquares.html"><img src="funktioner/media/images/mindste_kvadraters_metode/LeastSquaresThumbnail.png" style="width:400px;"></a>
       <a href="funktioner/ResidualerOgResidualPlot.html"><img src="funktioner/media/images/mindste_kvadraters_metode/ResidualerOgResidualPlotThumbnail.png" style="width:400px;"></a>
       <a href="funktioner/LinExpPow.html">Sammenligning af regressioner</a><br>
+      </div>
 
+      <div class="Geometri" id="geometri">
       <h3>Geometri</h3>
       <a href="geometri/Bagefad.html">Optimering af kassens volumen</a><br>
       <a href="geometri/CoinRotationParadox.html">Rotationsparadokset</a><br>
+      </div>
 
+      <div class="Sandsynlighedsregning" id="sandsynlighedsregning">
       <h3>Sandsynlighedsregning</h3>
       <a href="sandsynlighed_og_kombinatorik/FairDie.html">Hvad er en ærlig terning?</a><br>
       <a href="sandsynlighed_og_kombinatorik/MultiOgAddiPrincip.html">Multiplikations- og additionsprincippet</a><br>
+      </div>
 
+      <div class="Polynomier" id="polynomier">
       <h3>Polynomier</h3>
       <a href="polynomier/Polynomier_Etymologi.html">Polynomier</a><br>
 <!--      <a href="./media/videos/polynomier/1080p60/Polynomier.mp4" download>Download video</a>-->
       <a href="polynomier/MonotoniForhold.html">Grundlæggende monotoniforhold</a><br>
 <!--      <a href="./media/videos/polynomier/1080p60/MonotoniForhold.mp4" download>Download video</a>-->
       <a href="polynomier/Parallelforskydning_af_graf.html">Parallelforskydning af en graf</a><br>
+      </div>
 
       <div class="Deskriptiv Statistik" id="deskriptiv_statistik">
       <h3>Deskriptiv Statistik</h3>
@@ -94,22 +140,31 @@
       <a href="deskriptiv_statistik/SumkurveFraHistogram.html">Sammenhæng mellem histogram og sumkurve</a><br>
 <!--      <a href="deskriptiv_statistik/HistSum.html">Sammenhæng mellem histogram og sumkurve</a><br>-->
       <a href="deskriptiv_statistik/SampleSize.html">Stikprøve</a><br>
+      </div>
 
+      <div class="To-punkt-formler" id="to_punkt_formler">
       <h3>To-punkt-formler</h3>
       <a href="funktioner/ToPunktLin.html">Lineære funktioner</a><br>
       <a href="funktioner/ToPunktExp.html">Eksponentielle funktioner</a><br>
+      </div>
 
+      <div class="Trigonometri" id="trigonometri">
       <h3>Trigonometri</h3>
       <a href="trigonometri/TrigFunktioner.html">Intro til sin og cos</a><br>
+      </div>
 
+      <div class="Differentialregning" id="differentialregning">
       <h3>Differentialregning</h3>
       <a href="kalkulus/IntroTilDiff.html">Eksperimentel intro til afledede funktioner</a><br>
       <a href="kalkulus/Differentiabilitet.html">Differentiabilitet</a><br>
       <a href="kalkulus/TreTrinsRegel.html">Tretrinsreglen for differentiering</a><br>
       <a href="kalkulus/TangentLigning.html"><img src="kalkulus/media/images/tangentens_ligning/TangentLigningThumbnail.png" style="width:400px;"></a>
+      </div>
 
+      <div class="beviser" id="Beviser">
       <h3>Beviser</h3>
       <a href="beviser/LogRegler.html">Logaritmens regneregler</a><br>
+      </div>
 
       <br><br><br>
       <span class="underline">
