@@ -870,7 +870,8 @@ class LeastSquares(MovingCameraScene, Slide if slides else Scene):
                     Line(
                         start=point.get_center(),
                         end=gpoint.get_center(),
-                        color=dev_cols[0] if gpoint.get_y() - point.get_y() < 0 else dev_cols[1],
+                        # color=dev_cols[0] if gpoint.get_y() - point.get_y() < 0 else dev_cols[1],
+                        color=interpolate_color(WHITE, RED, min(1, 0.5*np.abs(gpoint.get_y() - point.get_y()))),
                         stroke_width=2.5
                     ) for point, gpoint in zip(points, _points)
                 ]
@@ -917,7 +918,8 @@ class LeastSquares(MovingCameraScene, Slide if slides else Scene):
                     plane.p2c(gpoint.get_center())[1] - plane.p2c(point.get_center())[1],
                     num_decimal_places=1,
                     include_sign=True,
-                    color=dev_cols[0] if plane.p2c(gpoint.get_center())[1] - plane.p2c(point.get_center())[1] < 0 else dev_cols[1]
+                    # color=dev_cols[0] if plane.p2c(gpoint.get_center())[1] - plane.p2c(point.get_center())[1] < 0 else dev_cols[1]
+                    color=interpolate_color(WHITE, RED, min(1, 0.5 * np.abs(gpoint.get_y() - point.get_y())))
                 ).scale(0.5).next_to(dotline, LEFT).shift(
                     0.2 * RIGHT
                 ) for point, gpoint, dotline in zip(points, _points, dotlines)
@@ -979,12 +981,19 @@ class LeastSquares(MovingCameraScene, Slide if slides else Scene):
                 ]),
                 num_decimal_places=1,
                 include_sign=True,
-                color=dev_cols[
-                    sum([
-                        plane.p2c(gpoint.get_center())[1] - plane.p2c(point.get_center())[1] for point, gpoint in
+                # color=dev_cols[
+                #     sum([
+                #         plane.p2c(gpoint.get_center())[1] - plane.p2c(point.get_center())[1] for point, gpoint in
+                #         zip(points, _points)
+                #     ]) >= 0
+                # ],
+                color=interpolate_color(WHITE, RED, min(
+                    1,
+                    0.0025*sum([
+                        np.abs(plane.p2c(gpoint.get_center())[1] - plane.p2c(point.get_center())[1]) for point, gpoint in
                         zip(points, _points)
-                    ]) >= 0
-                ]
+                    ])
+                ))
             ).next_to(brace_text, RIGHT)
         )
         self.play(
@@ -1052,8 +1061,12 @@ class LeastSquares(MovingCameraScene, Slide if slides else Scene):
             VGroup(*[
                 Square(
                     side_length=np.abs(point.get_y() - gpoint.get_y()),
-                    color=dev_cols[0],
-                    fill_color=dev_cols[0],
+                    # color=dev_cols[0],
+                    # fill_color=dev_cols[0],
+                    # color=interpolate_color(WHITE, RED, min(1, 0.5 * (gpoint.get_y() - point.get_y())**2)),
+                    # fill_color=interpolate_color(WHITE, RED, min(1, 0.5 * (gpoint.get_y() - point.get_y())**2)),
+                    color=three_way_interpolate(GREEN, WHITE, RED, min(2, 0.5 * (gpoint.get_y() - point.get_y())**2), 2),
+                    fill_color=three_way_interpolate(GREEN, WHITE, RED, min(2, 0.5 * (gpoint.get_y() - point.get_y())**2), 2),
                     fill_opacity=0.25,
                     stroke_width=2.5
                 ).next_to(
@@ -1102,7 +1115,9 @@ class LeastSquares(MovingCameraScene, Slide if slides else Scene):
                     (plane.p2c(gpoint.get_center())[1] - plane.p2c(point.get_center())[1]) ** 2,
                     num_decimal_places=1,
                     include_sign=True,
-                    color=dev_cols[0]
+                    # color=dev_cols[0]
+                    color=three_way_interpolate(GREEN, WHITE, RED, min(2, 0.5 * (gpoint.get_y() - point.get_y())**2), 2),
+                    # color=interpolate_color(WHITE, RED, min(1, 0.5 * (gpoint.get_y() - point.get_y())**2))
                 ).scale(0.45).move_to(sq) for sq, point, gpoint in zip(dotsquares, points, _points)
             ])
         )
@@ -1165,7 +1180,15 @@ class LeastSquares(MovingCameraScene, Slide if slides else Scene):
                 ]),
                 num_decimal_places=1,
                 include_sign=True,
-                color=dev_cols[0]
+                # color=dev_cols[0]
+                # color=interpolate_color(WHITE, RED, min(
+                #     1,
+                #     0.001*sum([(plane.p2c(gpoint.get_center())[1] - plane.p2c(point.get_center())[1]) ** 2 for point, gpoint in zip(points, _points)])
+                # ))
+                color=three_way_interpolate(GREEN, WHITE, RED, min(
+                    2,
+                    0.001*sum([(plane.p2c(gpoint.get_center())[1] - plane.p2c(point.get_center())[1]) ** 2 for point, gpoint in zip(points, _points)])
+                ), 2)
             ).next_to(brace_text, RIGHT)
         )
         self.play(
@@ -1269,8 +1292,10 @@ class LeastSquaresThumbnail(LeastSquares):
         dotsquares = VGroup(*[
             Square(
                 side_length=np.abs(point.get_y() - gpoint.get_y()),
-                color=dev_cols[0],
-                fill_color=dev_cols[0],
+                # color=dev_cols[0],
+                # fill_color=dev_cols[0],
+                color=three_way_interpolate(GREEN, WHITE, RED, min(2, 0.5 * (gpoint.get_y() - point.get_y())**2), 2),
+                fill_color=three_way_interpolate(GREEN, WHITE, RED, min(2, 0.5 * (gpoint.get_y() - point.get_y())**2), 2),
                 fill_opacity=0.25,
                 stroke_width=2.5
             ).next_to(
@@ -1282,6 +1307,7 @@ class LeastSquaresThumbnail(LeastSquares):
 
         titel = Tex("Mindste ", "kvadraters", " metode", font_size=72).to_edge(UL)
         titel[1].set_color(GREEN)
+        # titel[1].set_color(color_gradient([GREEN, WHITE, RED], 8))
 
         self.add(plane, dotsquares, points, titel, graph)
 
@@ -1591,20 +1617,23 @@ class ResidualerOgResidualPlotThumbnail(ResidualerOgResidualPlot):
 
 
 if __name__ == "__main__":
-    cls = ResidualerOgResidualPlot
-    class_name = cls.__name__
-    transparent = cls.btransparent
-    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
-    # if transparent:
-    #     command += " --transparent --format=webm"
-    scene_marker(rf"RUNNNING:    {command}")
-    subprocess.run(command)
-    if slides and q == "h":
-        command = rf"manim-slides convert {class_name} {class_name}.html"
+    classes = [
+        LeastSquares,
+        # ResidualerOgResidualPlot
+    ]
+    for cls in classes:
+        class_name = cls.__name__
+        command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+        # if transparent:
+        #     command += " --transparent --format=webm"
         scene_marker(rf"RUNNNING:    {command}")
         subprocess.run(command)
-        if class_name+"Thumbnail" in dir():
-            command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+        if slides and q == "h":
+            command = rf"manim-slides convert {class_name} {class_name}.html"
             scene_marker(rf"RUNNNING:    {command}")
             subprocess.run(command)
+            if class_name+"Thumbnail" in dir():
+                command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+                scene_marker(rf"RUNNNING:    {command}")
+                subprocess.run(command)
 
