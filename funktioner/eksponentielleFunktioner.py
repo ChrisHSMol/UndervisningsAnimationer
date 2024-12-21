@@ -1,10 +1,27 @@
+from tarfile import data_filter
+
 from manim import *
 import sys
 sys.path.append("../")
+import numpy as np
+import subprocess
 from helpers import *
-slides = True
+
+slides = False
 if slides:
     from manim_slides import Slide
+
+q = "l"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
 
 
 class ToPunktExp(Slide if slides else Scene):
@@ -674,3 +691,116 @@ class ToPunktExpThumbnail(Scene):
         title = Tex("To-Punkt-Formel for ", "Eksponentielle Funktioner").scale(1.25).to_edge(UL, buff=0.1)
         title[1].set_color(YELLOW)
         self.add(plane, points, eqs, lines, graph, title)
+
+
+class TerningHenfald(MovingCameraScene, Slide if slides else Scene):
+    def construct(self):
+        self.terninger_henfald()
+        self.slide_pause(5)
+
+    def slide_pause(self, t=1.0, slides_bool=slides):
+        return slides_pause(self, t=t, slides_bool=slides_bool)
+
+    def get_random_die(self, **kwargs):
+        value = np.random.randint(1, 7)
+        return DieFace(value=value, fill_color=BLUE_C if value != 6 else RED_C, **kwargs)
+
+    def terninger_henfald(self):
+        n_dice = 10000
+        n_throws = 25
+        n_cols = 15
+
+        xmin, xmax, xstep = 0, n_throws * 1.2, (n_throws * 1.2) // 15
+        ymin, ymax, ystep = 0, n_dice * 1.25, (n_dice * 1.25) // 10
+        plane = Axes(
+            x_range=(xmin, xmax+xstep, xstep),
+            y_range=(ymin, ymax+ystep, ystep),
+            x_length=9,
+            y_length=6,
+            axis_config={
+                'tip_shape': StealthTip
+            },
+            # y_axis_config={
+            #     "numbers_to_include": np.arange(ymin, ymax+ystep, ystep),
+            # },
+            # x_axis_config={
+            #     "numbers_to_include": np.arange(xmin, xmax+xstep, xstep),
+            # },
+        ).to_edge(DR)
+        plane[0].add_labels({v: Integer(v) for v in plane[0].get_tick_range()})
+        plane[1].add_labels({v: Integer(v) for v in plane[1].get_tick_range()})
+        data_points = VGroup(
+            Dot(plane.c2p(0, n_dice), radius=0.1, stroke_width=0, fill_color=RED_C, fill_opacity=1)
+        )
+        counter = VGroup(
+            Tex("Antal terninger i spil: "),
+            Integer(n_dice)
+        ).arrange(DOWN, aligned_edge=RIGHT).to_edge(UR)
+        self.add(plane, data_points, counter)
+        self.wait(1)
+        for i in range(n_throws):
+            terninger = VGroup(
+                *[
+                    self.get_random_die(stroke_width=0.1) for _ in range(counter[1].get_value())
+                ]
+            ).arrange_in_grid(
+                int(np.ceil(n_dice/n_cols)), n_cols
+            # ).scale_to_fit_height(
+            #     self.camera.frame.get_height() / 1.5
+            # ).scale_to_fit_width(
+            #     self.camera.frame.get_width() / 3
+            ).scale(min(
+                self.camera.frame.get_height() / (1.5*int(np.ceil(counter[1].get_value()/n_cols))),
+                self.camera.frame.get_width() / (6*n_cols)
+            )).to_edge(DL)
+            self.remove(counter)
+            counter = VGroup(
+                Tex("Antal terninger i spil: "),
+                Integer(len([d for d in terninger if d.value != 6]))
+            ).arrange(DOWN, aligned_edge=RIGHT).to_edge(UR)
+            data_points.add(
+                data_points[0].copy().move_to(plane.c2p(i + 1, counter[1].get_value()))
+            )
+            self.add(terninger, counter, data_points[-1])
+            self.wait(1)
+            self.remove(terninger, counter)
+            if counter[1].get_value() <= 1:
+                break
+
+        fit = np.exp(
+            np.polyfit(
+                [plane.p2c(p.get_center())[0] for p in data_points],
+                [np.log(plane.p2c(p.get_center())[1]) for p in data_points],
+                1
+            )
+        )
+        graph = plane.plot(
+            lambda x: fit[1] * fit[0]**x,
+            x_range=[xmin-5, xmax],
+            stroke_color=data_points[0].get_color()
+        ).set_z_index(2)
+        params = VGroup(
+            Tex(f"a = {fit[0]:.4f}"),
+            Tex(f"b = {fit[1]:.4f}"),
+        ).arrange(DOWN, aligned_edge=LEFT).to_edge(DL)
+        self.add(graph, params)
+
+
+if __name__ == "__main__":
+    classes = [
+        # ToPunktExp,
+        TerningHenfald
+    ]
+    for cls in classes:
+        class_name = cls.__name__
+        command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+        scene_marker(rf"RUNNNING:    {command}")
+        subprocess.run(command)
+        if slides and q == "h":
+            command = rf"manim-slides convert {class_name} {class_name}.html"
+            scene_marker(rf"RUNNNING:    {command}")
+            subprocess.run(command)
+            if class_name+"Thumbnail" in dir():
+                command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+                scene_marker(rf"RUNNNING:    {command}")
+                subprocess.run(command)
