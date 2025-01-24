@@ -3,7 +3,7 @@ import sys
 sys.path.append("../")
 from helpers import *
 
-slides = True
+slides = False
 if slides:
     from manim_slides import Slide
 base_col = GREEN

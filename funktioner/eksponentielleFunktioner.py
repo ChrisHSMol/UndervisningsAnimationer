@@ -1,4 +1,4 @@
-from tarfile import data_filter
+# from tarfile import data_filter
 
 from manim import *
 import sys
@@ -11,7 +11,7 @@ slides = False
 if slides:
     from manim_slides import Slide
 
-q = "l"
+q = "h"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -705,10 +705,26 @@ class TerningHenfald(MovingCameraScene, Slide if slides else Scene):
         value = np.random.randint(1, 7)
         return DieFace(value=value, fill_color=BLUE_C if value != 6 else RED_C, **kwargs)
 
+    def get_distributed_numbers(self, size, distribution):
+        if not isinstance(distribution, (list, tuple, np.ndarray)):
+            raise Exception(f"prop_limits must be of type list")
+        results = []
+        for num in np.random.uniform(size=size):
+            for i, lim in enumerate(distribution):
+                if num < lim:
+                    results.append(i + 1)
+                    break
+        return results
+
+    def get_distributed_die(self, value, **kwargs):
+        return DieFace(value=value, fill_color=BLUE_C if value != 6 else RED_C, **kwargs)
+
     def terninger_henfald(self):
-        n_dice = 10000
+        n_dice = 1000
         n_throws = 25
         n_cols = 15
+        distribution = [(n + 1) / 6 for n in range(6)]
+        # distribution = [0.1, 0.2, 0.3, 0.4, 0.5, 1.0]
 
         xmin, xmax, xstep = 0, n_throws * 1.2, (n_throws * 1.2) // 15
         ymin, ymax, ystep = 0, n_dice * 1.25, (n_dice * 1.25) // 10
@@ -739,9 +755,11 @@ class TerningHenfald(MovingCameraScene, Slide if slides else Scene):
         self.add(plane, data_points, counter)
         self.wait(1)
         for i in range(n_throws):
+            results = self.get_distributed_numbers(counter[1].get_value(), distribution)
             terninger = VGroup(
                 *[
-                    self.get_random_die(stroke_width=0.1) for _ in range(counter[1].get_value())
+                    # self.get_random_die(stroke_width=0.1) for _ in range(counter[1].get_value())
+                    self.get_distributed_die(val, stroke_width=0.1) for val in results
                 ]
             ).arrange_in_grid(
                 int(np.ceil(n_dice/n_cols)), n_cols
