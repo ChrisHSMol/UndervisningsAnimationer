@@ -720,6 +720,7 @@ class TerningHenfald(MovingCameraScene, Slide if slides else Scene):
         return DieFace(value=value, fill_color=BLUE_C if value != 6 else RED_C, **kwargs)
 
     def terninger_henfald(self):
+        np.random.seed(42)
         n_dice = 1000
         n_throws = 25
         n_cols = 15
@@ -727,7 +728,7 @@ class TerningHenfald(MovingCameraScene, Slide if slides else Scene):
         # distribution = [0.1, 0.2, 0.3, 0.4, 0.5, 1.0]
 
         xmin, xmax, xstep = 0, n_throws * 1.2, (n_throws * 1.2) // 15
-        ymin, ymax, ystep = 0, n_dice * 1.25, (n_dice * 1.25) // 10
+        ymin, ymax, ystep = 0, n_dice * 1.1, (n_dice * 1.0) // 10
         plane = Axes(
             x_range=(xmin, xmax+xstep, xstep),
             y_range=(ymin, ymax+ystep, ystep),
@@ -746,7 +747,7 @@ class TerningHenfald(MovingCameraScene, Slide if slides else Scene):
         plane[0].add_labels({v: Integer(v) for v in plane[0].get_tick_range()})
         plane[1].add_labels({v: Integer(v) for v in plane[1].get_tick_range()})
         data_points = VGroup(
-            Dot(plane.c2p(0, n_dice), radius=0.1, stroke_width=0, fill_color=RED_C, fill_opacity=1)
+            Dot(plane.c2p(0, n_dice), radius=0.1, stroke_width=0, fill_color=BLUE_C, fill_opacity=1)
         )
         counter = VGroup(
             Tex("Antal terninger i spil: "),
@@ -774,7 +775,7 @@ class TerningHenfald(MovingCameraScene, Slide if slides else Scene):
             self.remove(counter)
             counter = VGroup(
                 Tex("Antal terninger i spil: "),
-                Integer(len([d for d in terninger if d.value != 6]))
+                Integer(len([d for d in terninger if d.value != 6]), color=data_points[0].get_color())
             ).arrange(DOWN, aligned_edge=RIGHT).to_edge(UR)
             data_points.add(
                 data_points[0].copy().move_to(plane.c2p(i + 1, counter[1].get_value()))
@@ -804,7 +805,8 @@ class TerningHenfald(MovingCameraScene, Slide if slides else Scene):
         # self.add(graph, params)
         self.play(
             Create(graph),
-            Write(params)
+            Write(params),
+            run_time=2
         )
 
 
