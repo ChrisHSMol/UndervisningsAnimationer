@@ -7,7 +7,7 @@ import numpy as np
 import subprocess
 from helpers import *
 
-slides = False
+slides = True
 if slides:
     from manim_slides import Slide
 
@@ -753,7 +753,7 @@ class TerningHenfald(MovingCameraScene, Slide if slides else Scene):
             Integer(n_dice)
         ).arrange(DOWN, aligned_edge=RIGHT).to_edge(UR)
         self.add(plane, data_points, counter)
-        self.wait(1)
+        self.slide_pause(1)
         for i in range(n_throws):
             results = self.get_distributed_numbers(counter[1].get_value(), distribution)
             terninger = VGroup(
@@ -780,7 +780,7 @@ class TerningHenfald(MovingCameraScene, Slide if slides else Scene):
                 data_points[0].copy().move_to(plane.c2p(i + 1, counter[1].get_value()))
             )
             self.add(terninger, counter, data_points[-1])
-            self.wait(1)
+            self.slide_pause(1)
             self.remove(terninger, counter)
             if counter[1].get_value() <= 1:
                 break
@@ -801,7 +801,11 @@ class TerningHenfald(MovingCameraScene, Slide if slides else Scene):
             Tex(f"a = {fit[0]:.4f}"),
             Tex(f"b = {fit[1]:.4f}"),
         ).arrange(DOWN, aligned_edge=LEFT).to_edge(DL)
-        self.add(graph, params)
+        # self.add(graph, params)
+        self.play(
+            Create(graph),
+            Write(params)
+        )
 
 
 if __name__ == "__main__":

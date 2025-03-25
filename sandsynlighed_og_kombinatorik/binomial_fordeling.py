@@ -134,7 +134,6 @@ class BinomialIntro(MovingCameraScene, Slide if slides else Scene):
             offsets[str(n_kr)] += 1
 
 
-
 if __name__ == "__main__":
     class_name = BinomialIntro.name
     scene_marker(rf"RUNNNING:    manim {sys.argv[0]} {class_name} -pqh")
