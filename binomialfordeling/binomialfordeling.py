@@ -275,9 +275,54 @@ class BasisSandsynlighed(MovingCameraScene, Slide if slides else Scene):
         )
 
 
+class DeskriptorerBinomial(BasisSandsynlighed):
+    def construct(self):
+        self.forventning()
+        self.slide_pause(5)
+
+    def forventning(self):
+        np.random.seed(42)
+        n_kast = 50
+        alle_kast = np.random.randint(low=1, high=7, size=n_kast)
+        kast = ValueTracker(0)
+        n_seks = sum([1 if i==6 else 0 for i in alle_kast])
+        running_avg = [np.mean(alle_kast[:i+1]) for i in range(len(alle_kast))]
+        print(alle_kast)
+        print(n_seks)
+        print(running_avg)
+
+        plane = always_redraw(lambda:
+            Axes(
+                x_range=(0, max((10, kast.get_value()))+1, int(max((10, kast.get_value()))//10)),
+                y_range=(0, 6.01, 0.5),
+                x_length=12,
+                y_length=6,
+                x_axis_config={"include_numbers": True},
+                y_axis_config={"include_numbers": True, "font_size": 30}
+            )
+        )
+        points = always_redraw(lambda:
+            VGroup(
+                *[
+                    Dot(plane.c2p(i+1, val)) for i, val in enumerate(running_avg)
+                ]
+            )
+        )
+        self.add(plane)
+        self.add(points)
+        self.play(kast.animate.set_value(50), run_time=5)
+        # for i in range(n_kast):
+        #     self.play(
+        #         kast.animate.set_value(kast.get_value() + 1),
+        #         run_time=1/_FRAMERATE[q]
+        #     )
+        #     self.slide_pause(1/_FRAMERATE[q])
+
+
 if __name__ == "__main__":
     classes = [
-        BasisSandsynlighed
+        # BasisSandsynlighed,
+        DeskriptorerBinomial
     ]
     for cls in classes:
         class_name = cls.__name__

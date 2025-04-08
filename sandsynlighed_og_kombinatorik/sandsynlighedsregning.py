@@ -9,7 +9,17 @@ slides = True
 if slides:
     from manim_slides import Slide
 
-quality = "high"
+q = "h"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
 cmap = {
     "ærlig": BLUE_C,
     "uærlig": invert_color(BLUE_C),
@@ -901,10 +911,11 @@ class FairDie(Slide, MovingCameraScene if slides else MovingCameraScene):
 
 class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraScene):
     def construct(self):
+        self.slide_pause()
         self.counting_tree()
         self.additionsprincip()
-
         self.slide_pause(5)
+        fade_out_all(self)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t, slides_bool)
@@ -1035,7 +1046,7 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
                 node_cols=node_colors[1]
             ) for label in first_level["labels"]
         ]
-        self.create_branch(second_level)
+        self.create_branch(second_level, rt=0.7)
         self.slide_pause()
 
         third_level = [
@@ -1049,7 +1060,7 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
                 ) for label in group["labels"]
             ] for group in second_level
         ]
-        self.create_branch(third_level)
+        self.create_branch(third_level, rt=0.4)
         self.slide_pause()
 
         self.play(start_level.animate.set_color(colors[0]))
@@ -1077,11 +1088,12 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
             self.camera.frame.animate.set(
                 width=20
             ).move_to(ORIGIN + 1.5*DR),
-            run_time=3
+            run_time=1
         )
         question = Tex("Hvor mange forskellige slags is kan man vælge?").next_to(srec, DOWN)
         self.play(
-            Write(question)
+            Write(question),
+            run_time=0.75
         )
         self.slide_pause()
 
@@ -1094,7 +1106,7 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
                 Rectangle(
                     width=1.25*level["labels"].width, height=1.25*level["labels"].height
                 ).set_style(
-                    stroke_width=1,
+                    stroke_width=2,
                     stroke_color=node_colors[ilevel][1]
                 ).move_to(level["labels"])
             )
@@ -1117,7 +1129,7 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
                 self.play(
                     Transform(frames[i-1], frames[i]),
                     TransformFromCopy(choices[i-1], choices[i]),
-                    run_time=2
+                    run_time=1
                 )
                 self.remove(frames[i-1], frames[i])
                 self.add(frames[i])
@@ -1136,7 +1148,7 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
         udregning[-1].set_color(color_gradient(colors[1:], 3))
         self.play(
             TransformMatchingShapes(
-                choices.copy(), udregning, path_arc=-PI/2
+                choices.copy(), udregning, path_arc=-PI/2, transform_mismatches=True
             ),
             run_time=2
         )
@@ -1168,7 +1180,7 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
                 Transform(
                     counting[i-1], counting[i]
                 ),
-                run_time=1
+                run_time=0.5
             )
             self.remove(counting[i-1], counting[i])
             self.add(counting[i])
@@ -1277,7 +1289,7 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
                     fill_opacity=0.15
                 ).set_z_index(1)
                 temp.add(s)
-                squaresdict[str(i + j + 2)].add(s.set_style(fill_opacity=0.75))
+                squaresdict[str(i + j + 2)].add(s.set_style(fill_opacity=0.85))
             temp.arrange(RIGHT, buff=0)
             squares.add(temp)
         squares.arrange(DOWN, buff=0).move_to([
@@ -1291,7 +1303,7 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
                 run_time=1
             )
             self.play(
-                squaresdict[s].animate.set_style(fill_opacity=0.15),
+                squaresdict[s].animate.set_style(fill_opacity=0.25),
                 run_time=0.5
             )
         self.slide_pause()
@@ -1369,6 +1381,25 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
             )
             self.slide_pause()
 
+
+if __name__ == "__main__":
+    classes = [
+        # FairDie,
+        MultiOgAddiPrincip
+    ]
+    for cls in classes:
+        class_name = cls.__name__
+        command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+        scene_marker(rf"RUNNNING:    {command}")
+        subprocess.run(command)
+        if slides and q == "h":
+            command = rf"manim-slides convert {class_name} {class_name}.html"
+            scene_marker(rf"RUNNNING:    {command}")
+            subprocess.run(command)
+            if class_name+"Thumbnail" in dir():
+                command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+                scene_marker(rf"RUNNNING:    {command}")
+                subprocess.run(command)
 
 
 
