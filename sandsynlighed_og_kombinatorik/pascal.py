@@ -8,11 +8,11 @@ from manim import config as global_config
 config = global_config.copy()
 config.background_color = WHITE
 
-slides = False
+slides = True
 if slides:
     from manim_slides import Slide
 
-q = "l"
+q = "h"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
