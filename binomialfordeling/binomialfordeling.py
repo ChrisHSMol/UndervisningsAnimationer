@@ -1,3 +1,5 @@
+import math
+
 from manim import *
 import sys
 sys.path.append("../")
@@ -9,7 +11,7 @@ slides = False
 if slides:
     from manim_slides import Slide
 
-q = "l"
+q = "h"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -291,38 +293,210 @@ class DeskriptorerBinomial(BasisSandsynlighed):
         print(n_seks)
         print(running_avg)
 
-        plane = always_redraw(lambda:
-            Axes(
-                x_range=(0, max((10, kast.get_value()))+1, int(max((10, kast.get_value()))//10)),
-                y_range=(0, 6.01, 0.5),
-                x_length=12,
-                y_length=6,
-                x_axis_config={"include_numbers": True},
-                y_axis_config={"include_numbers": True, "font_size": 30}
-            )
+        plane = Axes(
+            x_range=(0, n_kast+1, 5),
+            y_range=(0, 6.01, 0.5),
+            x_length=12,
+            y_length=6,
+            x_axis_config={"include_numbers": True},
+            y_axis_config={"include_numbers": True, "font_size": 30}
         )
         points = always_redraw(lambda:
             VGroup(
                 *[
-                    Dot(plane.c2p(i+1, val)) for i, val in enumerate(running_avg)
+                    Dot(
+                        plane.c2p(i+1, val), fill_opacity=0 if i+1 >= kast.get_value() else 1
+                    ) for i, val in enumerate(running_avg)
                 ]
             )
         )
-        self.add(plane)
+        axhlines = VGroup(*[
+            DashedLine(
+                start=plane.c2p(0, y), end=plane.c2p(51, y), stroke_width=0.5
+            ) for y in plane[1].get_tick_range()
+        ])
+
+        self.add(plane, axhlines)
         self.add(points)
-        self.play(kast.animate.set_value(50), run_time=5)
-        # for i in range(n_kast):
-        #     self.play(
-        #         kast.animate.set_value(kast.get_value() + 1),
-        #         run_time=1/_FRAMERATE[q]
-        #     )
-        #     self.slide_pause(1/_FRAMERATE[q])
+        self.play(kast.animate.set_value(n_kast), run_time=5)
+
+
+class BinomialFordeling(DeskriptorerBinomial):
+    def construct(self):
+        self.basis_for_graphing()
+        self.slide_pause(5)
+
+    def binom_point_prob(self, n, p, r):
+        return math.factorial(n)/(math.factorial(n-r)*math.factorial(r)) * p**r * (1-p)**(n-r)
+
+    def get_cmap(self):
+        return {"n": YELLOW, "p": BLUE, "prob": GREEN, r"\mu": RED, r"\sigma": RED}
+
+    def basis_for_graphing(self):
+        cmap = self.get_cmap()
+        xmin, xmax, xstep = -0.5, 51, 5
+        ymin, ymax, ystep = 0, 0.26, 0.05
+        plane = Axes(
+            x_range=(xmin, xmax, xstep),
+            y_range=(ymin, ymax, ystep),
+            x_length=12,
+            y_length=5,
+            x_axis_config={"include_numbers": True},
+            y_axis_config={"include_numbers": True}
+        ).set_z_index(1).to_edge(DL)
+        axhlines = VGroup(*[
+            DashedLine(
+                start=plane.c2p(0, y), end=plane.c2p(xmax, y), stroke_width=0.5
+            ) for y in plane[1].get_tick_range()
+        ]).set_z_index(plane.get_z_index()+1)
+        self.add(plane, axhlines)
+
+        n, p = 50, 0.5
+        n, p = ValueTracker(n), ValueTracker(p)
+        param_labels = always_redraw(lambda:
+            VGroup(
+                VGroup(
+                    MathTex("{{n}} =").set_color_by_tex_to_color_map(cmap),
+                    Integer(int(n.get_value()), color=cmap["n"])
+                ).arrange(RIGHT),
+                VGroup(
+                    MathTex("{{p}} = ").set_color_by_tex_to_color_map(cmap),
+                    DecimalNumber(p.get_value(), num_decimal_places=3, color=cmap["p"])
+                ).arrange(RIGHT)
+            ).arrange(DOWN, aligned_edge=LEFT).to_edge(UL).shift(RIGHT * 2)
+        )
+        self.add(param_labels)
+        bars = always_redraw(lambda: VGroup(
+            *[
+                Rectangle(
+                    width=0.75*(plane.c2p(1, 0)[0] - plane.c2p(0, 0)[0]),
+                    height=plane.c2p(x, self.binom_point_prob(int(n.get_value()), p.get_value(), r=x))[1] - plane.c2p(x, 0)[1],
+                    stroke_width=1, stroke_color=cmap["prob"], fill_color=cmap["prob"], fill_opacity=0.75
+                ).set_z_index(plane.get_z_index()+2).move_to(
+                    plane.c2p(x, 0.5*self.binom_point_prob(int(n.get_value()), p.get_value(), r=x))
+                ) for x in range(int(n.get_value()) + 1)
+            ]
+        ))
+        bar_labels = always_redraw(lambda: VGroup(
+            *[
+                DecimalNumber(
+                    self.binom_point_prob(int(n.get_value()), p.get_value(), r=x), color=cmap["prob"],
+                    num_decimal_places=3
+                ).set(
+                    width=bar.width if self.binom_point_prob(int(n.get_value()), p.get_value(), r=x) >= 0.001 else 0
+                # ).scale(
+                #     0.35 if self.binom_point_prob(int(n.get_value()), p.get_value(), r=x) >= 0.001 else 0
+                ).next_to(bar, UP, buff=0.1).set_z_index(bar.get_z_index()) for x, bar in zip(range(int(n.get_value()) + 1), bars)
+            ]
+        ))
+        self.add(bars, bar_labels)
+
+        mu_line = always_redraw(lambda:
+            Line(
+                start=plane.c2p(n.get_value() * p.get_value(), ymin-0.025),
+                end=plane.c2p(n.get_value() * p.get_value(), 0.225+0.025),
+                stroke_color=cmap[r"\mu"],
+                stroke_width=2
+            ).set_z_indec(plane.get_z_index() + 4)
+        )
+        mu_label = always_redraw(lambda:
+            # VGroup(
+            #     MathTex(r"\mu = ", color=mu_line.get_color()),
+            #     DecimalNumber(n.get_value() * p.get_value(), num_decimal_places=2, color=mu_line.get_color())
+            # ).arrange(RIGHT).scale(0.5).next_to(mu_line, UP, buff=0.1).set_z_index(mu_line.get_z_index())
+                MathTex(r"\mu").scale(0.5).next_to(mu_line, UP, buff=0.1).set_z_index(mu_line.get_z_index())
+        )
+        self.add(mu_label, mu_line)
+
+        sigma_lines = always_redraw(lambda:
+            VGroup(*[
+                DashedLine(
+                    start=plane.c2p(n.get_value() * p.get_value(), 0.23),
+                    end=plane.c2p(
+                        n.get_value()*p.get_value() + s*np.sqrt(n.get_value()*p.get_value()*(1-p.get_value())),
+                        0.23
+                    ),
+                    stroke_color=cmap[r"\sigma"]
+                ).set_z_index(mu_line.get_z_index()) for s in (1, -1)
+            ])
+        )
+        sigma_labels = always_redraw(lambda:
+            VGroup(
+                # *[VGroup(
+                #     MathTex(r"\sigma = ", color=RED),
+                #     DecimalNumber(np.sqrt(n.get_value()*p.get_value()*(1-p.get_value())), num_decimal_places=2, color=RED)
+                # ).arrange(RIGHT).scale(0.5).next_to(l, UP, buff=0.1) for l in sigma_lines]
+                *[MathTex(r"\sigma").scale(0.5).next_to(l, UP, buff=0.1) for l in sigma_lines]
+            )
+        )
+        self.add(sigma_labels, sigma_lines)
+
+        sigma_lines2 = always_redraw(lambda:
+            VGroup(*[
+                DashedLine(
+                    start=plane.c2p(n.get_value() * p.get_value(), 0.21),
+                    end=plane.c2p(
+                        n.get_value()*p.get_value() + s*np.sqrt(n.get_value()*p.get_value()*(1-p.get_value())),
+                        0.21
+                    ),
+                    stroke_color=cmap[r"\sigma"]
+                ).set_z_index(mu_line.get_z_index()) for s in (2, -2)
+            ])
+        )
+        sigma_labels2 = always_redraw(lambda:
+            VGroup(
+                # *[VGroup(
+                #     MathTex(r"2\sigma = ", color=RED),
+                #     DecimalNumber(2*np.sqrt(n.get_value()*p.get_value()*(1-p.get_value())), num_decimal_places=2, color=RED)
+                # ).arrange(RIGHT).scale(0.5).next_to(l, UP, buff=0.1) for l in sigma_lines2]
+                *[MathTex(r"2\sigma").scale(0.5).next_to(l, UP, buff=0.1) for l in sigma_lines2]
+            )
+        )
+        self.add(sigma_labels2, sigma_lines2)
+
+        musig_vals = always_redraw(lambda:
+            VGroup(
+                VGroup(
+                    MathTex(r"{{\mu}} = ").set_color_by_tex_to_color_map(cmap),
+                    DecimalNumber(
+                        n.get_value() * p.get_value(), num_decimal_places=2, color=cmap[r"\mu"]
+                    )
+                ).arrange(RIGHT),
+                VGroup(
+                    MathTex(r"{{\sigma}} = ").set_color_by_tex_to_color_map(cmap),
+                    DecimalNumber(
+                        np.sqrt(n.get_value() * p.get_value() * (1 - p.get_value())), num_decimal_places=2,
+                        color=cmap[r"\sigma"]
+                    )
+                ).arrange(RIGHT),
+                # VGroup(
+                #     MathTex(r"2{{\sigma}} = ").set_color_by_tex_to_color_map(cmap),
+                #     DecimalNumber(
+                #         2 * np.sqrt(n.get_value() * p.get_value() * (1 - p.get_value())), num_decimal_places=2,
+                #         color=cmap[r"\sigma"]
+                #     )
+                # ).arrange(RIGHT)
+            ).arrange(DOWN, aligned_edge=LEFT).to_edge(UL).shift(7*RIGHT)
+        )
+        self.add(musig_vals)
+
+        self.play(
+            p.animate.set_value(0.125),
+            run_time=10
+        )
+        self.slide_pause()
+        self.play(
+            # n.animate.set_value(50),
+            p.animate.set_value(0.95),
+            run_time=10
+        )
 
 
 if __name__ == "__main__":
     classes = [
         # BasisSandsynlighed,
-        DeskriptorerBinomial
+        # DeskriptorerBinomial,
+        BinomialFordeling
     ]
     for cls in classes:
         class_name = cls.__name__
