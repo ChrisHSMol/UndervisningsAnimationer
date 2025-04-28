@@ -7,11 +7,11 @@ import numpy as np
 import subprocess
 from helpers import *
 
-slides = True
+slides = False
 if slides:
     from manim_slides import Slide
 
-q = "h"
+q = "l"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -508,15 +508,17 @@ class BinomialFordeling(DeskriptorerBinomial):
 
 class BinomialTest(BinomialFordeling):
     def construct(self):
-        self.konfidensinterval()
-        self.overgang1()
-        self.to_sidet_test()
+        # self.konfidensinterval()
+        # self.overgang1()
+        # self.to_sidet_test()
+        # self.overgang2()
+        self.enkel_sidet_test()
         self.slide_pause(5)
 
     def get_cmap(self):
         return {
             "tilfæl": BLUE, "signif": RED, "udvalg": YELLOW, "antal": PURPLE, "sands": TEAL,
-            "toside": GREEN
+            "toside": GREEN, "enside": MAROON, "enstre": MAROON_B, "øjre": MAROON_D
         }
 
     def cross_out_mobject(self, mobject):
@@ -842,6 +844,41 @@ class BinomialTest(BinomialFordeling):
             FadeOut(to_sidet_tekst[1], shift=LEFT)
         )
 
+    def overgang2(self):
+        cmap = self.get_cmap()
+        overgang_tekst = VGroup(
+            Tex("Hvad så med"),
+            Tex("en ", "enkeltsidet", " test?")
+        ).arrange(DOWN, aligned_edge=LEFT)
+        overgang_tekst[1][1].set_color(cmap["enside"])
+        if len(self.mobjects) == 0:
+            self.add(Circle())
+        self.play(
+            FadeOut(*self.mobjects),
+            FadeIn(overgang_tekst[0], shift=RIGHT),
+            FadeIn(overgang_tekst[1], shift=LEFT)
+        )
+        self.slide_pause()
+
+        enkelt_sidet_tekst = VGroup(
+            Tex("I en ", "enkeltsidet", " test, "),
+            Tex("ligger alle afvigelser på den ", "ene", " side")
+        ).arrange(DOWN, aligned_edge=LEFT)
+        enkelt_sidet_tekst[0][1].set_color(cmap["enside"])
+        enkelt_sidet_tekst[1][1].set_color(cmap["enside"])
+        self.play(
+            FadeOut(overgang_tekst[0], shift=RIGHT),
+            FadeOut(overgang_tekst[1], shift=LEFT),
+            FadeIn(enkelt_sidet_tekst[0], shift=RIGHT),
+            FadeIn(enkelt_sidet_tekst[1], shift=LEFT)
+        )
+        self.slide_pause()
+
+        self.play(
+            FadeOut(enkelt_sidet_tekst[0], shift=RIGHT),
+            FadeOut(enkelt_sidet_tekst[1], shift=LEFT)
+        )
+
     def to_sidet_test(self):
         n = 100
         p = 0.5
@@ -1109,6 +1146,82 @@ class BinomialTest(BinomialFordeling):
                 ],
                 lag_ratio=0.02
             )
+        )
+        self.slide_pause(5*_ONEFRAME)
+
+    def enkel_sidet_test(self):
+        n = 50
+        p = 0.5
+        r = 19
+        cmap = self.get_cmap()
+
+        punktsandsynligheder = [self.binom_point_prob(n, p, x) for x in range(n+1)]
+        kumulerede_sandsynligheder = [sum(punktsandsynligheder[:i+1]) for i in range(n+1)]
+        mu, sigma = n*p, np.sqrt(n*p*(1-p))
+        a, b = ValueTracker(0), ValueTracker(1)
+
+        xmin, xmax, xstep = 0, n, 5
+        ymin, ymax, ystep = 0, np.ceil(max(punktsandsynligheder)*10)/10, 0.02
+        plane = Axes(
+            x_range=(xmin, xmax, xstep),
+            y_range=(ymin, ymax, ystep),
+            x_length=12,
+            y_length=4,
+            tips=False,
+            axis_config={"include_numbers": True}
+        ).to_edge(DOWN, buff=0.25)
+        axhlines = self.get_axhlines(plane)
+        self.add(plane, axhlines)
+        # self.play(
+        #     Create(plane, lag_ratio=0.2),
+        #     Create(axhlines, lag_ratio=0.2)
+        # )
+        self.slide_pause(5*_ONEFRAME)
+
+        binom_bars = always_redraw(lambda: VGroup(
+            *[
+                Rectangle(
+                    width=0.75*(plane.c2p(1, 0)[0] - plane.c2p(0, 0)[0]),
+                    height=plane.c2p(0, prob)[1] - plane.c2p(0, 0)[1],
+                    stroke_width=0.1,
+                    # fill_color=cmap["tilfæl"] if a.get_value() < i <= b.get_value() else cmap["signif"],
+                    fill_color=cmap["tilfæl"] if a.get_value() < kum_prob < b.get_value() else cmap["signif"],
+                    fill_opacity=0.85
+                ).set_z_index(plane.get_z_index()+2).move_to(
+                    plane.c2p(i, 0.5*prob)
+                ) for i, prob, kum_prob in zip(
+                    range(len(punktsandsynligheder)), punktsandsynligheder, kumulerede_sandsynligheder
+                )
+            ]
+        ))
+        self.add(binom_bars)
+        # self.play(
+        #     LaggedStart(
+        #         *[
+        #             GrowFromEdge(bar, DOWN) for bar in binom_bars
+        #         ],
+        #         lag_ratio=0.05
+        #     )
+        # )
+        self.remove(binom_bars)
+        self.add(binom_bars)
+        self.slide_pause(5*_ONEFRAME)
+
+        self.play(
+            a.animate.set_value(0.1),
+            b.animate.set_value(0.9)
+        )
+        self.slide_pause(5*_ONEFRAME)
+
+        self.play(
+            a.animate.set_value(0),
+            b.animate.set_value(0.8)
+        )
+        self.slide_pause(5*_ONEFRAME)
+
+        self.play(
+            a.animate.set_value(0.2),
+            b.animate.set_value(1)
         )
         self.slide_pause(5*_ONEFRAME)
 
