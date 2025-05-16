@@ -7,11 +7,11 @@ import numpy as np
 import subprocess
 from helpers import *
 
-slides = False
+slides = True
 if slides:
     from manim_slides import Slide
 
-q = "l"
+q = "h"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -1157,6 +1157,7 @@ class BinomialTest(BinomialFordeling):
 
         punktsandsynligheder = [self.binom_point_prob(n, p, x) for x in range(n+1)]
         kumulerede_sandsynligheder = [sum(punktsandsynligheder[:i+1]) for i in range(n+1)]
+        print(len(punktsandsynligheder), len(kumulerede_sandsynligheder))
         mu, sigma = n*p, np.sqrt(n*p*(1-p))
         a, b = ValueTracker(0), ValueTracker(1)
 
@@ -1228,9 +1229,9 @@ class BinomialTest(BinomialFordeling):
 
 if __name__ == "__main__":
     classes = [
-        # BasisSandsynlighed,
-        # DeskriptorerBinomial,
-        # BinomialFordeling,
+        BasisSandsynlighed,
+        DeskriptorerBinomial,
+        BinomialFordeling,
         BinomialTest
     ]
     for cls in classes:
@@ -1239,7 +1240,7 @@ if __name__ == "__main__":
         scene_marker(rf"RUNNNING:    {command}")
         subprocess.run(command)
         if slides and q == "h":
-            command = rf"manim-slides convert {class_name} {class_name}.html"
+            command = rf"manim-slides convert {class_name} {class_name}.html --one-file --offline"
             scene_marker(rf"RUNNNING:    {command}")
             subprocess.run(command)
             if class_name+"Thumbnail" in dir():

@@ -27,7 +27,7 @@ cmap = {
 }
 
 
-class FairDie(Slide, MovingCameraScene if slides else MovingCameraScene):
+class FairDie(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
         self.fair_terning()
         self.slide_pause()
@@ -122,7 +122,7 @@ class FairDie(Slide, MovingCameraScene if slides else MovingCameraScene):
                 )
             else:
                 self.add(graph_rect)
-                self.wait(1/15 if quality == "low" else 1/60)
+                self.wait(1/15 if q == "l" else 1/60)
             self.remove(die)
 
         self.slide_pause()
@@ -258,7 +258,7 @@ class FairDie(Slide, MovingCameraScene if slides else MovingCameraScene):
                     )
                 else:
                     self.add(graph_rect)
-                    self.wait(1/15 if quality == "low" else 1/60)
+                    self.wait(1/15 if q == "l" else 1/60)
                 self.remove(die)
 
             self.slide_pause()
@@ -1384,8 +1384,8 @@ class MultiOgAddiPrincip(Slide, MovingCameraScene if slides else MovingCameraSce
 
 if __name__ == "__main__":
     classes = [
-        # FairDie,
-        MultiOgAddiPrincip
+        FairDie,
+        # MultiOgAddiPrincip
     ]
     for cls in classes:
         class_name = cls.__name__
@@ -1393,7 +1393,7 @@ if __name__ == "__main__":
         scene_marker(rf"RUNNNING:    {command}")
         subprocess.run(command)
         if slides and q == "h":
-            command = rf"manim-slides convert {class_name} {class_name}.html"
+            command = rf"manim-slides convert {class_name} {class_name}.html --one-file --offline"
             scene_marker(rf"RUNNNING:    {command}")
             subprocess.run(command)
             if class_name+"Thumbnail" in dir():
