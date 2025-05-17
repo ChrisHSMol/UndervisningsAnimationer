@@ -1,15 +1,30 @@
 from manim import *
 import sys
 sys.path.append("../")
+import numpy as np
+import subprocess
 from helpers import *
+
 slides = True
 if slides:
     from manim_slides import Slide
 
+q = "h"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
 
-class StykFunk(MovingCameraScene if not slides else MovingCameraScene, Slide):
+
+class StykFunk(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
-        play_title(self, "Stykkevist definerede funktioner")
+        play_title2(self, "Stykkevist definerede funktioner")
 
         xmin, xmax, xstep = -2, 8.5, 0.5
         ymin, ymax, ystep = -2, 4.5, 0.5
@@ -736,3 +751,22 @@ class StykFunkThumbnail(Scene):
         ).arrange(RIGHT).next_to(VGroup(fx, brace, eq), UP, aligned_edge=LEFT, buff=1)
         VGroup(eq, brace, fx, title).scale(1.5).to_edge(UL)
         self.add(eq, brace, fx, title)
+
+
+if __name__ == "__main__":
+    classes = [
+        StykFunk
+    ]
+    for cls in classes:
+        class_name = cls.__name__
+        command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+        scene_marker(rf"RUNNNING:    {command}")
+        subprocess.run(command)
+        if slides and q == "h":
+            command = rf"manim-slides convert {class_name} {class_name}.html --one-file --offline"
+            scene_marker(rf"RUNNNING:    {command}")
+            subprocess.run(command)
+            if class_name+"Thumbnail" in dir():
+                command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+                scene_marker(rf"RUNNNING:    {command}")
+                subprocess.run(command)

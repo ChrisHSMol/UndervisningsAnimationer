@@ -37,7 +37,7 @@ plane = NumberPlane(
 )
 
 
-class Polynomier(Slide if slides else MovingCameraScene):
+class Polynomier(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
         title = "Polynomier og deres ordner"
         # play_title(self, title, cols={"0": YELLOW, "-1": RED})
@@ -373,7 +373,7 @@ class Polynomier(Slide if slides else MovingCameraScene):
         self.slide_pause(3)
 
 
-class PolyRod(Slide if slides else MovingCameraScene):
+class PolyRod(Polynomier):
     def construct(self):
         self.roots()
         self.slide_pause(5)
@@ -400,7 +400,7 @@ class PolyRod(Slide if slides else MovingCameraScene):
         )
 
 
-class MonotoniForhold(Slide if slides else Scene):
+class MonotoniForhold(PolyRod):
     def construct(self):
         self.slide_pause(0.1)
         plane, graph = self.start_graph()
@@ -549,7 +549,7 @@ class MonotoniForhold(Slide if slides else Scene):
             self.slide_pause()
 
 
-class ParallelForskydning(Slide if slides else Scene):
+class ParallelForskydning(MonotoniForhold):
     def construct(self):
         self.lodret()
         self.vandret()
@@ -845,7 +845,7 @@ class ParallelForskydning(Slide if slides else Scene):
         )
 
 
-class KonstantersBetydning(Slide if slides else Scene):
+class KonstantersBetydning(ParallelForskydning):
     def construct(self):
         self.slide_pause(0.1)
         self.betydning_af_a()
@@ -894,22 +894,22 @@ class KonstantersBetydning(Slide if slides else Scene):
             )
 
 
-
 if __name__ == "__main__":
-    cls = MonotoniForhold
-    class_name = cls.__name__
-    # transparent = cls.btransparent
-    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
-    # if transparent:
-    #     command += " --transparent --format=webm"
-    scene_marker(rf"RUNNNING:    {command}")
-    subprocess.run(command)
-    if slides and q == "h":
-        command = rf"manim-slides convert {class_name} {class_name}.html"
+    classes = [
+        MonotoniForhold,
+        ParallelForskydning,
+        Polynomier
+    ]
+    for cls in classes:
+        class_name = cls.__name__
+        command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
         scene_marker(rf"RUNNNING:    {command}")
         subprocess.run(command)
-        if class_name+"Thumbnail" in dir():
-            command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+        if slides and q == "h":
+            command = rf"manim-slides convert {class_name} {class_name}.html --one-file --offline"
             scene_marker(rf"RUNNNING:    {command}")
             subprocess.run(command)
-
+            if class_name+"Thumbnail" in dir():
+                command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+                scene_marker(rf"RUNNNING:    {command}")
+                subprocess.run(command)

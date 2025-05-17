@@ -24,7 +24,7 @@ _FRAMERATE = {
 }
 
 
-class ToPunktExp(Slide if slides else Scene):
+class ToPunktExp(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
         def p2p_anim(mob1, mob2, tex1, tex2=None, index=0):
             if tex2 is None:
@@ -812,7 +812,7 @@ class TerningHenfald(MovingCameraScene, Slide if slides else Scene):
 
 if __name__ == "__main__":
     classes = [
-        # ToPunktExp,
+        ToPunktExp,
         TerningHenfald
     ]
     for cls in classes:
@@ -821,7 +821,7 @@ if __name__ == "__main__":
         scene_marker(rf"RUNNNING:    {command}")
         subprocess.run(command)
         if slides and q == "h":
-            command = rf"manim-slides convert {class_name} {class_name}.html"
+            command = rf"manim-slides convert {class_name} {class_name}.html --one-file --offline"
             scene_marker(rf"RUNNNING:    {command}")
             subprocess.run(command)
             if class_name+"Thumbnail" in dir():

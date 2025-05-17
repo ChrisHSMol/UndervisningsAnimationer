@@ -1997,14 +1997,14 @@ class PrikVsPind(OutliersOgBredder):
 
 if __name__ == "__main__":
     classes = [
-        # HyppighedsTabel,
-        # Deskriptorer,
-        # PrikOgPindediagrammer,
-        # SumkurveFraTabel,
-        # BoksplotOgKvartiler,
-        # OutliersOgBredder,
-        # SampleSize,
-        # TrappediagramFraTabel,
+        HyppighedsTabel,
+        Deskriptorer,
+        PrikOgPindediagrammer,
+        SumkurveFraTabel,
+        BoksplotOgKvartiler,
+        OutliersOgBredder,
+        SampleSize,
+        TrappediagramFraTabel,
         PrikVsPind
     ]
     for cls in classes:
@@ -2013,7 +2013,7 @@ if __name__ == "__main__":
         scene_marker(rf"RUNNNING:    {command}")
         subprocess.run(command)
         if slides and q == "h":
-            command = rf"manim-slides convert {class_name} {class_name}.html"
+            command = rf"manim-slides convert {class_name} {class_name}.html --one-file --offline"
             scene_marker(rf"RUNNNING:    {command}")
             subprocess.run(command)
             if class_name+"Thumbnail" in dir():

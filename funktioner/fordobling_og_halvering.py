@@ -1,12 +1,25 @@
 from manim import *
 import sys
 sys.path.append("../")
-from helpers import *
 import numpy as np
+import subprocess
+from helpers import *
+
 slides = True
 if slides:
     from manim_slides import Slide
 
+q = "h"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
 graph_col = YELLOW
 a_col = PINK
 lines_col = [RED, GREEN]
@@ -30,9 +43,9 @@ plane = NumberPlane(
 )
 
 
-class FordoblingsKonstant(MovingCameraScene if not slides else MovingCameraScene, Slide):
+class FordoblingsOgHalvering(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
-        play_title(self, "Fordoblingskonstant")
+        play_title2(self, "Fordoblingskonstant")
         self.fordobling()
         srec = SurroundingRectangle(
             plane,
@@ -41,10 +54,10 @@ class FordoblingsKonstant(MovingCameraScene if not slides else MovingCameraScene
             fill_opacity=0.90
         ).scale(3)
         self.play(FadeIn(srec), run_time=0.5)
-        play_title(self, "Halveringskonstant")
+        play_title2(self, "Halveringskonstant")
         self.play(FadeOut(srec), run_time=0.5)
         self.halvering()
-        play_title_reverse(self, "Fordoblings- og halveringskonstanter")
+        # play_title_reverse(self, "Fordoblings- og halveringskonstanter")
 
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t, slides_bool)
@@ -472,3 +485,21 @@ class FordoblingsKonstant(MovingCameraScene if not slides else MovingCameraScene
         self.slide_pause()
         fade_out_all(self)
 
+
+if __name__ == "__main__":
+    classes = [
+        FordoblingsOgHalvering
+    ]
+    for cls in classes:
+        class_name = cls.__name__
+        command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+        scene_marker(rf"RUNNNING:    {command}")
+        subprocess.run(command)
+        if slides and q == "h":
+            command = rf"manim-slides convert {class_name} {class_name}.html --one-file --offline"
+            scene_marker(rf"RUNNNING:    {command}")
+            subprocess.run(command)
+            if class_name+"Thumbnail" in dir():
+                command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+                scene_marker(rf"RUNNNING:    {command}")
+                subprocess.run(command)
