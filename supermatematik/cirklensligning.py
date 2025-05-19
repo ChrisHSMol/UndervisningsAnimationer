@@ -23,7 +23,7 @@ _FRAMERATE = {
 }
 
 
-class CirklensLigning(Scene if not slides else Slide):
+class CirklensLigning(MovingCameraScene, Slide if slides else Scene):
     btransparent = True
 
     def slide_pause(self, t=1.0, slides_bool=slides):

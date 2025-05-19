@@ -22,7 +22,6 @@ _FRAMERATE = {
 
 
 class LigningsLoesning(Slide if slides else Scene):
-# class LigningsLoesning(Scene):
     btransparent = True
 
     def slide_pause(self, t=1.0, slides_bool=slides):
