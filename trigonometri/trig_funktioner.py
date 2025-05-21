@@ -1,19 +1,33 @@
+from manim import *
 import sys
 sys.path.append("../")
-from manim import *
 from helpers import *
+import numpy as np
+import subprocess
 
 slides = True
 if slides:
     from manim_slides import Slide
 
+q = "h"
+_RESOLUTION = {
+    "ul": "426,240",
+    "l": "854,480",
+    "h": "1920,1080"
+}
+_FRAMERATE = {
+    "ul": 5,
+    "l": 15,
+    "h": 60
+}
 
-class TrigFunktioner(MovingCameraScene, Slide if slides else None):
+
+class TrigFunktioner(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
         self.slide_pause()
         basis = self.enhedscirkel(banimation=True)
-        self.trig_funktioner(basis)
-        self.sin_og_cos_identiteter(basis)
+        # self.trig_funktioner(basis)
+        # self.sin_og_cos_identiteter(basis)
         self.wait(5)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
@@ -74,6 +88,8 @@ class TrigFunktioner(MovingCameraScene, Slide if slides else None):
                 ),
                 run_time=2
             )
+            self.remove(plane_rec, plane, unit_circle, *[tickmarks[d] for d in tickmarks.keys()])
+            self.add(plane_rec, plane, unit_circle, *[tickmarks[d] for d in tickmarks.keys()])
             self.slide_pause()
 
             self.play(
@@ -82,7 +98,7 @@ class TrigFunktioner(MovingCameraScene, Slide if slides else None):
             )
             self.slide_pause()
 
-        theta = ValueTracker(0)  # Rad
+        theta = ValueTracker(0.0)  # Rad
         radius_line = always_redraw(lambda: Line(
             start=plane.c2p(0, 0), end=unit_circle.point_at_angle(theta.get_value()), color=ac, stroke_width=1.5
         ).set_z_index(5))
@@ -116,10 +132,9 @@ class TrigFunktioner(MovingCameraScene, Slide if slides else None):
             self.slide_pause()
 
         axis_labels = VGroup(*[
-            MathTex(lab, color=c, font_size=8)
-                             .next_to(axis, cor, buff=0.05)
-                             .shift(0.15*d)
-                             .set_z_index(unit_circle.get_z_index())
+            MathTex(
+                lab, color=c, font_size=8
+            ).next_to(axis, cor, buff=0.05).shift(0.15*d).set_z_index(unit_circle.get_z_index())
             for lab, axis, cor, d, c in zip(["x", "y"], plane[2:4], [DR, UL], [LEFT, DOWN], [YELLOW, BLUE])
         ])
         if banimation:
@@ -209,20 +224,36 @@ class TrigFunktioner(MovingCameraScene, Slide if slides else None):
             )
             self.slide_pause()
 
+        # vek_bue = always_redraw(lambda:
+        #     Arc(
+        #         radius=0.15,
+        #         start_angle=0,
+        #         angle=theta.get_value(),
+        #         color=RED,
+        #         stroke_width=1
+        #     ).set_z_index(radius_line.get_z_index())
+        # )
         vek_bue = always_redraw(lambda:
-            Arc(
+            Angle(
+                Line(plane.c2p(0, 0), plane.c2p(1, 0)),
+                radius_line,
+                quadrant=(1, 1),
                 radius=0.15,
-                start_angle=0,
-                angle=theta.get_value(),
                 color=RED,
                 stroke_width=1
             ).set_z_index(radius_line.get_z_index())
         )
+        # vinkel = always_redraw(lambda:
+        #     MathTex(
+        #         rf"{theta.get_value() * 180/PI:.1f}^\circ",
+        #         color=vek_bue.get_color(), font_size=10
+        #     ).next_to(vek_bue, RIGHT)
+            # ).move_to(Circle(0.35).point_at_angle(theta.get_value() - PI/8)).set_z_index(radius_line.get_z_index())
+        # )
         vinkel = always_redraw(lambda:
-            MathTex(
-                rf"{theta.get_value() * 180/PI:.1f}^\circ",
-                color=vek_bue.get_color(), font_size=10
-            # ).next_to(vek_bue, RIGHT)
+            DecimalNumber(
+                vek_bue.get_value(degrees=True), unit=r"^{\circ}",
+                color=vek_bue.get_color(), font_size=10, num_decimal_places=1
             ).move_to(Circle(0.35).point_at_angle(theta.get_value() - PI/8)).set_z_index(radius_line.get_z_index())
         )
         if banimation:
@@ -235,6 +266,8 @@ class TrigFunktioner(MovingCameraScene, Slide if slides else None):
                 ),
                 run_time=2
             )
+            self.remove(vinkel, vek_bue)
+            self.add(vinkel, vek_bue)
             for angle in [PI/2, PI, PI/5]:
                 self.play(
                     theta.animate.set_value(angle),
@@ -319,6 +352,8 @@ class TrigFunktioner(MovingCameraScene, Slide if slides else None):
             ),
             run_time=2
         )
+        self.remove(cos_plane, cos_plane_rec, sin_plane, sin_plane_rec)
+        self.add(cos_plane, cos_plane_rec, sin_plane, sin_plane_rec)
 
         time_tracker = ValueTracker(0)
         moving_dot = always_redraw(lambda:
@@ -367,6 +402,8 @@ class TrigFunktioner(MovingCameraScene, Slide if slides else None):
             ),
             run_time=2
         )
+        self.remove(lines[0], lines[1], moving_dot)
+        self.add(lines[0], lines[1], moving_dot)
         self.add(lines)
         target_time = 10*PI
         self.play(
@@ -408,6 +445,8 @@ class TrigFunktioner(MovingCameraScene, Slide if slides else None):
             ),
             run_time=4
         )
+        self.remove(sin_plane_copy, sin_plot_copy, cos_plane_copy, cos_plot_copy, sin_cos_plane_copy_rect, fkt_labels)
+        self.add(sin_plane_copy, sin_plot_copy, cos_plane_copy, cos_plot_copy, sin_cos_plane_copy_rect, fkt_labels)
         self.play(
             time_tracker.animate.set_value(14*PI),
             run_time=4*PI
@@ -477,6 +516,8 @@ class TrigFunktioner(MovingCameraScene, Slide if slides else None):
             ),
             run_time=2
         )
+        self.remove(radius_line, vek_bue, vinkel, edge_point, point_coords)
+        self.add(radius_line, vek_bue, vinkel, edge_point, point_coords)
         self.slide_pause()
 
         vinkler = [0, PI/6, PI/4, PI/2, 3*PI/4, PI, 3*PI/2, 15*PI/8]
@@ -539,6 +580,8 @@ class TrigFunktioner(MovingCameraScene, Slide if slides else None):
             ),
             run_time=4
         )
+        self.remove(tabel_overskrifter, tabel_struktur)
+        self.add(tabel_overskrifter, tabel_struktur)
         self.slide_pause()
 
         for j, v in enumerate(vinkler):
@@ -564,6 +607,8 @@ class TrigFunktioner(MovingCameraScene, Slide if slides else None):
                 ),
                 run_time=3
             )
+            self.remove(tabel_tekst[0][j], tabel_tekst[1][j], tabel_tekst[2][j])
+            self.add(tabel_tekst[0][j], tabel_tekst[1][j], tabel_tekst[2][j])
             self.wait()
         self.slide_pause()
 
@@ -581,3 +626,22 @@ class TrigFunktioner(MovingCameraScene, Slide if slides else None):
             run_time=2
         )
         self.remove(point_coords)
+
+
+if __name__ == "__main__":
+    classes = [
+        TrigFunktioner
+    ]
+    for cls in classes:
+        class_name = cls.__name__
+        command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+        scene_marker(rf"RUNNNING:    {command}")
+        subprocess.run(command)
+        if slides and q == "h":
+            command = rf"manim-slides convert {class_name} {class_name}.html --one-file --offline"
+            scene_marker(rf"RUNNNING:    {command}")
+            subprocess.run(command)
+            if class_name+"Thumbnail" in dir():
+                command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+                scene_marker(rf"RUNNNING:    {command}")
+                subprocess.run(command)
