@@ -1,6 +1,60 @@
 from manim import *
 import random
 import numpy as np
+import itertools as it
+import sys
+from collections.abc import Hashable, Iterable, Mapping, Sequence
+from typing import TYPE_CHECKING, Callable, Literal
+
+from PIL.Image import Image
+
+# from manim import config
+# from manim.constants import *
+# from manim.mobject.mobject import Mobject
+# from manim.mobject.opengl.opengl_compatibility import ConvertToOpenGL
+# from manim.mobject.opengl.opengl_mobject import OpenGLMobject
+# from manim.mobject.opengl.opengl_vectorized_mobject import OpenGLVMobject
+# from manim.mobject.three_d.three_d_utils import (
+#     get_3d_vmob_gradient_start_and_end_points,
+# )
+# from manim.utils.bezier import (
+#     bezier,
+#     bezier_remap,
+#     get_smooth_cubic_bezier_handle_points,
+#     integer_interpolate,
+#     interpolate,
+#     partial_bezier_points,
+#     proportions_along_bezier_curve_for_point,
+# )
+# from manim.utils.color import BLACK, WHITE, ManimColor, ParsableManimColor
+# from manim.utils.iterables import (
+#     make_even,
+#     resize_array,
+#     stretch_array_to_length,
+#     tuplify,
+# )
+# from manim.utils.space_ops import rotate_vector, shoelace_direction
+
+from typing import Any
+
+import numpy.typing as npt
+from typing_extensions import Self
+
+from manim.typing import (
+    CubicBezierPath,
+    CubicBezierPointsLike,
+    CubicSpline,
+    ManimFloat,
+    MappingFunction,
+    Point2DLike,
+    Point3D,
+    Point3D_Array,
+    Point3DLike,
+    Point3DLike_Array,
+    RGBA_Array_Float,
+    Vector3D,
+    Zeros,
+)
 
 
 class Nuclid(VGroup):
@@ -272,3 +326,57 @@ class BohrAtom(VGroup):
     def get_nuclei(self):
         # return self[2].add(self[3])
         return self[2]
+
+
+class Prikformel(VGroup):
+    def __init__(
+            self,
+            atom_label: str = "H",
+            number_of_valence_electrons: int = 1,
+            label_color: ParsableManimColor | None = WHITE,
+            unpaired_location: Vector3D = RIGHT,
+            **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.atom_label = atom_label
+        self.number_of_valence_electrons = number_of_valence_electrons
+        self.label_color = label_color
+        self.unpaired_location = unpaired_location
+        self.label_group = self.make_label_group()
+        self.locations = self.calculate_electron_positions()
+        self.electron_group = self.populate_electrons()
+        self.add(self.make_label_group(), self.populate_electrons())
+
+    def make_label_group(self, **kwargs):
+        return Text(self.atom_label, **kwargs)
+
+    def calculate_electron_positions(self):
+        locations = []
+        # for offset in [1, -1]:
+        #     for i, direction in enumerate([UP, RIGHT, DOWN, LEFT]):
+        #         loc = self.label_group.get_edge_center(direction)
+        #         # loc += 0.5 * offset * LEFT if direction == UP else 0.5 * offset * UP
+        #         loc += 0.2 * offset * (i%2*UP + (i+1)%2*LEFT) + 0.2 * direction
+        #         # loc += 0.2 * offset * (i % 2 * UP + (i + 1) % 2 * LEFT) + 0.2 * direction
+        #         locations.append(loc)
+        for direction in [
+            (UP, LEFT), (RIGHT, UP), (DOWN, RIGHT), (LEFT, DOWN), (UP, RIGHT), (RIGHT, DOWN), (DOWN, LEFT), (LEFT, UP)
+        ]:
+            loc = self.label_group.get_edge_center(direction[0])
+            loc += 0.2 * direction[0] + 0.15 * direction[1]
+            locations.append(loc)
+        return locations
+
+    def _electron(self):
+        return Circle(
+            fill_color=self.label_color, stroke_color=self.label_color, fill_opacity=1, radius=0.05
+        )
+
+    def populate_electrons(self):
+        electron_group = VGroup()
+        for i_electron, loc in zip(range(self.number_of_valence_electrons), self.calculate_electron_positions()):
+            electron = self._electron()
+            electron.move_to(loc)
+            electron_group.add(electron)
+        return electron_group
+

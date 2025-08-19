@@ -12,7 +12,7 @@ _preamble = [
     "\n"
 ]
 # _target = "C:\\Users\\KG-chri12mz\\OneDrive - IT Center Fyn\\Desktop\\Supermatematik\\genererede_opgaver"
-_target = r"C:\Users\frhf-cm\PycharmProjects\UndervisningsAnimationer\misc_files\genererede_opgaver"
+_target = r"C:\Users\chsm\Documents\UndervisningsAnimationer\misc_files\genererede_opgaver"
 
 
 class Opgave():

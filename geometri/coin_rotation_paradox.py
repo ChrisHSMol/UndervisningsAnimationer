@@ -59,6 +59,7 @@ class CoinRotationParadox(MovingCameraScene, Slide if slides else Scene):
         )
         trace = TracedPath(circle2[1].get_center, stroke_color=BLUE, stroke_opacity=[0.5, 1])
 
+        self.slide_pause()
         self.play(
             self.camera.frame.animate.set(
                 height=2 * (r1 + r2 + 2)
@@ -66,6 +67,7 @@ class CoinRotationParadox(MovingCameraScene, Slide if slides else Scene):
             # ).move_to(circle2),
             run_time=0.1
         )
+        self.slide_pause()
         # self.camera.frame.set(height=2*(r1 + r2) + 1)
 
         def _untilwaiter():
@@ -84,6 +86,7 @@ class CoinRotationParadox(MovingCameraScene, Slide if slides else Scene):
             self.add(circle2[-1].copy())
             # self.add(circle2[0].copy())
             self.wait(2*PI/(r1 + r2) - PI/_FRAMERATE[q])
+        self.slide_pause()
 
         # self.pause()
         # circle1.set(radius=3)
@@ -94,7 +97,20 @@ class CoinRotationParadox(MovingCameraScene, Slide if slides else Scene):
 
 
 if __name__ == "__main__":
-    class_name = CoinRotationParadox.__name__
-    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
-    scene_marker(rf"RUNNNING:    {command}")
-    subprocess.run(command)
+    classes = [
+        CoinRotationParadox
+    ]
+    for cls in classes:
+        class_name = cls.__name__
+        command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+        scene_marker(rf"RUNNNING:    {command}")
+        subprocess.run(command)
+        if slides and q == "h":
+            command = rf"manim-slides convert {class_name} {class_name}.html --one-file --offline"
+            scene_marker(rf"RUNNNING:    {command}")
+            subprocess.run(command)
+            if class_name+"Thumbnail" in dir():
+                command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+                scene_marker(rf"RUNNNING:    {command}")
+                subprocess.run(command)
+
