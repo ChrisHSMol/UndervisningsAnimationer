@@ -36,13 +36,40 @@ class KovalenteBindinger(MovingCameraScene, Slide if slides else Scene):
         return slides_pause(self, t, slides_bool)
 
     def prikformler(self):
-        hydrogen = Prikformel(
+        h1 = Prikformel(
             atom_label="H",
-            number_of_valence_electrons=8
-        )
-        self.add(hydrogen)
+            number_of_valence_electrons=1,
+            rotation=-PI/2,
+            label_color=RED
+        ).shift(LEFT)
+        h2 = Prikformel(
+            atom_label="H",
+            number_of_valence_electrons=1,
+            rotation=PI/2,
+            label_color=BLUE
+        ).shift(RIGHT)
+        self.add(h1, h2)
         # self.add(Circle())
         self.wait(1)
+        self.play(
+            h1.animate.shift(0.55*RIGHT),
+            h2.animate.shift(0.55*LEFT)
+        )
+        self.wait(1)
+
+        h1_electrons = h1[1]
+        h2_electrons = h2[1]
+        self.play(
+            h1_electrons.animate.set_color(BLUE),
+        )
+        self.play(
+            h1_electrons.animate.set_color(RED),
+            h2_electrons.animate.set_color(RED),
+        )
+        self.play(
+            h2_electrons.animate.set_color(BLUE),
+        )
+
 
 
 if __name__ == "__main__":

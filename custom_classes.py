@@ -38,6 +38,8 @@ from PIL.Image import Image
 from typing import Any
 
 import numpy.typing as npt
+from manim.utils.color.X11 import VIOLET, CYAN1, BEIGE
+from pandas.core.dtypes.inference import is_integer
 from typing_extensions import Self
 
 from manim.typing import (
@@ -335,6 +337,7 @@ class Prikformel(VGroup):
             number_of_valence_electrons: int = 1,
             label_color: ParsableManimColor | None = WHITE,
             unpaired_location: Vector3D = RIGHT,
+            rotation: float = 0.0,
             **kwargs
     ):
         super().__init__(**kwargs)
@@ -342,23 +345,17 @@ class Prikformel(VGroup):
         self.number_of_valence_electrons = number_of_valence_electrons
         self.label_color = label_color
         self.unpaired_location = unpaired_location
+        self.rotation = rotation
         self.label_group = self.make_label_group()
         self.locations = self.calculate_electron_positions()
         self.electron_group = self.populate_electrons()
         self.add(self.make_label_group(), self.populate_electrons())
 
     def make_label_group(self, **kwargs):
-        return Text(self.atom_label, **kwargs)
+        return Text(self.atom_label, color=self.label_color, **kwargs)
 
     def calculate_electron_positions(self):
         locations = []
-        # for offset in [1, -1]:
-        #     for i, direction in enumerate([UP, RIGHT, DOWN, LEFT]):
-        #         loc = self.label_group.get_edge_center(direction)
-        #         # loc += 0.5 * offset * LEFT if direction == UP else 0.5 * offset * UP
-        #         loc += 0.2 * offset * (i%2*UP + (i+1)%2*LEFT) + 0.2 * direction
-        #         # loc += 0.2 * offset * (i % 2 * UP + (i + 1) % 2 * LEFT) + 0.2 * direction
-        #         locations.append(loc)
         for direction in [
             (UP, LEFT), (RIGHT, UP), (DOWN, RIGHT), (LEFT, DOWN), (UP, RIGHT), (RIGHT, DOWN), (DOWN, LEFT), (LEFT, UP)
         ]:
@@ -377,6 +374,61 @@ class Prikformel(VGroup):
         for i_electron, loc in zip(range(self.number_of_valence_electrons), self.calculate_electron_positions()):
             electron = self._electron()
             electron.move_to(loc)
+            electron.rotate(self.rotation, about_point=ORIGIN)
             electron_group.add(electron)
         return electron_group
+
+    def get_electron_group(self):
+        return self.electron_group
+
+    def get_atomic_label(self):
+        return self.atom_label
+
+
+class Molecule2D(VGroup):
+    def __init__(
+            self,
+            atoms_dict: dict,
+            bonds_dict: dict | None = None,
+            bond_length: float = 0.5,
+            add_element_label: bool = True,
+            **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.atoms_dict = atoms_dict
+        self.bonds_dict = bonds_dict
+        self.bond_length = bond_length
+        self.add_element_label = add_element_label
+        self.color_dict = {
+            "H": WHITE, "C": BLACK, "N": BLUE, "O": RED, "F": GREEN, "Cl": GREEN, "Br": RED_A, "I": VIOLET,
+            "He": CYAN1, "Ne": CYAN1, "Ar": CYAN1, "Kr": CYAN1, "Xe": CYAN1, "Rn": CYAN1,
+            "P": ORANGE, "S": YELLOW, "B": BEIGE, "Li": VIOLET, "Na": VIOLET, "K": VIOLET, "Rb": VIOLET, "Cs": VIOLET,
+            "Fr": VIOLET, "Be": GREEN_A, "Mg": GREEN_A, "Ca": GREEN_A, "Sr": GREEN_A, "Ba": GREEN_A, "Ra": GREEN_A,
+            "Ti": GREY, "Fe": ORANGE
+        }
+        self.add(self.create_atoms())
+
+    def _base_atom(self, element):
+        atom_label = ""
+        for c in element:
+            try:
+                int(c)
+            except:
+                atom_label += c
+        atom = VGroup(
+            Circle(
+                radius=0.25, fill_color=self.color_dict[atom_label], fill_opacity=1, stroke_width=0,
+                stroke_color=self.color_dict[atom_label]
+            )
+        )
+        if self.add_element_label:
+            atom.add(Tex(atom_label, color=BLACK if atom_label != "C" else WHITE).scale(0.5))
+        return atom
+
+    def create_atoms(self):
+        atoms = VGroup()
+        for atom, loc in self.atoms_dict.items():
+            # atoms[atom] = self._base_atom(atom).move_to(loc)
+            atoms.add(self._base_atom(atom).move_to(loc))
+        return atoms
 
