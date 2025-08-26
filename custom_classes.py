@@ -388,7 +388,7 @@ class Prikformel(VGroup):
 class Molecule2D(VGroup):
     def __init__(
             self,
-            atoms_dict: dict,
+            atoms_dict: dict,  # dict: {"element": [x, y, z, charge]}
             bonds_dict: dict | None = None,
             bond_length: float = 0.5,
             add_element_label: bool = True,
@@ -408,7 +408,7 @@ class Molecule2D(VGroup):
         }
         self.add(self.create_atoms())
 
-    def _base_atom(self, element):
+    def _base_atom(self, element, charge=0):
         atom_label = ""
         for c in element:
             try:
@@ -422,13 +422,26 @@ class Molecule2D(VGroup):
             )
         )
         if self.add_element_label:
-            atom.add(Tex(atom_label, color=BLACK if atom_label != "C" else WHITE).scale(0.5))
+            # if charge != 0:
+            #     charge = str(charge) if charge < 0 else f"+{charge}"
+            if charge > 0:
+                charge = (str(charge) if charge > 1 else "") + "+"
+            elif charge < 0:
+                charge = (str(np.abs(charge)) if charge < -1 else "") + "-"
+            else:
+                charge = ""
+            atom.add(
+                Tex(
+                    f"{atom_label}$^{{{charge}}}$", color=BLACK if atom_label != "C" else WHITE
+                ).scale(0.5 if not charge else 0.4)
+            )
         return atom
 
     def create_atoms(self):
         atoms = VGroup()
         for atom, loc in self.atoms_dict.items():
+            loc, charge = loc[:3], loc[3]
             # atoms[atom] = self._base_atom(atom).move_to(loc)
-            atoms.add(self._base_atom(atom).move_to(loc))
+            atoms.add(self._base_atom(atom, charge=charge).move_to(loc))
         return atoms
 

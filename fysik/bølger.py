@@ -10,7 +10,7 @@ slides = True
 if slides:
     from manim_slides import Slide
 
-q = "l"
+q = "h"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -23,12 +23,12 @@ _FRAMERATE = {
 }
 
 
-class Egenskaber(Slide if slides else Scene):
+class Egenskaber(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
-        self.wavelength()
-        self.amplitude()
+        # self.wavelength()
+        # self.amplitude()
         self.frekvens()
-        self.fart()
+        # self.fart()
 
         self.slide_pause(5)
 
@@ -107,7 +107,8 @@ class Egenskaber(Slide if slides else Scene):
         )
         self.slide_pause()
 
-        for x in [1, 3, 4.5, 6, l_tracker.get_value()/4]:
+        # for x in [1, 3, 4.5, 6, l_tracker.get_value()/4]:
+        for x in [1, PI, -PI, PI/2]:
             self.play(
                 x0_tracker.animate.set_value(x),
                 run_time=2
@@ -127,10 +128,13 @@ class Egenskaber(Slide if slides else Scene):
         #     include_sign=False,
         #     color=RED
         # ).next_to(length_brace, UP))
-        length_number = always_redraw(lambda: MathTex(
-            f"{l_tracker.get_value():.2f}",
-            color=RED
-        ).next_to(length_brace, UP))
+        # length_number = always_redraw(lambda: MathTex(
+        #     f"{l_tracker.get_value():.2f}",
+        #     color=RED
+        # ).next_to(length_brace, UP))
+        length_number = always_redraw(lambda:
+            DecimalNumber(l_tracker.get_value(), num_decimal_places=2, color=RED).next_to(length_brace, UP)
+        )
         self.play(
             GrowFromCenter(length_brace)
         )
@@ -140,37 +144,45 @@ class Egenskaber(Slide if slides else Scene):
         )
         self.slide_pause()
 
-        for x in np.random.uniform(-5, 5, 5):
+        # for x in np.random.uniform(-5, 5, 5):
+        for x in [1, PI, -PI, PI/2]:
             self.play(
                 x0_tracker.animate.set_value(x),
                 run_time=3
             )
             xs_pause(self)
         self.play(
-            x0_tracker.animate.set_value(-0.5*l_tracker.get_value()),
+            # x0_tracker.animate.set_value(-0.5*l_tracker.get_value()),
+            x0_tracker.animate.set_value(l_tracker.get_value()),
             run_time=3
         )
         self.slide_pause()
 
         length_text = always_redraw(lambda:
-            MathTex(
-                r"\lambda=",
-                f"{l_tracker.get_value():.2f}",
-                color=RED
-            ).next_to(length_brace, UP)
+            # MathTex(
+            #     r"\lambda=",
+            #     f"{l_tracker.get_value():.2f}",
+            #     color=RED
+            # ).next_to(length_brace, UP)
+            VGroup(
+                MathTex(r"\lambda=", color=RED),
+                DecimalNumber(l_tracker.get_value(), num_decimal_places=2, color=RED)
+            ).arrange(RIGHT).next_to(length_brace, UP)
         )
         self.play(
-            TransformMatchingTex(length_number, length_text, transform_mismatches=True)
+            TransformMatchingShapes(length_number, length_text, transform_mismatches=False)
         )
         self.slide_pause()
 
-        for l in [5, 3, 2, 6, 1, 0.4, 10, 6]:
+        # for l in [5, 3, 2, 6, 1, 0.4, 10, 6]:
+        for l in [7, 2, 0.5, 10, 6]:
             self.play(
                 l_tracker.animate.set_value(l),
                 x0_tracker.animate.set_value(-0.5*l),
                 run_time=4
             )
-            self.slide_pause(0.1)
+            xs_pause(self)
+            # self.slide_pause(0.1)
 
         self.play(
             *[FadeOut(m) for m in self.mobjects if m not in [plane, wave]]
@@ -238,7 +250,7 @@ class Egenskaber(Slide if slides else Scene):
         )
         self.slide_pause()
 
-        for amp in [1, 2, 7, amp_tracker.get_value()]:
+        for amp in [1, 7, 2, amp_tracker.get_value()]:
             self.play(
                 amp_tracker.animate.set_value(amp),
                 run_time=2
@@ -258,10 +270,16 @@ class Egenskaber(Slide if slides else Scene):
             color=GREEN,
             direction=LEFT
         ))
-        amp_text = always_redraw(lambda: MathTex(
-            f"A={amp_tracker.get_value():.1f}",
-            color=GREEN
-        ).next_to(amp_brace, LEFT))
+        # amp_text = always_redraw(lambda: MathTex(
+        #     f"A={amp_tracker.get_value():.1f}",
+        #     color=GREEN
+        # ).next_to(amp_brace, LEFT))
+        amp_text = always_redraw(lambda:
+            VGroup(
+                MathTex("A=", color=GREEN),
+                DecimalNumber(amp_tracker.get_value(), num_decimal_places=1, color=GREEN)
+            ).arrange(RIGHT).next_to(amp_brace, LEFT)
+        )
         # srec = VGroup(*[get_background_rect(m) for m in [amp_brace, amp_text]])
         self.play(
             Create(amp_full)
@@ -278,14 +296,14 @@ class Egenskaber(Slide if slides else Scene):
         )
         self.slide_pause()
 
-        for amp in [1, 2, 7, amp_tracker.get_value()]:
+        for amp in [1, 7, 2, amp_tracker.get_value()]:
             self.play(
                 amp_tracker.animate.set_value(amp),
                 run_time=2
             )
             self.slide_pause(0.1)
 
-        for off in [1, 2, -3, 4, offset.get_value()]:
+        for off in [1, -3, 4, offset.get_value()]:
             self.play(
                 offset.animate.set_value(off),
                 run_time=2
@@ -342,14 +360,15 @@ class Egenskaber(Slide if slides else Scene):
         self.slide_pause()
 
         if slides:
-            self.start_loop()
-            self.play(amp_tracker.animate.set_value(-4),
-                      rate_func=rate_functions.linear,
-                      run_time=2)
-            self.play(amp_tracker.animate.set_value(4),
-                      rate_func=rate_functions.linear,
-                      run_time=2)
-            self.end_loop()
+            # self.start_loop()
+            for _i in range(10):
+                self.play(amp_tracker.animate.set_value(-4),
+                          rate_func=rate_functions.linear,
+                          run_time=2 / (_i//5 + 1))
+                self.play(amp_tracker.animate.set_value(4),
+                          rate_func=rate_functions.linear,
+                          run_time=2 / (_i//5 + 1))
+            # self.end_loop()
         else:
             for i in range(11):
                 self.play(
@@ -360,12 +379,12 @@ class Egenskaber(Slide if slides else Scene):
         self.slide_pause()
 
         if slides:
-            self.start_loop()
+            # self.start_loop()
             self.play(phase_tracker.animate.set_value(32*PI),
                       rate_func=rate_functions.linear,
                       run_time=32)
             phase_tracker.set_value(0)
-            self.end_loop()
+            # self.end_loop()
         else:
             for i, phase in zip([1, 2, 1], [16*PI, -16*PI, 0]):
                 self.play(
@@ -379,6 +398,7 @@ class Egenskaber(Slide if slides else Scene):
         #     *[FadeOut(m) for m in self.mobjects if m not in [plane, wave]]
         # )
         # self.remove(plane, wave)
+        self.slide_pause()
         self.play(
             *[FadeOut(m) for m in self.mobjects]
         )
@@ -482,8 +502,10 @@ class Egenskaber(Slide if slides else Scene):
                 VGroup(*[
                     Dot(
                         plane.c2p(x, 2*np.sin(x*2*PI/length + phase_tracker.get_value())),
-                        color=color, radius=0.04
-                    ) for x in np.linspace(-6.5, 6.5, 61)
+                        radius=0.08 if 2*np.sin(x*2*PI/length + phase_tracker.get_value()) >= 1.95 else 0.04,
+                        color=YELLOW if 2*np.sin(x*2*PI/length + phase_tracker.get_value()) >= 1.95 else color
+                    # ) for x in np.linspace(-6.5, 6.5, 61)
+                   ) for x in np.linspace(-6.5, 6.5, 91)
                 ]) for plane, phase_tracker, color in zip(planes, phase_trackers, colors)
             ]))
         dots = always_redraw(lambda: VGroup(*[
@@ -498,8 +520,8 @@ class Egenskaber(Slide if slides else Scene):
             ) for plane, phase_tracker in zip(planes, phase_trackers)
         ]))
         self.play(Create(wave_dots))
-        self.play(DrawBorderThenFill(dots))
-        self.add(dots)
+        # self.play(DrawBorderThenFill(dots))
+        # self.add(dots)
         self.slide_pause()
 
         v_texts = VGroup(
@@ -524,13 +546,13 @@ class Egenskaber(Slide if slides else Scene):
         )
         self.slide_pause()
         if slides:
-            self.start_loop()
+            # self.start_loop()
             self.play(
                 *[phase_tracker.animate.set_value(4*PI*v) for phase_tracker, v in zip(phase_trackers, vs)],
                 rate_func=rate_functions.linear,
                 run_time=4*PI
             )
-            self.end_loop()
+            # self.end_loop()
         else:
             tid = 30
             self.play(
@@ -540,6 +562,7 @@ class Egenskaber(Slide if slides else Scene):
             )
             self.slide_pause()
 
+        self.slide_pause()
         self.play(
             *[FadeOut(m) for m in self.mobjects]
         )
@@ -943,11 +966,19 @@ class Doppler(MovingCameraScene, Scene if not slides else Slide):
 
 
 if __name__ == "__main__":
-    cls = Doppler
-    class_name = cls.__name__
-    # transparent = cls.btransparent
-    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
-    # if transparent:
-    #     command += " --transparent --format=webm"
-    scene_marker(rf"RUNNNING:    {command}")
-    subprocess.run(command)
+    classes = [
+        Egenskaber,
+    ]
+    for cls in classes:
+        class_name = cls.__name__
+        command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+        scene_marker(rf"RUNNNING:    {command}")
+        subprocess.run(command)
+        if slides and q == "h":
+            command = rf"manim-slides convert {class_name} {class_name}.html --one-file --offline"
+            scene_marker(rf"RUNNNING:    {command}")
+            subprocess.run(command)
+            # if class_name + "Thumbnail" in dir():
+            #     command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+            #     scene_marker(rf"RUNNNING:    {command}")
+            #     subprocess.run(command)

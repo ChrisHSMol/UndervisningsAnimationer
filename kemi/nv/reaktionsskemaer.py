@@ -33,15 +33,28 @@ class IntroTilReaktioner(MovingCameraScene, Slide if slides else Scene):
         play_title2(self, "Intro til reaktioner")
         self.grundprincipper()
         self.eksempel_no2()
+        self.tilstandsformer()
+        self.eksempel_cacl2()
 
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t, slides_bool)
 
     def get_cmap(self):
-        return {"reak": GREEN, "prod": GOLD}
+        return {"reak": GREEN, "prod": GOLD, "(s)": RED, "(l)": YELLOW, "(g)": GREEN, "(aq)": BLUE}
 
     def grundprincipper(self):
         _c = self.get_cmap()
+        titel = Tex("Reaktionsskema").scale(2).to_edge(UP)
+        titel_underline = Line(
+            start=titel.get_corner(DL) + 0.25*DL + LEFT, end=titel.get_corner(DR) + 0.25*DR + RIGHT,
+            stroke_opacity=[0, 1, 0], stroke_width=3
+        )
+        self.play(
+            Write(titel),
+            Create(titel_underline, run_time=0.5)
+        )
+        self.slide_pause()
+
         reaktant_og_produkt = Tex(
             "Reaktanter", r"$\longrightarrow$", "Produkter"
         ).scale(2)
@@ -93,9 +106,9 @@ class IntroTilReaktioner(MovingCameraScene, Slide if slides else Scene):
             rs[6].set_color(BLACK if int(rs[6].get_tex_string()) == 1 else YELLOW)
             rs[7].set_color(_c["prod"])
 
-        n2_structure = {"N1": [0, 0, 0], "N2": [0.5, 0, 0]}
-        o2_structure = {"O1": [0, 0, 0], "O2": [0.5, 0, 0]}
-        no2_structure = {"N1": [0, 0, 0], "O1": [0.5, 0, 0], "O2": [-0.155, -0.476, 0]}
+        n2_structure = {"N1": [0, 0, 0, 0], "N2": [0.5, 0, 0, 0]}
+        o2_structure = {"O1": [0, 0, 0, 0], "O2": [0.5, 0, 0, 0]}
+        no2_structure = {"N1": [0, 0, 0, 0], "O1": [0.5, 0, 0, 0], "O2": [-0.155, -0.476, 0, 0]}
         molecules = VGroup(
             *[
                 Molecule2D(s) for s in [n2_structure, o2_structure, o2_structure, no2_structure, no2_structure]
@@ -137,11 +150,11 @@ class IntroTilReaktioner(MovingCameraScene, Slide if slides else Scene):
                 Tex("Venstre").move_to(table_structure[0][1]), Tex("Højre").move_to(table_structure[0][2])
             ),
             VGroup(
-                Molecule2D({"N": [0, 0, 0]}).move_to(table_structure[1][0]),
+                Molecule2D({"N": [0, 0, 0, 0]}).move_to(table_structure[1][0]),
                 Integer(2).move_to(table_structure[1][1]), Integer(1).move_to(table_structure[1][2])
             ),
             VGroup(
-                Molecule2D({"O": [0, 0, 0]}).move_to(table_structure[2][0]),
+                Molecule2D({"O": [0, 0, 0, 0]}).move_to(table_structure[2][0]),
                 Integer(2).move_to(table_structure[2][1]), Integer(2).move_to(table_structure[2][2])
             )
         # ).arrange(DOWN, aligned_edge=RIGHT).to_edge(UR)
@@ -181,6 +194,114 @@ class IntroTilReaktioner(MovingCameraScene, Slide if slides else Scene):
             Write(molecules[2]),
             stoich_table[2][1].animate.set_value(4),
             FadeOut(reaktionsskema[1], run_time=_ONEFRAME)
+        )
+        self.slide_pause()
+
+        self.play(
+            LaggedStart(
+                *[FadeOut(m) for m in self.mobjects],
+                lag_ratio=0.05
+            )
+        )
+
+    def tilstandsformer(self):
+        _c = self.get_cmap()
+        titel = Tex("Tilstandsformer").scale(2).to_edge(UP)
+        titel_underline = Line(
+            start=titel.get_corner(DL) + 0.25*DL + LEFT, end=titel.get_corner(DR) + 0.25*DR + RIGHT,
+            stroke_opacity=[0, 1, 0], stroke_width=3
+        )
+        self.play(
+            Write(titel),
+            Create(titel_underline, run_time=0.5)
+        )
+        self.slide_pause()
+
+        forklaring = VGroup(
+            Tex("I kemi er der 4 tilstandsformer:"),
+            Tex("(s)", ": \"solid\"", ", altså fast"),
+            Tex("(l)", ": \"liquid\"", ", altså flydende"),
+            Tex("(g)", ": \"gaseous\"", ", altså gas"),
+            Tex("(aq)", ": \"aqueous\"", ", altså vandig opløsning")
+        ).arrange(DOWN, aligned_edge=LEFT).to_edge(DOWN)
+        for t, c in zip(forklaring[1:], [_c["(s)"], _c["(l)"], _c["(g)"], _c["(aq)"]]):
+            t[0][1:-1].set_color(c)
+            # t[0].set_style({"font": "monospace"})
+            t[1][2:-1].set_color(c)
+
+        self.play(
+            Write(forklaring[0])
+        )
+        self.slide_pause()
+        for t in forklaring[1:]:
+            self.play(
+                LaggedStart(
+                    Write(t[0], run_time=0.5),
+                    Write(t[1:]),
+                    lag_ratio=0.5
+                ),
+                run_time=1
+            )
+            self.slide_pause()
+
+        self.play(
+            LaggedStart(
+                *[FadeOut(m) for m in self.mobjects],
+                lag_ratio=0.05
+            )
+        )
+
+    def eksempel_cacl2(self):
+        _c = self.get_cmap()
+        reaktionsstype = Tex("Opløsning af CaCl$_2$ i vand:").shift(UP)
+        reaktionsskema = Tex(
+            "CaCl$_2$", "(s)", r"$\longrightarrow$", "Ca$^{2+}$", "(aq)", "+", "2", "Cl$^-$", "(aq)"
+        )
+        reaktionsskema[1][1].set_color(_c["(s)"])
+        reaktionsskema[4][1:3].set_color(_c["(aq)"])
+        reaktionsskema[8][1:3].set_color(_c["(aq)"])
+        self.play(
+            Write(reaktionsstype)
+        )
+        self.slide_pause()
+
+        cacl2_structure = {"Ca1": [0, 0, 0, 0], "Cl1": [0.5, 0, 0, 0], "Cl2": [-0.155, -0.476, 0, 0]}
+        ca_structure = {"Ca1": [0, 0, 0, 2]}
+        cl_structure = {"Cl1": [0, 0, 0, -1]}
+        molecules = VGroup(
+            *[
+                Molecule2D(s) for s in [cacl2_structure, ca_structure, cl_structure, cl_structure]
+            ]
+        )
+        molecules[0].next_to(reaktionsskema[0], DOWN)
+        molecules[1].next_to(reaktionsskema[3], DOWN)
+        molecules[2].next_to(reaktionsskema[7], DOWN)
+        molecules[3].next_to(molecules[2], DOWN)
+
+        self.play(
+            Write(reaktionsskema[:2]),
+            Write(molecules[0])
+        )
+        self.slide_pause()
+
+        self.play(
+            Write(reaktionsskema[2:5]),
+            Write(molecules[1])
+        )
+        self.slide_pause()
+
+        self.play(
+            LaggedStart(
+                Indicate(reaktionsskema[0][-1]),
+                Write(reaktionsskema[5:]),
+                Write(molecules[2]),
+                lag_ratio=1
+            )
+        )
+        self.play(
+            reaktionsskema[0][-1].animate.set_color(YELLOW),
+            reaktionsskema[-3].animate.set_color(YELLOW),
+            FadeIn(molecules[3], shift=molecules[3].get_center() - molecules[2].get_center())
         )
         self.slide_pause()
 

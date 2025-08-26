@@ -8,7 +8,8 @@ sys.path.append("../../")
 import numpy as np
 import subprocess
 from helpers import *
-from custom_classes import Prikformel
+# from custom_classes import *
+from manim_chemistry import *
 
 slides = True
 if slides:
@@ -28,12 +29,28 @@ _FRAMERATE = {
 _ONEFRAME = 1/_FRAMERATE[q]
 
 
-class KovalenteBindinger(MovingCameraScene, Slide if slides else Scene):
+class AtomPrikformel(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
-        self.prikformler()
+        self.bohr_atom()
 
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t, slides_bool)
+
+    def bohr_atom(self):
+        atomer = VGroup(
+            *[
+                BohrAtom(
+                    e=i+1, p=i+1, n=neu
+                ) for i, neu in enumerate([1, 4, 7, 9, 10, 12, 14, 16, 19, 21])
+            ]
+        ).scale(0.5).arrange(RIGHT)
+        self.add(atomer)
+        self.slide_pause()
+
+
+class KovalenteBindinger(AtomPrikformel):
+    def construct(self):
+        self.prikformler()
 
     def prikformler(self):
         h1 = Prikformel(
@@ -71,10 +88,10 @@ class KovalenteBindinger(MovingCameraScene, Slide if slides else Scene):
         )
 
 
-
 if __name__ == "__main__":
     classes = [
-        KovalenteBindinger,
+        AtomPrikformel,
+        # KovalenteBindinger,
     ]
     for cls in classes:
         class_name = cls.__name__
