@@ -164,9 +164,12 @@ class Modulation(MovingCameraScene, Slide if slides else Scene):
         ))
         fm_wave = always_redraw(lambda: planes[2].plot(
             # lambda x: message_wave.underlying_function(x) + carrier_wave.underlying_function(x),
-            lambda x: carrier_amp_tracker.get_value() * np.sin(
+            # lambda x: np.sin(
                 # 2*x*PI/(carrier_lambda_tracker.get_value() * message_lambda_tracker.get_value())
-                np.sin(2*x*PI/(carrier_lambda_tracker.get_value() * message_lambda_tracker.get_value()))
+                # np.sin(2*x*PI/(carrier_lambda_tracker.get_value() * message_lambda_tracker.get_value()))
+            lambda x: carrier_lambda_tracker.get_value() * np.sin(2*x*PI/carrier_lambda_tracker.get_value() * 0.5*(
+                    np.sin(2*x*PI/message_lambda_tracker.get_value() + message_phase_tracker.get_value()) * message_amp_tracker.get_value() + 1
+            )
             ),
             color=GREEN
         ))

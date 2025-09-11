@@ -156,6 +156,7 @@ class Tetraeder(ThreeDScene, Slide if slides else Scene):
             run_time=2
         )
         self.wait(20)
+        self.slide_pause()
         self.stop_ambient_camera_rotation()
         self.remove(*self.mobjects)
 
@@ -191,7 +192,7 @@ class Tetraeder(ThreeDScene, Slide if slides else Scene):
                 ) for a in atoms
             ]
         )
-        name = Tex("Methan, CH$_4$").next_to(atoms, DOWN)
+        name = Tex("Methan, CH$_4$").scale(2).to_edge(DOWN)
         self.add_fixed_in_frame_mobjects(name)
         self.add(atoms, center, bonds)
         # self.slide_pause()
@@ -251,7 +252,7 @@ class Tetraeder(ThreeDScene, Slide if slides else Scene):
                 Dot3D(radius=0.0375, color=YELLOW, stroke_width=0).shift(0.5*OUT+0.075*LEFT)
             )
         )
-        name = Tex("Ammoniak, NH$_3$").next_to(atoms, DOWN)
+        name = Tex("Ammoniak, NH$_3$").scale(2).to_edge(DOWN)
         self.add_fixed_in_frame_mobjects(name)
         self.add(atoms, center, bonds)
         # self.slide_pause()
@@ -314,7 +315,7 @@ class Tetraeder(ThreeDScene, Slide if slides else Scene):
         atoms.add(
             atoms[-1].copy().rotate(120*DEGREES, axis=bonds[0].get_direction(), about_point=center.get_center())
         )
-        name = Tex("Vand, H$_2$O").next_to(atoms, DOWN)
+        name = Tex("Vand, H$_2$O").scale(2).to_edge(DOWN)
         self.add_fixed_in_frame_mobjects(name)
         self.add(atoms, center, bonds)
         # self.slide_pause()
