@@ -32,7 +32,7 @@ _ONEFRAME = 1/_FRAMERATE[q]
 class Modulation(MovingCameraScene, Slide if slides else Scene):
     def construct(self):
         # self.vigtige_begreber()
-        # self.am_modulering()
+        self.am_modulering()
         self.fm_modulering()
 
     def slide_pause(self, t=1.0, slides_bool=slides):
@@ -51,7 +51,7 @@ class Modulation(MovingCameraScene, Slide if slides else Scene):
         carrier_phase_tracker = ValueTracker(0)
         planes = VGroup(*[
             NumberPlane(
-                x_range=[0, 64, 1],
+                x_range=[-32, 32, 1],
                 y_range=[-3, 3, 1],
                 x_length=16,
                 y_length=3,
@@ -81,10 +81,13 @@ class Modulation(MovingCameraScene, Slide if slides else Scene):
         ))
         am_wave = always_redraw(lambda: planes[2].plot(
             # lambda x: message_wave.underlying_function(x) + carrier_wave.underlying_function(x),
-            lambda x: message_wave.underlying_function(x) * carrier_wave.underlying_function(x),
+            lambda x: (message_wave.underlying_function(x)+1) * carrier_wave.underlying_function(x),
             color=GREEN
         ))
-        message_wave_copy = always_redraw(lambda: message_wave.copy().set_style(stroke_opacity=0.5).move_to(am_wave))
+        # message_wave_copy = always_redraw(lambda: message_wave.copy().set_style(stroke_opacity=0.5).move_to(am_wave))
+        message_wave_copy = always_redraw(lambda:
+            planes[2].plot(lambda x: message_wave.underlying_function(x) + 1, color=BLUE, stroke_opacity=0.5)
+        )
         self.add(planes, message_wave, carrier_wave, am_wave, message_wave_copy, labels)
         self.slide_pause()
 
@@ -124,6 +127,7 @@ class Modulation(MovingCameraScene, Slide if slides else Scene):
             run_time=5
         )
         self.slide_pause()
+        self.remove(planes, message_wave, carrier_wave, am_wave, message_wave_copy, labels)
 
     def fm_modulering(self):
         message_amp_tracker = ValueTracker(1)
@@ -134,7 +138,7 @@ class Modulation(MovingCameraScene, Slide if slides else Scene):
         carrier_phase_tracker = ValueTracker(0)
         planes = VGroup(*[
             NumberPlane(
-                x_range=[0, 64, 1],
+                x_range=[-32, 32, 1],
                 y_range=[-3, 3, 1],
                 x_length=16,
                 y_length=3,
@@ -165,15 +169,20 @@ class Modulation(MovingCameraScene, Slide if slides else Scene):
         fm_wave = always_redraw(lambda: planes[2].plot(
             # lambda x: message_wave.underlying_function(x) + carrier_wave.underlying_function(x),
             # lambda x: np.sin(
-                # 2*x*PI/(carrier_lambda_tracker.get_value() * message_lambda_tracker.get_value())
-                # np.sin(2*x*PI/(carrier_lambda_tracker.get_value() * message_lambda_tracker.get_value()))
-            lambda x: carrier_lambda_tracker.get_value() * np.sin(2*x*PI/carrier_lambda_tracker.get_value() * 0.5*(
-                    np.sin(2*x*PI/message_lambda_tracker.get_value() + message_phase_tracker.get_value()) * message_amp_tracker.get_value() + 1
-            )
+            #     2*x*PI/((carrier_lambda_tracker.get_value())+1) * message_wave.underlying_function(x)
+            #     np.sin(2*x*PI/(carrier_lambda_tracker.get_value() * message_lambda_tracker.get_value()))
+            # lambda x: carrier_lambda_tracker.get_value() * np.sin(2*x*PI/carrier_lambda_tracker.get_value() * 0.5*(
+            #         np.sin(2*x*PI/message_lambda_tracker.get_value() + message_phase_tracker.get_value()) * message_amp_tracker.get_value() + 1
+            # )
+            lambda x: np.sin(
+                4*x*x*PI*PI/(((carrier_lambda_tracker.get_value())+1) * message_wave.underlying_function(x))
             ),
             color=GREEN
         ))
-        message_wave_copy = always_redraw(lambda: message_wave.copy().set_style(stroke_opacity=0.5).move_to(fm_wave))
+        # message_wave_copy = always_redraw(lambda: message_wave.copy().set_style(stroke_opacity=0.5).move_to(fm_wave))
+        message_wave_copy = always_redraw(lambda:
+            planes[2].plot(lambda x: message_wave.underlying_function(x)+1, color=BLUE, stroke_opacity=0.5)
+        )
         self.add(planes, message_wave, carrier_wave, fm_wave, message_wave_copy, labels)
         self.slide_pause()
 
