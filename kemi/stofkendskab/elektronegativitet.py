@@ -169,7 +169,7 @@ class ElektronegativitetTabel(MovingCameraScene, Slide if slides else Scene):
         self.play(
             *[dots[i].animate.set_opacity(1.0) for i in periods[0]],
             *[dot_labels[i].animate.set_opacity(1.0) for i in periods[0]],
-            FadeIn(periode_tekst[0], shift=RIGHT)
+            FadeIn(periode_tekst[0], shift=UP)
         )
         self.slide_pause()
 
@@ -179,22 +179,22 @@ class ElektronegativitetTabel(MovingCameraScene, Slide if slides else Scene):
                 *[dot_labels[i].animate.set_opacity(0.2) for i in periods[iper]],
                 *[dots[i].animate.set_opacity(1.0) for i in period],
                 *[dot_labels[i].animate.set_opacity(1.0) for i in period],
-                FadeOut(periode_tekst[iper], shift=RIGHT),
-                FadeIn(periode_tekst[iper+1], shift=RIGHT)
+                FadeOut(periode_tekst[iper], shift=UP),
+                FadeIn(periode_tekst[iper+1], shift=UP)
             )
             self.slide_pause()
 
         self.play(
             *[dots[i].animate.set_opacity(1.0) for i in range(Z_max)],
             *[dot_labels[i].animate.set_opacity(1.0) for i in range(Z_max)],
-            FadeOut(periode_tekst[-1], shift=RIGHT)
+            FadeOut(periode_tekst[-1], shift=UP)
         )
         self.slide_pause()
 
         self.play(
             *[dots[i].animate.set_opacity(0.2) for i in range(Z_max) if i not in groups[0]],
             *[dot_labels[i].animate.set_opacity(0.2) for i in range(Z_max) if i not in groups[0]],
-            FadeIn(gruppe_tekst[0], shift=DOWN)
+            FadeIn(gruppe_tekst[0], shift=RIGHT)
         )
         self.slide_pause()
 
@@ -204,15 +204,15 @@ class ElektronegativitetTabel(MovingCameraScene, Slide if slides else Scene):
                 *[dot_labels[i].animate.set_opacity(0.2) for i in groups[igr]],
                 *[dots[i].animate.set_opacity(1.0) for i in group],
                 *[dot_labels[i].animate.set_opacity(1.0) for i in group],
-                FadeOut(gruppe_tekst[igr], shift=DOWN),
-                FadeIn(gruppe_tekst[igr+1], shift=DOWN)
+                FadeOut(gruppe_tekst[igr], shift=RIGHT),
+                FadeIn(gruppe_tekst[igr+1], shift=RIGHT)
             )
             self.slide_pause()
 
         self.play(
             *[dots[i].animate.set_opacity(1.0) for i in range(Z_max)],
             *[dot_labels[i].animate.set_opacity(1.0) for i in range(Z_max)],
-            FadeOut(gruppe_tekst[-1], shift=DOWN)
+            FadeOut(gruppe_tekst[-1], shift=RIGHT)
         )
         self.slide_pause()
         self.remove(*self.mobjects)
@@ -306,17 +306,17 @@ class ElektronegativitetTabel(MovingCameraScene, Slide if slides else Scene):
         self.slide_pause()
 
         udregning = VGroup(
-            MathTex(r"\Delta EN_{NaCl}", " = ", r"EN_{Na}", " - ", r"EN_{Cl}"),
+            MathTex(r"\Delta EN_{NaCl}", " = ", r"EN_{Cl}", " - ", r"EN_{Na}"),
             MathTex(r"\Delta EN_{NaCl}", " = ", en_values[1].get_value(), " - ", en_values[0].get_value()),
             MathTex(r"\Delta EN_{NaCl}", " = ", f"{en_values[1].get_value() - en_values[0].get_value():.2f}")
         ).arrange(DOWN, aligned_edge=LEFT).next_to(nacl_molecule, RIGHT, buff=3).shift(DOWN)
         [i[0][0].set_color(BLUE) for i in udregning]
         [i[0][3:5].set_color(nacl_molecule[0][0][0].get_fill_color()) for i in udregning]
-        udregning[0][2][2:].set_color(nacl_molecule[0][0][0].get_fill_color())
-        udregning[1][2].set_color(nacl_molecule[0][0][0].get_fill_color())
+        udregning[0][2][2:].set_color(nacl_molecule[0][1][0].get_fill_color())
+        udregning[1][2].set_color(nacl_molecule[0][1][0].get_fill_color())
         [i[0][5:].set_color(nacl_molecule[0][1][0].get_fill_color()) for i in udregning]
-        udregning[0][4][2:].set_color(nacl_molecule[0][1][0].get_fill_color())
-        udregning[1][4].set_color(nacl_molecule[0][1][0].get_fill_color())
+        udregning[0][4][2:].set_color(nacl_molecule[0][0][0].get_fill_color())
+        udregning[1][4].set_color(nacl_molecule[0][0][0].get_fill_color())
         # symbolforklaring = Tex(r"\Delta (Delta) betyder \"\ae ndring\"").next_to(udregning, UP, aligned_edge=LEFT)
         # symbolforklaring[0].set_color(BLUE)
         # self.add(udregning)
@@ -338,9 +338,17 @@ class ElektronegativitetTabel(MovingCameraScene, Slide if slides else Scene):
         self.slide_pause()
 
 
+class PolarBonds(ElektronegativitetTabel):
+    def construct(self):
+        # molekyler, hvor bindingerne bliver gradientfarvet fra f.eks. blå til rød med intensitet svarende til
+        # deres EN-forskel. Upolære bindinger er hvide.
+        pass
+
+
 if __name__ == "__main__":
     classes = [
         ElektronegativitetTabel,
+        # PolarBonds
     ]
     for cls in classes:
         class_name = cls.__name__
