@@ -389,7 +389,7 @@ class Molecule2D(VGroup):
     def __init__(
             self,
             atoms_dict: dict,  # dict: {"element": [x, y, z, charge]}
-            bonds_dict: dict | None = None,
+            bonds_dict: dict | None = None,  # not implemented yet
             bond_length: float = 0.5,
             add_element_label: bool = True,
             **kwargs
@@ -444,4 +444,12 @@ class Molecule2D(VGroup):
             # atoms[atom] = self._base_atom(atom).move_to(loc)
             atoms.add(self._base_atom(atom, charge=charge).move_to(loc))
         return atoms
+
+    # def bind_atoms(self):
+    #     bonds = VGroup()
+    #     for atom, loc in self.atoms_dict.items():
+    #         for receiver in self.atoms_dict[atom]:
+    #             bonds.add(
+    #                 Line(start=loc, end=receiver)
+    #             )
 
