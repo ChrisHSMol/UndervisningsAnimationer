@@ -38,7 +38,7 @@ class ElektronegativitetTabel(MovingCameraScene, Slide if slides else Scene):
             self.next_slide(loop=True)
         self.add(title)
         self.play(
-            Indicate(title, scale_factor=1.05, color=interpolate_color(RED_D, WHITE, 0.75))
+            Indicate(title, scale_factor=1.05, color=interpolate_color(RED_D, WHITE, 0.875))
         )
         if slides:
             self.next_slide(loop=False)
@@ -47,15 +47,15 @@ class ElektronegativitetTabel(MovingCameraScene, Slide if slides else Scene):
             run_time=0.25
         )
         self.elektronegativitet()
-        self.partiel_ladning()
+        # self.partiel_ladning()
         self.wait(5)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
         return slides_pause(self, t, slides_bool)
 
-    def make_electronegativity_table(self):
+    def make_electronegativity_table(self, output_type="array"):
         # data = np.loadtxt("electronegativity.csv", delimiter=",")
-        data = []
+        data = [] if output_type == "array" else {}
         with open("elektronegativitet.txt", "r") as inFile:
             # print(inFile)
             for line in inFile:
@@ -64,7 +64,10 @@ class ElektronegativitetTabel(MovingCameraScene, Slide if slides else Scene):
                 v = line[1]
                 if v == "no data":
                     v = 0
-                data.append([n, float(v)])
+                if output_type == "array":
+                    data.append([n, float(v)])
+                elif output_type == "dict":
+                    data[n] = float(v)
         # data = np.array(data)
         return data
 
@@ -340,10 +343,102 @@ class ElektronegativitetTabel(MovingCameraScene, Slide if slides else Scene):
 
 class PolarBonds(ElektronegativitetTabel):
     def construct(self):
+        self.camera.background_color = DARK_GRAY
         # molekyler, hvor bindingerne bliver gradientfarvet fra f.eks. blå til rød med intensitet svarende til
         # deres EN-forskel. Upolære bindinger er hvide.
-        pass
+        self.polar_bonds()
+        self.wait()
+        # pass
 
+    def polar_bonds(self):
+        # atomer = ("Li", "F")
+        atomer = ("H1", "H2", "H3", "O", "H4", "C")
+        molecule = Molecule2D(
+            # {atomer[0]: [-0.5, 0, 0, 0], atomer[1]: [0.5, 0, 0, 0]},
+            atoms_dict={
+                atomer[0]: {"x": -1, "y": 0, "z": 0, "charge": 0, "index": 1},
+                atomer[1]: {"x": 0, "y": 1, "z": 0, "charge": 0, "index": 2},
+                atomer[2]: {"x": 0, "y": -1, "z": 0, "charge": 0, "index": 3},
+                atomer[3]: {"x": 1, "y": 0, "z": 0, "charge": 0, "index": 4},
+                atomer[4]: {"x": 2, "y": 0, "z": 0, "charge": 0, "index": 5},
+                atomer[5]: {"x": 0, "y": 0, "z": 0, "charge": 0, "index": 0}
+            },
+            bonds_dict={
+                "0": (1, 2, 3, 4),
+                "4": (5,)
+            }
+        )
+        en_values = self.make_electronegativity_table(output_type="dict")
+        # print(en_values[atomer[0]], en_values[atomer[1]])
+        print(en_values)
+        # en_max = 4.0
+        # bond = Line(
+        #     start=molecule[0][0].get_right(), end=molecule[0][1].get_left(),
+        #     stroke_color=color_gradient(
+        #         (
+        #             interpolate_color(WHITE, PURE_RED, np.abs((en_values[atomer[1]]-en_values[atomer[0]])/en_max)),
+        #             # WHITE,
+        #             interpolate_color(WHITE, PURE_BLUE, np.abs((en_values[atomer[1]]-en_values[atomer[0]])/en_max))
+        #         ),
+        #         3
+        #     ),
+        #     stroke_width=10
+        # )
+        self.add(molecule)
+
+
+class ElektronegativitetTabelThumbnail(ElektronegativitetTabel):
+    def construct(self):
+        # self.camera.background_color = DARK_GRAY
+        data = self.make_electronegativity_table()
+        Z_max = 36
+        width, height = 12, 5
+        plane = NumberPlane(
+            x_range=[0, Z_max+0.1, 1],
+            y_range=[0, 4.1, 0.5],
+            x_length=width,
+            y_length=height,
+            background_line_style={
+                "stroke_color": TEAL,
+                "stroke_width": 0.5,
+                "stroke_opacity": 0.25
+            },
+            axis_config={"include_numbers": True},
+            x_axis_config={"label_direction": DOWN},
+            y_axis_config={"label_direction": LEFT}
+        ).set_z_index(2)
+        ax_labs = VGroup(
+            plane.get_x_axis_label(Tex("Atomnummer")).next_to(plane, DOWN, aligned_edge=RIGHT),
+            plane.get_y_axis_label(Tex("EN")).next_to(plane, UP, aligned_edge=LEFT),
+        )
+        self.add(plane, ax_labs)
+
+        dots = VGroup(
+            *[
+                Dot(
+                    color=interpolate_color(WHITE, RED, y[1]/2), radius=0.05 if y[1]>0 else 0
+                ).set_z_index(3).move_to(
+                    plane.c2p(i+1, y[1])
+                ) for i, y in enumerate(data[:Z_max])
+            ]
+        )
+        dot_labels = VGroup(
+            *[
+                Tex(n[0]).set_z_index(3).scale(0.5).next_to(
+                    dots[i], DOWN, buff=0.1
+                ) for i, n in enumerate(data[:Z_max])
+            ]
+        )
+        [dot_labels[i].scale(0) for i in (1, 9, 17)]
+        overskrift = Tex(
+            "Elektronegativitet"
+        ).scale(2).set_color(color_gradient((BLUE, RED), 2)).next_to(
+            plane, UP
+        )
+        self.add(overskrift, dots, dot_labels)
+
+# pb = PolarBonds()
+# print(pb.polar_bonds())
 
 if __name__ == "__main__":
     classes = [

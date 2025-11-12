@@ -31,7 +31,7 @@ _ONEFRAME = 1/_FRAMERATE[q]
 
 class Tetraeder(ThreeDScene, Slide if slides else Scene):
     def construct(self):
-        self.camera.background_color = DARK_GRAY
+        self.camera.background_color = DARKER_GRAY
         self.tetraeder_form()
         self.methan()
         self.ammoniak()
@@ -155,7 +155,7 @@ class Tetraeder(ThreeDScene, Slide if slides else Scene):
             face_opacity_trackers[3].animate.set_value(0.2),
             run_time=2
         )
-        self.wait(20)
+        self.wait(60)
         self.slide_pause()
         self.stop_ambient_camera_rotation()
         self.remove(*self.mobjects)
@@ -196,7 +196,7 @@ class Tetraeder(ThreeDScene, Slide if slides else Scene):
         self.add_fixed_in_frame_mobjects(name)
         self.add(atoms, center, bonds)
         # self.slide_pause()
-        self.wait(5)
+        self.wait(15)
         self.slide_pause()
         self.stop_ambient_camera_rotation()
         self.remove(atoms, center, bonds, name)
@@ -256,7 +256,7 @@ class Tetraeder(ThreeDScene, Slide if slides else Scene):
         self.add_fixed_in_frame_mobjects(name)
         self.add(atoms, center, bonds)
         # self.slide_pause()
-        self.wait(5)
+        self.wait(15)
         self.slide_pause()
         self.stop_ambient_camera_rotation()
         self.remove(atoms, center, bonds, name)
@@ -319,15 +319,83 @@ class Tetraeder(ThreeDScene, Slide if slides else Scene):
         self.add_fixed_in_frame_mobjects(name)
         self.add(atoms, center, bonds)
         # self.slide_pause()
-        self.wait(5)
+        self.wait(15)
         self.slide_pause()
         self.stop_ambient_camera_rotation()
         self.remove(atoms, center, bonds, name)
 
 
+class TetraederThumbnail(Tetraeder):
+    def construct(self):
+        atomradier = {}
+        with open("../data_atomradier.txt", "r") as inFile:
+            for line in inFile:
+                line = line.split()
+                atomradier[str(line[0])] = float(line[2])
+        self.set_camera_orientation(phi=PI/3, theta=-2*PI/8, zoom=1.5)
+        vertices = np.array([
+            # (0, 0, 1),
+            (2*np.sqrt(2)/3, 0, -1/3),
+            (-np.sqrt(2)/3, np.sqrt(2/3), -1/3),
+            (-np.sqrt(2)/3, -np.sqrt(2/3), -1/3)
+        ]) * 0.5
+        axes = ThreeDAxes(
+            x_range=[-2, 2],
+            y_range=[-2, 2],
+            z_range=[-2, 2],
+            x_length=4,
+            y_length=4,
+            z_length=4,
+        )
+        ax_labs = VGroup(
+            axes.get_x_axis_label(Tex("$x$")),
+            axes.get_y_axis_label(Tex("$y$")),
+            axes.get_z_axis_label(Tex("$z$"))
+        )
+        self.add(axes, ax_labs)
+        atoms = VGroup(
+            *[
+                Dot3D(
+                    fill_opacity=0.9, stroke_opacity=0, radius=atomradier[a]
+                ).move_to(axes.c2p(*v)) for v, a in zip(vertices, ["H", "H", "H"])
+            ]
+        )
+        center = Dot3D(radius=atomradier["N"], color=BLUE, stroke_opacity=0, fill_opacity=1).move_to(axes.c2p(*ORIGIN))
+        bonds = VGroup(
+            *[
+                Line3D(
+                    start=center.get_center(), end=a.get_center(), color=LIGHT_GRAY, stroke_width=0.1
+                ) for a in atoms
+            ]
+        )
+        atoms.add(
+            VGroup(
+                Surface(
+                    lambda u, v: np.array([
+                        np.cos(u) * np.cos(v) * 0.175,
+                        np.cos(u) * np.sin(v) * 0.175,
+                        np.sin(u) * 0.375 + 0.5
+                    ]),
+                    u_range=(-PI/2, PI/2),
+                    v_range=(0, 2*PI),
+                    resolution=(16, 16),
+                    checkerboard_colors=(YELLOW, YELLOW_A),
+                    fill_opacity=0.125,
+                    stroke_width=0
+                ),
+                Dot3D(radius=0.0375, color=YELLOW, stroke_width=0).shift(0.5*OUT+0.075*RIGHT),
+                Dot3D(radius=0.0375, color=YELLOW, stroke_width=0).shift(0.5*OUT+0.075*LEFT)
+            )
+        )
+        overskrift = Tex("3D-strukturer af simple molekyler").set_color(YELLOW).scale(1.675).to_edge(UL)
+        self.add_fixed_in_frame_mobjects(overskrift)
+        self.add(atoms, center, bonds)
+
+
+
 if __name__ == "__main__":
     classes = [
-        Tetraeder
+        Tetraeder,
     ]
     for cls in classes:
         class_name = cls.__name__

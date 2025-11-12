@@ -385,10 +385,10 @@ class Prikformel(VGroup):
         return self.atom_label
 
 
-class Molecule2D(VGroup):
+class _OLDMolecule2D(VGroup):
     def __init__(
             self,
-            atoms_dict: dict,  # dict: {"element": [x, y, z, charge]}
+            atoms_dict: dict,  # dict: {"element": [x, y, z, charge, index]}
             bonds_dict: dict | None = None,  # not implemented yet
             bond_length: float = 0.5,
             add_element_label: bool = True,
@@ -405,6 +405,21 @@ class Molecule2D(VGroup):
             "P": ORANGE, "S": YELLOW, "B": BEIGE, "Li": VIOLET, "Na": VIOLET, "K": VIOLET, "Rb": VIOLET, "Cs": VIOLET,
             "Fr": VIOLET, "Be": GREEN_A, "Mg": GREEN_A, "Ca": GREEN_A, "Sr": GREEN_A, "Ba": GREEN_A, "Ra": GREEN_A,
             "Ti": GREY, "Fe": ORANGE
+        }
+        self.electronegativities = {
+            'H': 2.2, 'He': 0.0,
+            'Li': 0.98, 'Be': 1.57, 'B': 2.04, 'C': 2.55, 'N': 3.04, 'O': 3.44, 'F': 3.98, 'Ne': 0.0,
+            'Na': 0.93, 'Mg': 1.31, 'Al': 1.61, 'Si': 1.9, 'P': 2.19, 'S': 2.58, 'Cl': 3.16, 'Ar': 0.0,
+            'K': 0.82, 'Ca': 1.0, 'Sc': 1.36, 'Ti': 1.54, 'V': 1.63, 'Cr': 1.66, 'Mn': 1.55, 'Fe': 1.83, 'Co': 1.88,
+            'Ni': 1.91, 'Cu': 1.9, 'Zn': 1.65, 'Ga': 1.81, 'Ge': 2.01, 'As': 2.18, 'Se': 2.55, 'Br': 2.96, 'Kr': 3.0,
+            'Rb': 0.82, 'Sr': 0.95, 'Y': 1.22, 'Zr': 1.33, 'Nb': 1.6, 'Mo': 2.16, 'Tc': 1.9, 'Ru': 2.2, 'Rh': 2.28,
+            'Pd': 2.2, 'Ag': 1.93, 'Cd': 1.69, 'In': 1.78, 'Sn': 1.96, 'Sb': 2.05, 'Te': 2.1, 'I': 2.66, 'Xe': 2.6,
+            'Cs': 0.79, 'Ba': 0.89, 'La': 1.1, 'Ce': 1.12, 'Pr': 1.13, 'Nd': 1.14, 'Pm': 1.1, 'Sm': 1.17, 'Eu': 1.1,
+            'Gd': 1.2, 'Tb': 1.1, 'Dy': 1.22, 'Ho': 1.23, 'Er': 1.24, 'Tm': 1.25, 'Yb': 1.1, 'Lu': 1.27, 'Hf': 1.3,
+            'Ta': 1.5, 'W': 2.36, 'Re': 1.9, 'Os': 2.2, 'Ir': 2.2, 'Pt': 2.28, 'Au': 2.54, 'Hg': 2.0, 'Tl': 1.62,
+            'Pb': 2.33, 'Bi': 2.02, 'Po': 2.0, 'At': 2.2, 'Rn': 0.0, 'Fr': 0.0, 'Ra': 0.9, 'Ac': 1.1, 'Th': 1.3,
+            'Pa': 1.5, 'U': 1.38, 'Np': 1.36, 'Pu': 1.28, 'Am': 1.3, 'Cm': 1.3, 'Bk': 1.3, 'Cf': 1.3, 'Es': 1.3,
+            'Fm': 1.3, 'Md': 1.3, 'No': 1.3
         }
         self.add(self.create_atoms())
 
@@ -453,3 +468,167 @@ class Molecule2D(VGroup):
     #                 Line(start=loc, end=receiver)
     #             )
 
+class Molecule2D(VGroup):
+    def __init__(
+            self,
+            atoms_dict: dict,  # dict: {"element": {"x": float, "y": float, "z": float, "charge": int, "index": int]}
+            bonds_dict: dict | None = None,  # dict: {"index": tuple of bonded indices}
+            bond_length: float = 0.5,
+            add_element_label: bool = True,
+            **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.atoms_dict = atoms_dict
+        self.bonds_dict = bonds_dict
+        self.bond_length = bond_length
+        self.add_element_label = add_element_label
+        self.color_dict = {
+            "H": WHITE, "C": BLACK, "N": BLUE, "O": RED, "F": GREEN, "Cl": GREEN, "Br": RED_A, "I": VIOLET,
+            "He": CYAN1, "Ne": CYAN1, "Ar": CYAN1, "Kr": CYAN1, "Xe": CYAN1, "Rn": CYAN1,
+            "P": ORANGE, "S": YELLOW, "B": BEIGE, "Li": VIOLET, "Na": VIOLET, "K": VIOLET, "Rb": VIOLET, "Cs": VIOLET,
+            "Fr": VIOLET, "Be": GREEN_A, "Mg": GREEN_A, "Ca": GREEN_A, "Sr": GREEN_A, "Ba": GREEN_A, "Ra": GREEN_A,
+            "Ti": GREY, "Fe": ORANGE
+        }
+        self.electronegativities = {
+            'H': 2.2, 'He': 0.0,
+            'Li': 0.98, 'Be': 1.57, 'B': 2.04, 'C': 2.55, 'N': 3.04, 'O': 3.44, 'F': 3.98, 'Ne': 0.0,
+            'Na': 0.93, 'Mg': 1.31, 'Al': 1.61, 'Si': 1.9, 'P': 2.19, 'S': 2.58, 'Cl': 3.16, 'Ar': 0.0,
+            'K': 0.82, 'Ca': 1.0, 'Sc': 1.36, 'Ti': 1.54, 'V': 1.63, 'Cr': 1.66, 'Mn': 1.55, 'Fe': 1.83, 'Co': 1.88,
+            'Ni': 1.91, 'Cu': 1.9, 'Zn': 1.65, 'Ga': 1.81, 'Ge': 2.01, 'As': 2.18, 'Se': 2.55, 'Br': 2.96, 'Kr': 3.0,
+            'Rb': 0.82, 'Sr': 0.95, 'Y': 1.22, 'Zr': 1.33, 'Nb': 1.6, 'Mo': 2.16, 'Tc': 1.9, 'Ru': 2.2, 'Rh': 2.28,
+            'Pd': 2.2, 'Ag': 1.93, 'Cd': 1.69, 'In': 1.78, 'Sn': 1.96, 'Sb': 2.05, 'Te': 2.1, 'I': 2.66, 'Xe': 2.6,
+            'Cs': 0.79, 'Ba': 0.89, 'La': 1.1, 'Ce': 1.12, 'Pr': 1.13, 'Nd': 1.14, 'Pm': 1.1, 'Sm': 1.17, 'Eu': 1.1,
+            'Gd': 1.2, 'Tb': 1.1, 'Dy': 1.22, 'Ho': 1.23, 'Er': 1.24, 'Tm': 1.25, 'Yb': 1.1, 'Lu': 1.27, 'Hf': 1.3,
+            'Ta': 1.5, 'W': 2.36, 'Re': 1.9, 'Os': 2.2, 'Ir': 2.2, 'Pt': 2.28, 'Au': 2.54, 'Hg': 2.0, 'Tl': 1.62,
+            'Pb': 2.33, 'Bi': 2.02, 'Po': 2.0, 'At': 2.2, 'Rn': 0.0, 'Fr': 0.0, 'Ra': 0.9, 'Ac': 1.1, 'Th': 1.3,
+            'Pa': 1.5, 'U': 1.38, 'Np': 1.36, 'Pu': 1.28, 'Am': 1.3, 'Cm': 1.3, 'Bk': 1.3, 'Cf': 1.3, 'Es': 1.3,
+            'Fm': 1.3, 'Md': 1.3, 'No': 1.3
+        }
+        self.add(*self.create_atoms(), *self.create_bonds())
+
+    def _base_atom(self, element, charge=0):
+        atom_label = ""
+        for c in element:
+            try:
+                int(c)
+            except:
+                atom_label += c
+        atom = VGroup(
+            Circle(
+                radius=0.25, fill_color=self.color_dict[atom_label], fill_opacity=1, stroke_width=0,
+                stroke_color=self.color_dict[atom_label]
+            )
+        )
+        if self.add_element_label:
+            # if charge != 0:
+            #     charge = str(charge) if charge < 0 else f"+{charge}"
+            if charge > 0:
+                charge = (str(charge) if charge > 1 else "") + "+"
+            elif charge < 0:
+                charge = (str(np.abs(charge)) if charge < -1 else "") + "-"
+            else:
+                charge = ""
+            atom.add(
+                Tex(
+                    f"{atom_label}$^{{{charge}}}$", color=BLACK if atom_label != "C" else WHITE
+                ).scale(0.5 if not charge else 0.4)
+            )
+        return atom
+
+    def _base_bond(self, atom1, atom2, en1, en2, en_max=4.0):
+        direction = atom2.get_center() - atom1.get_center()
+        bond = Line(
+            start=atom1.get_edge_center(direction),
+            end=atom2.get_edge_center(-direction),
+            stroke_width=10,
+            stroke_color=color_gradient(
+                (
+                    interpolate_color(WHITE, PURE_RED, np.abs((en2-en1)/en_max)),
+                    interpolate_color(WHITE, PURE_BLUE, np.abs((en2-en1)/en_max))
+                ),
+                3
+            ),
+        )
+        return bond
+
+    def create_atoms(self):
+        atoms = VGroup()
+        for atom, vals in self.atoms_dict.items():
+            loc = (vals["x"], vals["y"], vals["z"])
+            atoms.add(self._base_atom(atom, charge=vals["charge"]).move_to(loc))
+        return atoms
+
+    def create_bonds(self):
+        bonds = VGroup()
+        for donor, receivers in self.bonds_dict.items():
+            donor_element = [atom for atom in self.atoms_dict.keys() if self.atoms_dict[atom]["index"] == int(donor)]
+            donor_element_stripped = ""
+            for c in donor_element[0]:
+                try:
+                    int(c)
+                except:
+                    donor_element_stripped += c
+            donor_atom = self._base_atom(donor_element[0]).move_to((
+                self.atoms_dict[donor_element[0]]["x"],
+                self.atoms_dict[donor_element[0]]["y"],
+                self.atoms_dict[donor_element[0]]["z"]
+            ))
+            for receiver in receivers:
+                receiver_element = [atom for atom in self.atoms_dict.keys() if self.atoms_dict[atom]["index"] == int(receiver)]
+                receiver_element_stripped = ""
+                for c in receiver_element[0]:
+                    try:
+                        int(c)
+                    except:
+                        receiver_element_stripped += c
+                receiver_atom = self._base_atom(receiver_element[0]).move_to((
+                    self.atoms_dict[receiver_element[0]]["x"],
+                    self.atoms_dict[receiver_element[0]]["y"],
+                    self.atoms_dict[receiver_element[0]]["z"]
+                ))
+                bonds.add(
+                    self._base_bond(
+                        donor_atom, receiver_atom,
+                        self.electronegativities[donor_element_stripped],
+                        self.electronegativities[receiver_element_stripped]
+                    )
+                )
+        return bonds
+
+    # def bind_atoms(self):
+    #     bonds = VGroup()
+    #     for atom, loc in self.atoms_dict.items():
+    #         for receiver in self.atoms_dict[atom]:
+    #             bonds.add(
+    #                 Line(start=loc, end=receiver)
+    #             )
+
+
+class Sumformel(VGroup):
+    def __init__(
+            self,
+            formula_string: str,
+            prefix: str = "",
+            suffix: str = "",
+            **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.formula_string = formula_string
+        self.prefix = prefix
+        self.suffix = suffix
+        self.add(*self.format_formula_string())
+
+    def format_formula_string(self):
+        output = VGroup()
+        output.add(Tex(self.prefix))
+        form = ""
+        for c in self.formula_string:
+            if not c.isdigit():
+                form += c
+            else:
+                form += f"$_{c}$"
+        output.add(Tex(form))
+        output.add(Tex(self.suffix))
+        output.arrange(RIGHT, buff=0.1)
+        print(output, *output)
+        return output
