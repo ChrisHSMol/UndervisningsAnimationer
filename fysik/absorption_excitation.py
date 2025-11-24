@@ -1,14 +1,19 @@
-import sys
-sys.path.append("../")
+import math
+
 from manim import *
-# from manim_chemistry import *
-from custom_classes import BohrAtom
-from helpers import *
-import random
+import sys
+
+sys.path.append("../")
+sys.path.append("../../")
+import numpy as np
 import subprocess
-from manim_slides import Slide
+from helpers import *
+from custom_classes import *
+# from manim_chemistry import *
 
 slides = True
+if slides:
+    from manim_slides import Slide
 
 q = "h"
 _RESOLUTION = {
@@ -21,6 +26,7 @@ _FRAMERATE = {
     "l": 15,
     "h": 60
 }
+_ONEFRAME = 1/_FRAMERATE[q]
 
 
 class AbsorptionExcitation(Scene if not slides else Slide):
@@ -178,8 +184,8 @@ class RydbergBalmer(AbsorptionExcitation):
         title = Tex("Rydbergformlen og Balmerserien")
         self.slide_pause()
         play_title2(self, title)
-        photon_energies = self.rydberg_formel()
-        self.balmer_serie(photon_energies)
+        self.rydberg_formel()
+        self.balmer_serie()
         self.play(
             LaggedStart(
                 *[FadeOut(m) for m in self.mobjects],
@@ -187,7 +193,7 @@ class RydbergBalmer(AbsorptionExcitation):
             ),
             run_time=2
         )
-        play_title_reverse(self, title)
+        # play_title_reverse(self, title)
 
     def rydberg_formel(self):
         cmap = {
@@ -335,7 +341,7 @@ class RydbergBalmer(AbsorptionExcitation):
         self.slide_pause()
         return VGroup(photon_energies, srec, balmer_lab)
 
-    def balmer_serie(self, photon_energies):
+    def balmer_serie(self):
         ECOL = GOLD_A
         PCOL = RED
         NCOL = GRAY
@@ -359,6 +365,7 @@ class RydbergBalmer(AbsorptionExcitation):
         ).scale(0.5)
         electron = atom.get_electrons()
         orbitals = atom.get_orbitals().set_style(stroke_width=1.5)
+        [o.set_style(stroke_width=min(3.0, 5/(1+i))) for i, o in enumerate(orbitals)]
         electron.move_to(
             orbitals[1].point_at_angle(np.arctan(electron.get_center()[1]/electron.get_center()[0]))
         )
@@ -375,7 +382,10 @@ class RydbergBalmer(AbsorptionExcitation):
         ])
         self.play(
             LaggedStart(
-                *[ShowPassingFlash(orb.copy().set_color(YELLOW), time_width=2, run_time=0.5) for orb in orbitals],
+                *[
+                    ShowPassingFlash(
+                        orb.copy().set_color(YELLOW), time_width=2, run_time=0.5, stroke_opacity=[0.1, 1, 0.1]
+                    ) for orb in orbitals],
                 lag_ratio=0.9
             ),
             LaggedStart(
@@ -388,7 +398,10 @@ class RydbergBalmer(AbsorptionExcitation):
 
         for orb, bcol in zip(orbitals[2:7], balmer_colors):
             self.play(
-                ShowPassingFlash(VGroup(orbitals[1], orb).copy().set_color(bcol), time_width=2),
+                ShowPassingFlash(
+                    VGroup(orbitals[1], orb).copy().set_color(bcol), time_width=2,
+                    stroke_opacity=[0.1, 1, 0.1]
+                ),
                 run_time=3
             )
             self.abs_animation(electron, orb, bcol)
@@ -399,19 +412,18 @@ class RydbergBalmer(AbsorptionExcitation):
 
 class RydbergBalmerThumbnail(RydbergBalmer):
     def construct(self):
-        title = Tex("Rydbergformlen og Balmerserien")
-        self.slide_pause()
-        play_title2(self, title)
-        photon_energies = self.rydberg_formel()
-        self.balmer_serie(photon_energies)
-        self.play(
-            LaggedStart(
-                *[FadeOut(m) for m in self.mobjects],
-                lag_ratio=0.1
-            ),
-            run_time=2
-        )
-        play_title_reverse(self, title)
+        balmer_colors = [
+            interpolate_color(VISIBLE_LIGHT[650], VISIBLE_LIGHT[650], 0.628),
+            interpolate_color(VISIBLE_LIGHT[480], VISIBLE_LIGHT[490], 0.614),
+            interpolate_color(VISIBLE_LIGHT[430], VISIBLE_LIGHT[440], 0.405),
+            interpolate_color(VISIBLE_LIGHT[410], VISIBLE_LIGHT[410], 0.173),
+        ]
+        title = Tex("Rydbergformlen", " og ", "Balmerserien").scale(1.75).to_edge(UL)
+        title[0].set_color(RED)
+        title[-1].set_color(YELLOW)
+        self.add(title)
+        self.rydberg_formel()
+        self.balmer_serie()
 
     def rydberg_formel(self):
         cmap = {
@@ -424,142 +436,25 @@ class RydbergBalmerThumbnail(RydbergBalmer):
             interpolate_color(VISIBLE_LIGHT[430], VISIBLE_LIGHT[440], 0.405),
             interpolate_color(VISIBLE_LIGHT[410], VISIBLE_LIGHT[410], 0.173),
         ]
-        # starter = VGroup(
-        #     Tex("Rydbergs formel", " bruges til at udregne ", "bølgelængden"),
-        #     Tex("af exciteret eller absorberet lys mellem ", "to energitilstande")
-        # ).arrange(DOWN, aligned_edge=LEFT).to_edge(DL)
-        # starter[0][0].set_color(cmap[r"R_H"])
-        # starter[1][1].set_color(cmap["n"])
         formel = MathTex(
             r"{1\over\lambda}", r" = ", r"R_H", r" \left( ", r"{1\over n^2}", " -", r"{1\over m^2}", r" \right)",
             substrings_to_isolate=list(cmap.keys())
-        ).set_color_by_tex_to_color_map(cmap)
-        # self.play(
-        #     Write(starter),
-        #     run_time=2
-        # )
-        # self.slide_pause()
-        # for i in formel:
-        #     print(i)
-        # self.add(formel)
-        self.play(
-            Write(formel),
-            run_time=0.5
-        )
-        # self.play(
-        #     LaggedStart(
-        #         ReplacementTransform(starter[0][0], formel[4]),
-        #         ReplacementTransform(starter[0][2], formel[1]),
-        #         ReplacementTransform(starter[1][1], formel[7]),
-        #         ReplacementTransform(starter[1][1], formel[11]),
-        #         ReplacementTransform(
-        #             VGroup(starter[0][1], starter[1]),
-        #             VGroup(formel[0], formel[2:4], formel[5:7], formel[8:11], formel[12:])
-        #         ),
-        #         lag_ratio=0.75
-        #     ),
-        #     run_time=5
-        # )
-        self.slide_pause()
-
-        calc = VGroup(
-            formel.copy(),
-            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{1\over", " n^2}", " -", r"{1\over", " m^2}", r" \right)", " ", " ", " ", " "),
-            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{1\over", " 2^2}", " -", r"{1\over", " 3^2}", r" \right)", " ", " ", " ", " "),
-            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{1\over", " 4}", " -", r"{1\over", " 9}", r" \right)", " ", " ", " ", " "),
-            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{9\over", " 36}", " -", r"{4\over", " 36}", r" \right)", " ", " ", " ", " "),
-            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{9-4", r"\over", " 36}", r" \right)", " ", " ", " ", " ", " ", " "),
-            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r" \left( ", r"{5", r"\over", " 36}", r" \right)", " ", " ", " ", " ", " ", " "),
-            MathTex(r"{1\over\lambda}", r" = ", r"1.097\times10^7 \text{m}^{-1}", r"\cdot", r"{5", r"\over", " 36}", " ", " ", " ", " ", " ", " ", " "),
-            MathTex(r"{1\over\lambda}", r" = ", r"0.152\times10^7 \text{m}^{-1}", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "),
-            MathTex(r"\lambda", r" = ", r"6.563\times10^{-7} \text{m}", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "),
-            MathTex(r"\lambda", r" = ", r"656.3 \text{nm}", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "),
-        )
-        for n in calc:
-            print(len(n))
-        [calc[i][0][2].set_color(cmap[r"\lambda"]) for i in [1, 2, 3, 4, 5, 6, 7, 8]]
-        [calc[i][0].set_color(cmap[r"\lambda"]) for i in [9, 10]]
-        [calc[i][2].set_color(cmap[r"R_H"]) for i in [1, 2, 3, 4, 5, 6, 7]]
-        [calc[i][5][0].set_color(cmap["n"]) for i in [1, 2, 3]]
-        # calc[4][5].set_color(cmap["n"])
-        calc[4][4:9].set_color(interpolate_color(cmap["n"], cmap["m"], 0.5))
-        [calc[i][4:7].set_color(interpolate_color(cmap["n"], cmap["m"], 0.5)) for i in [5, 6, 7]]
-        [calc[i][8][0].set_color(cmap["m"]) for i in [1, 2, 3]]
-        # calc[4][8].set_color(cmap["m"])
-        calc[8][2].set_color(interpolate_color(cmap[r"R_H"], interpolate_color(cmap["n"], cmap["m"], 0.5), 0.5))
-        [calc[i][2].set_color(balmer_colors[0]) for i in [9, 10]]
-
-        # for i, c in enumerate(calc):
-        #     c[0][-1].set_color(cmap[r"\lambda"])
-        #     if i < 8:
-        #         c[2].set_color(cmap[r"R_H"])
-        #     if 0 < i < 4:
-        #         c[5][0].set_color(cmap["n"])
-        #         c[8][0].set_color(cmap["m"])
-        #     if 4 <= i < 7:
-        #         c[4:-1].set_color(interpolate_color(cmap["n"], cmap["m"], 0.5))
-        #     if i == 7:
-        #         c[4:].set_color(interpolate_color(cmap["n"], cmap["m"], 0.5))
-        #     if i == 8:
-        #         c[2:].set_color(interpolate_color(cmap[r"R_H"], interpolate_color(cmap["n"], cmap["m"], 0.5), 0.5))
-        #     if i >= 9:
-        #         c[2].set_color(balmer_colors[0])
-        calc.add(MathTex(r"\lambda", r"_{2\leftarrow3}", r" = ", r"656.3 \text{nm}", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "))
-        calc[-1][0][0].set_color(cmap[r"\lambda"])
-        calc[-1][3].set_color(balmer_colors[0])
-
-        self.remove(formel)
-        for i, c in enumerate(calc):
-            if i == 0:
-                self.add(c)
-            # elif i in [1, 5, 7]:
-            #     self.play(
-            #         TransformMatchingTex(calc[i-1], c)
-            #     )
-            else:
-                self.play(
-                    ReplacementTransform(calc[i-1], c, transform_mismatches=True)
-                )
-            self.slide_pause()
+        ).set_color_by_tex_to_color_map(cmap).to_edge(LEFT)
+        self.add(formel)
 
         photon_energies = VGroup(
             MathTex(r"\lambda_{2\leftarrow3}", r" = ", r"656.3 \text{nm}"),
             MathTex(r"\lambda_{2\leftarrow4}", r" = ", r"486.1 \text{nm}"),
             MathTex(r"\lambda_{2\leftarrow5}", r" = ", r"434.0 \text{nm}"),
             MathTex(r"\lambda_{2\leftarrow6}", r" = ", r"410.2 \text{nm}"),
-        ).arrange(DOWN, aligned_edge=LEFT).next_to(c, DOWN, buff=0).shift(UP * c.get_height()).set_z_index(2)
+        ).arrange(DOWN, aligned_edge=LEFT).set_z_index(2)
         for en, col in zip(photon_energies, balmer_colors):
             en[0][0].set_color(cmap[r"\lambda"])
             en[-1].set_color(col)
-        self.remove(c)
-        self.add(photon_energies[0])
-        self.play(
-            LaggedStart(
-                *[FadeIn(pe, shift=0.5*DOWN) for pe in photon_energies[1:]],
-                lag_ratio=0.75
-            ),
-            run_time=2
-        )
-        self.slide_pause()
-        self.play(
-            photon_energies.animate.to_edge(DL)
-        )
-        srec = get_background_rect(
-            photon_energies, stroke_colour=color_gradient(balmer_colors, 8), fill_color=BLACK, fill_opacity=0.8
-        ).set_z_index(1)
-        balmer_lab = Tex("Balmerserien").next_to(srec, UP, aligned_edge=LEFT, buff=0.1).set_color(
-            color_gradient([interpolate_color(WHITE, bc, 0.25) for bc in balmer_colors], 8)
-        )
-        self.play(
-            # DrawBorderThenFill(srec),
-            FadeIn(srec),
-            Write(balmer_lab),
-            run_time=0.5
-        )
-        self.slide_pause()
-        return VGroup(photon_energies, srec, balmer_lab)
+        photon_energies.to_edge(DL)
+        self.add(photon_energies)
 
-    def balmer_serie(self, photon_energies):
+    def balmer_serie(self):
         ECOL = GOLD_A
         PCOL = RED
         NCOL = GRAY
@@ -580,48 +475,23 @@ class RydbergBalmerThumbnail(RydbergBalmer):
             neutron_color=NCOL,
             sheen_factor=-0.25,
             separate_nuclei=True
-        ).scale(0.5)
+        ).scale(0.4)
+        atom.to_edge(DR)
         electron = atom.get_electrons()
         orbitals = atom.get_orbitals().set_style(stroke_width=1.5)
+        [o.set_style(stroke_width=min(3.0, 5/(1+i))) for i, o in enumerate(orbitals)]
         electron.move_to(
             orbitals[1].point_at_angle(np.arctan(electron.get_center()[1]/electron.get_center()[0]))
         )
-        backup_electron = electron.copy()
-        self.play(
-            FadeIn(atom)
-        )
-        # self.play(
-        #     Indicate(orbitals[1:3], color=balmer_colors[0])
-        # )
-        self.slide_pause()
+        self.add(atom)
         orb_labels = VGroup(*[
             MathTex(rf"n={i+1}").scale(0.5).next_to(orb, DOWN, buff=0) for i, orb in enumerate(orbitals)
         ])
-        self.play(
-            LaggedStart(
-                *[ShowPassingFlash(orb.copy().set_color(YELLOW), time_width=2, run_time=0.5) for orb in orbitals],
-                lag_ratio=0.9
-            ),
-            LaggedStart(
-                *[FadeIn(lab, shift=0.25*DOWN) for lab in orb_labels],
-                lag_ratio=0.9
-            ),
-            run_time=9
-        )
-        self.slide_pause()
-
-        for orb, bcol in zip(orbitals[2:7], balmer_colors):
-            self.play(
-                ShowPassingFlash(VGroup(orbitals[1], orb).copy().set_color(bcol), time_width=2),
-                run_time=3
-            )
-            self.abs_animation(electron, orb, bcol)
-            self.slide_pause()
-            self.exc_animation(electron, orbitals[1], bcol)
-            self.slide_pause()
+        self.add(orb_labels)
 
 
-class Spektra(MovingCameraScene, Scene if not slides else Slide):
+
+class Spektra(MovingCameraScene, Slide if slides else Scene):
     btransparent = False
 
     def construct(self):
@@ -712,7 +582,7 @@ class Spektra(MovingCameraScene, Scene if not slides else Slide):
         self.slide_pause()
 
 
-class SpektraThumbnail(MovingCameraScene):
+class SpektraThumbnail(Spektra):
 
     def construct(self):
         H_farver = [
@@ -1072,19 +942,25 @@ class RedShift(MovingCameraScene, Scene if not slides else Slide):
 
 
 if __name__ == "__main__":
-    cls = Spektra
-    class_name = cls.__name__
-    # transparent = cls.btransparent
-    command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
-    # if transparent:
-    #     command += " --transparent --format=webm"
-    scene_marker(rf"RUNNNING:    {command}")
-    # subprocess.run(command)
-    if slides and q == "h":
-        command = rf"manim-slides convert {class_name} {class_name}.html"
+    classes = [
+        AbsorptionExcitation,
+        RydbergBalmer,
+        Spektra,
+        RedShift
+    ]
+    for cls in classes:
+        class_name = cls.__name__
+        command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+        # if _bcol is not None:
+        #     command += f" -c {_bcol} --background_color {_bcol}"
         scene_marker(rf"RUNNNING:    {command}")
-        # subprocess.run(command)
-        if class_name+"Thumbnail" in dir():
-            command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+        subprocess.run(command)
+        if slides and q == "h":
+            # command = rf"manim-slides convert {class_name} {class_name}.html"
+            command = rf"manim-slides convert {class_name} {class_name}.html --one-file --offline"
             scene_marker(rf"RUNNNING:    {command}")
             subprocess.run(command)
+            if class_name + "Thumbnail" in dir():
+                command = rf"manim {sys.argv[0]} {class_name}Thumbnail -pq{q} -o {class_name}Thumbnail.png"
+                scene_marker(rf"RUNNNING:    {command}")
+                subprocess.run(command)

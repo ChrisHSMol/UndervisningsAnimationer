@@ -231,7 +231,7 @@ class FormelMasse(MaengdeSkema):
     def construct(self):
         self.camera.background_color = DARK_GRAY
         title = Tex("Formelmasse").scale(2)
-        play_title2(self, title)
+        play_title2(self, title, hidden_box_color=self.camera.background_color)
         elements = self.massetabel()
         self.eksempeludregning(elements)
         self.wait(5)

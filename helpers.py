@@ -119,7 +119,7 @@ def play_title_reverse(self, title, edge=None):
     self.wait(1)
 
 
-def play_title2(self, title, cols=None, direction=None):
+def play_title2(self, title, cols=None, direction=None, hidden_box_color=BLACK):
     if isinstance(title, str):
         title = Tex(*[t + " " for t in title.split()])
     if cols is not None and isinstance(cols, dict):
@@ -134,7 +134,7 @@ def play_title2(self, title, cols=None, direction=None):
         height=title.height * 3.0
     ).next_to(
         title_ul, DOWN, buff=0
-    ).set_style(fill_opacity=1, stroke_width=0, fill_color=BLACK).set_z_index(title.get_z_index()+1)
+    ).set_style(fill_opacity=1, stroke_width=0, fill_color=hidden_box_color).set_z_index(title.get_z_index()+1)
 
     title.shift(DOWN)
     if direction is None:
