@@ -313,7 +313,7 @@ def slides_pause(self, t=1.0, slides_bool=True):
         # ).scale(0.5).to_edge(DR, buff=0.1)
         indicator = MathTex(
             ">", font_size=50, color=GREEN, stroke_width=7, fill_opacity=0.5, stroke_opacity=0.5
-        ).to_edge(DR, buff=0.1)
+        ).to_edge(DR, buff=0.1).set_z_index(100)
         # indicator = Dot(fill_opacity=0.5, fill_color=GREEN).scale(0.5).move_to(
         #     0.45 * (ManimFrame().frame_width * RIGHT + ManimFrame().frame_height * DOWN)
         # )

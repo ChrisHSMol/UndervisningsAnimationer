@@ -492,7 +492,7 @@ class Molecule2D(VGroup):
         self.electronegativities = {
             'H': 2.2, 'He': 0.0,
             'Li': 0.98, 'Be': 1.57, 'B': 2.04, 'C': 2.55, 'N': 3.04, 'O': 3.44, 'F': 3.98, 'Ne': 0.0,
-            'Na': 0.93, 'Mg': 1.31, 'Al': 1.61, 'Si': 1.9, 'P': 2.19, 'S': 2.58, 'Cl': 3.16, 'Ar': 0.0,
+            'Na': 0.93, '   Mg': 1.31, 'Al': 1.61, 'Si': 1.9, 'P': 2.19, 'S': 2.58, 'Cl': 3.16, 'Ar': 0.0,
             'K': 0.82, 'Ca': 1.0, 'Sc': 1.36, 'Ti': 1.54, 'V': 1.63, 'Cr': 1.66, 'Mn': 1.55, 'Fe': 1.83, 'Co': 1.88,
             'Ni': 1.91, 'Cu': 1.9, 'Zn': 1.65, 'Ga': 1.81, 'Ge': 2.01, 'As': 2.18, 'Se': 2.55, 'Br': 2.96, 'Kr': 3.0,
             'Rb': 0.82, 'Sr': 0.95, 'Y': 1.22, 'Zr': 1.33, 'Nb': 1.6, 'Mo': 2.16, 'Tc': 1.9, 'Ru': 2.2, 'Rh': 2.28,
@@ -610,12 +610,14 @@ class Sumformel(VGroup):
             formula_string: str,
             prefix: str = "",
             suffix: str = "",
+            charge: str = "",
             **kwargs
     ):
         super().__init__(**kwargs)
         self.formula_string = formula_string
         self.prefix = prefix
         self.suffix = suffix
+        self.charge = charge
         self.add(*self.format_formula_string())
 
     def format_formula_string(self):
@@ -629,6 +631,7 @@ class Sumformel(VGroup):
                 form += f"$_{c}$"
         output.add(Tex(form))
         output.add(Tex(self.suffix))
+        # output.add(MathTex(r"^"+self.charge))
         output.arrange(RIGHT, buff=0.1)
         print(output, *output)
         return output
