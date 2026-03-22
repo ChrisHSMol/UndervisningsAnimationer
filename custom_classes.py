@@ -543,8 +543,16 @@ class Molecule2D(VGroup):
             stroke_width=10,
             stroke_color=color_gradient(
                 (
-                    interpolate_color(WHITE, PURE_RED, np.abs((en2-en1)/en_max)),
-                    interpolate_color(WHITE, PURE_BLUE, np.abs((en2-en1)/en_max))
+                    interpolate_color(
+                        WHITE,
+                        PURE_RED if en2 > en1 else PURE_BLUE,
+                        np.abs((en2-en1)/en_max)
+                    ),
+                    interpolate_color(
+                        WHITE,
+                        PURE_BLUE if en2 > en1 else PURE_RED,
+                        np.abs((en2-en1)/en_max)
+                    )
                 ),
                 3
             ),

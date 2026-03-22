@@ -11,11 +11,11 @@ from helpers import *
 from custom_classes import *
 # from manim_chemistry import *
 
-slides = True
+slides = False
 if slides:
     from manim_slides import Slide
 
-q = "h"
+q = "l"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -346,7 +346,8 @@ class PolarBonds(ElektronegativitetTabel):
         self.camera.background_color = DARK_GRAY
         # molekyler, hvor bindingerne bliver gradientfarvet fra f.eks. blå til rød med intensitet svarende til
         # deres EN-forskel. Upolære bindinger er hvide.
-        self.polar_bonds()
+        # self.polar_bonds()
+        self.cfc()
         self.wait()
         # pass
 
@@ -384,6 +385,22 @@ class PolarBonds(ElektronegativitetTabel):
         #     ),
         #     stroke_width=10
         # )
+        self.add(molecule)
+
+    def cfc(self):
+        atomer = ("C1", "F1", "F2", "Cl1", "Cl2")
+        molecule = Molecule2D(
+            atoms_dict={
+                atomer[0]: {"x": 0, "y": 0, "z": 0, "charge": 0, "index": 0},
+                atomer[1]: {"x": 0, "y": 1, "z": 0, "charge": 0, "index": 1},
+                atomer[2]: {"x": 0, "y": -1, "z": 0, "charge": 0, "index": 2},
+                atomer[3]: {"x": 1, "y": 0, "z": 0, "charge": 0, "index": 3},
+                atomer[4]: {"x": -1, "y": 0, "z": 0, "charge": 0, "index": 4}
+            },
+            bonds_dict={
+                "0": (1, 2, 3, 4),
+            }
+        )
         self.add(molecule)
 
 
@@ -442,8 +459,8 @@ class ElektronegativitetTabelThumbnail(ElektronegativitetTabel):
 
 if __name__ == "__main__":
     classes = [
-        ElektronegativitetTabel,
-        # PolarBonds
+        # ElektronegativitetTabel,
+        PolarBonds
     ]
     for cls in classes:
         class_name = cls.__name__
