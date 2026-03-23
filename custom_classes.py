@@ -44,16 +44,16 @@ from typing_extensions import Self
 
 from manim.typing import (
     CubicBezierPath,
-    CubicBezierPointsLike,
+    CubicBezierPoints,
     CubicSpline,
     ManimFloat,
     MappingFunction,
-    Point2DLike,
+    Point2D,
     Point3D,
     Point3D_Array,
-    Point3DLike,
-    Point3DLike_Array,
-    RGBA_Array_Float,
+    Point3D,
+    Point3D_Array,
+    # RGBA_Array_Float,
     Vector3D,
     Zeros,
 )
