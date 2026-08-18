@@ -8,7 +8,7 @@ sys.path.append("../../")
 import numpy as np
 import subprocess
 from helpers import *
-from custom_classes import *
+# from custom_classes import *
 # from manim_chemistry import *
 from _manim_physics import *
 
@@ -44,17 +44,37 @@ class Snell(MovingCameraScene, Slide if slides else Scene):
         width_tracker = ValueTracker(1.0)
         index_tracker = ValueTracker(1.33)
         lens = always_redraw(lambda:
-            Lens(f=focal_tracker.get_value(), d=width_tracker.get_value(), n=index_tracker.get_value())
+            Lens(
+                f=focal_tracker.get_value(), d=width_tracker.get_value(), n=index_tracker.get_value(),
+                stroke_width=1
+            )
         )
         self.add(lens)
 
-        n_rays = ValueTracker(3)
+        n_rays_tracker = ValueTracker(5)
         light = always_redraw(lambda:
             VGroup(*[
-                Ray(start=8*LEFT + y*UP, direction=RIGHT) for y in np.linspace(-2, 2, n_rays + 1)
+                Ray(
+                    start=8*LEFT + y*UP, direction=4*RIGHT, propagate=[lens], stroke_width=0.5, stroke_color=RED
+                ) for y in np.linspace(-0.1*lens.height, 0.1*lens.height, int(n_rays_tracker.get_value()))
             ])
         )
         self.add(light)
+
+        # for v in [2.5, 0.5, 1.33]:
+        #     self.play(
+        #         index_tracker.animate.set_value(v),
+        #         run_time=3
+        #     )
+        self.play(
+            index_tracker.animate.set_value(2.0)
+        )
+        self.play(
+            index_tracker.animate.set_value(1.0)
+        )
+        self.play(
+            index_tracker.animate.set_value(1.33)
+        )
 
 
 if __name__ == "__main__":

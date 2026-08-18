@@ -15,9 +15,6 @@ from manim.mobject.geometry.line import Line
 from manim.utils.space_ops import angle_of_vector, rotate_vector
 
 
-__all__ = ["Lens"]
-
-
 def intersection(vmob1: VMobject, vmob2: VMobject) -> Iterable[Iterable[float]]:
     """intersection points of 2 curves"""
     a = gm.LineString(vmob1.points)
