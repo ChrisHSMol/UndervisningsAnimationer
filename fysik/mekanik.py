@@ -612,7 +612,9 @@ class LodretKast(MovingCameraScene, Slide if slides else Scene):
 
         def hast(time, a=g, v=v0, limits=(0, t_done), _width=0.05):
             # return np.convolve(time, _sted(time, a=a, v=v, s=s), mode="valid")
-            return np.mean([_hast(t, a=a, v=v, limits=limits) for t in np.linspace(time-0.5*_width, time+0.5*_width, 21)])
+            # return np.mean([_hast(t, a=a, v=v, limits=limits) for t in np.linspace(time-0.5*_width, time+0.5*_width, 21)])
+            return (sted_graf.underlying_function(time + 0.5*_dx) - sted_graf.underlying_function(time - 0.5*_dx))/_dx
+            # return ((sted_graf.underlying_function(_x+0.5*_dx) - sted_graf.underlying_function(_x-0.5*_dx))/_dx + 0*time for _x in np.linspace(t_start, t_slut, 500))
 
         def hast_measured(time, a=g, v=v0):
             return hast(time, a=a, v=v) + random.gauss(mu=0.0, sigma=sigY)
@@ -859,7 +861,8 @@ class LodretKast(MovingCameraScene, Slide if slides else Scene):
             return acc_raw(time, a=a) if limits[0] < time < limits[1] else 0
 
         def acc(time, a=g, limits=(0, t_done), _width=0.05):
-            return np.mean([_acc(t, a=a, limits=limits) for t in np.linspace(time-0.5*_width, time+0.5*_width, 21)])
+            # return np.mean([_acc(t, a=a, limits=limits) for t in np.linspace(time-0.5*_width, time+0.5*_width, 21)])
+            return np.min([(hast_graf.underlying_function(time + 0.5*_dx) - hast_graf.underlying_function(time - 0.5*_dx))/_dx, 10])
 
         acc_graf = always_redraw(lambda:
             acc_plane.plot(
@@ -911,6 +914,19 @@ class LodretKast(MovingCameraScene, Slide if slides else Scene):
         # self.add(graftype_tekst)
         self.slide_pause()
 
+        opgave = Tex(
+            r"Hvordan kan den kaldes\\", "konstant", r"\\når den svinger så meget?"
+        ).scale(0.75).arrange(DOWN, aligned_edge=LEFT).next_to(
+            graftype_tekst, DOWN, aligned_edge=LEFT, buff=3
+        )
+        opgave[1].set_color(cmap["acc"])
+        opgave_srec = get_background_rect(opgave, stroke_colour=cmap["acc"], fill_color=cmap["acc"], fill_opacity=0.1)
+        self.play(
+            FadeIn(opgave, shift=0.5*DOWN),
+            FadeIn(opgave_srec, shift=0.5*DOWN)
+        )
+        self.slide_pause()
+
         # self.play(
         #     LaggedStart(
         #         *[
@@ -921,7 +937,7 @@ class LodretKast(MovingCameraScene, Slide if slides else Scene):
         #     )
         # )
         self.play(
-            FadeOut(graftype_tekst, shift=0.25*LEFT),
+            *[FadeOut(m, shift=0.25*LEFT) for m in (graftype_tekst, opgave, opgave_srec)],
             run_time=0.5
         )
 
@@ -933,6 +949,7 @@ class LodretKast(MovingCameraScene, Slide if slides else Scene):
         return acc_plane, acc_graf, acc_axis_labels, acc_ticks, acc_tickmarks, acc_tick_bgs
 
     def opsamling(self, sted_data, hast_data, acc_data):
+        t_start, t, g, m, h_max, sigY, v0, s0, eps, t_done, t_slut = self._simulation_data()
         sted_plane, sted_graf, sted_axis_labels, sted_ticks, sted_tick_bgs, sted_tickmarks, _, _, _ = sted_data
         hast_plane, hast_graf, hast_axis_labels, hast_ticks, hast_tickmarks, hast_tick_bgs, _ = hast_data
         acc_plane, acc_graf, acc_axis_labels, acc_ticks, acc_tickmarks, acc_tick_bgs = acc_data
@@ -967,6 +984,31 @@ class LodretKast(MovingCameraScene, Slide if slides else Scene):
             sted_gruppe, hast_gruppe, acc_gruppe
         ).arrange(RIGHT, buff=1).next_to(acc_plane, LEFT, buff=-acc_plane.width)
 
+        x_top = -v0/g
+        highlight_areas = VGroup(
+            *[
+                VGroup(
+                    DashedLine(start=plane.c2p(x_top-0.9, y1), end=plane.c2p(x_top-0.9, y2)).set_z_index(15),
+                    DashedLine(start=plane.c2p(x_top+0.9, y1), end=plane.c2p(x_top+0.9, y2)).set_z_index(15),
+                ) for plane, y1, y2 in zip(
+                    (sted_plane, hast_plane, acc_plane), (-2, -12, -12), (7, 12, 12)
+                )
+            ]
+        )
+        dimmed_zones = VGroup(
+            *[
+                Rectangle(
+                    width=VGroup(highlight_areas[0][1], highlight_areas[1][0]).width,
+                    height=VGroup(highlight_areas[0][1], highlight_areas[1][0]).height,
+                    fill_color=DARKER_GRAY, fill_opacity=0.75, stroke_width=0
+                ).set_z_index(15) for _ in range(4)
+            ]
+        )
+        dimmed_zones[0].next_to(highlight_areas[0][0], LEFT, buff=0)
+        dimmed_zones[1].move_to(between_mobjects(highlight_areas[0][1], highlight_areas[1][0]))
+        dimmed_zones[2].move_to(between_mobjects(highlight_areas[1][1], highlight_areas[2][0]))
+        dimmed_zones[3].next_to(highlight_areas[2][1], RIGHT, buff=0)
+
         self.remove(*[m for m in self.mobjects if m not in (opsamlings_tekst, opsamlings_rect)])
 
         self.play(
@@ -993,6 +1035,16 @@ class LodretKast(MovingCameraScene, Slide if slides else Scene):
         self.play(
             *[FadeIn(m, shift=1*d) for m, d in zip((sted_gruppe, hast_gruppe, acc_gruppe), (RIGHT, DOWN, LEFT))],
             run_time=1
+        )
+        self.slide_pause()
+
+        self.play(
+            LaggedStart(
+                AnimationGroup(*[Create(l) for l in highlight_areas]),
+                AnimationGroup(*[FadeIn(r) for r in dimmed_zones]),
+                lag_ratio=0.75
+            ),
+            run_time=2
         )
         self.slide_pause()
 
@@ -1041,7 +1093,8 @@ class LodretKast(MovingCameraScene, Slide if slides else Scene):
                     FadeOut(m, shift=np.random.uniform()*UP+np.random.uniform()*RIGHT) for m in self.mobjects
                 ],
                 lag_ratio=0.1
-            )
+            ),
+            run_time=1
         )
 
 class LodretKastThumbnail(LodretKast):
