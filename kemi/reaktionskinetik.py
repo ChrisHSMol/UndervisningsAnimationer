@@ -202,6 +202,48 @@ class HastighedsFordeling(MovingCameraScene, Slide if slides else Scene):
         )
         self.slide_pause()
 
+        hyppigst = always_redraw(lambda:
+            VGroup(
+                VGroup(
+                    Tex(
+                        "Mest {{hyppige}} hastighed: "
+                    ).set_color_by_tex_to_color_map({"hyppige": ORANGE}),
+                    DecimalNumber(
+                        np.sqrt(2 * kB * T.get_value() / m.get_value()), num_decimal_places=1, unit="~m/s"
+                    )
+                ).scale(0.875).arrange(RIGHT).next_to(masse_tekst, DOWN, aligned_edge=LEFT),
+                Dot(
+                    stroke_width=0, fill_color=ORANGE
+                ).move_to(plane.c2p(
+                    np.sqrt(2*kB*T.get_value()/m.get_value()),
+                    graph.underlying_function(np.sqrt(2*kB*T.get_value()/m.get_value()))
+                )),
+            )
+        )
+        middel = always_redraw(lambda:
+            VGroup(
+                VGroup(
+                    Tex(
+                        "Mest {{gennemsnitlige}} hastighed: "
+                    ).set_color_by_tex_to_color_map({"gennemsnitlige": PINK}),
+                    DecimalNumber(
+                        np.sqrt(8 * kB * T.get_value() / (m.get_value() * np.pi)), num_decimal_places=1, unit="~m/s"
+                    )
+                ).scale(0.875).arrange(RIGHT).next_to(hyppigst[0], DOWN, aligned_edge=LEFT),
+                Dot(
+                    stroke_width=0, fill_color=PINK
+                ).move_to(plane.c2p(
+                    np.sqrt(8 * kB * T.get_value() / (m.get_value() * np.pi)),
+                    graph.underlying_function(np.sqrt(8 * kB * T.get_value() / (m.get_value() * np.pi)))
+                )),
+            )
+        )
+        self.play(
+            FadeIn(hyppigst),
+            FadeIn(middel),
+        )
+        self.slide_pause()
+
         self.play(
             T.animate.set_value(1000),
             run_time=2
