@@ -340,7 +340,8 @@ class FormelMasse(MaengdeSkema):
 
     def eksempeludregning(self, elements):
         self.play(
-            elements.animate.scale(1/2).to_edge(UL)
+            elements.animate.scale(1/2).to_edge(UL),
+            self.camera.frame.animate.set(background_color=DARKER_GRAY)
         )
         element_box = get_background_rect(
             elements, fill_color=BLACK, stroke_colour=GREEN
@@ -387,6 +388,18 @@ class FormelMasse(MaengdeSkema):
             run_time=0.5
         )
         self.slide_pause()
+
+        self.play(
+            elements[0].animate.set(
+                stroke_color=eksempel_struktur[1][0][0].get_color(), fill_color=eksempel_struktur[1][0][0].get_color()
+            ),
+            elements[15].animate.set(
+                stroke_color=eksempel_struktur[1][0][2].get_color(), fill_color=eksempel_struktur[1][0][2].get_color()
+            ),
+            elements[7].animate.set(
+                stroke_color=eksempel_struktur[1][0][3].get_color(), fill_color=eksempel_struktur[1][0][3].get_color()
+            )
+        )
 
         eksempel_udregning = VGroup(
             VGroup(

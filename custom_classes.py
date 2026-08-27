@@ -562,45 +562,50 @@ class Molecule2D(VGroup):
     def create_atoms(self):
         atoms = VGroup()
         for atom, vals in self.atoms_dict.items():
-            loc = (vals["x"], vals["y"], vals["z"])
-            atoms.add(self._base_atom(atom, charge=vals["charge"]).move_to(loc))
+            if isinstance(vals, dict):
+                loc = (vals["x"], vals["y"], vals["z"])
+                atoms.add(self._base_atom(atom, charge=vals["charge"]).move_to(loc))
+            else:
+                loc = (vals[0], vals[1], vals[2])
+                atoms.add(self._base_atom(atom, charge=vals[3]).move_to(loc))
         return atoms
 
     def create_bonds(self):
         bonds = VGroup()
-        for donor, receivers in self.bonds_dict.items():
-            donor_element = [atom for atom in self.atoms_dict.keys() if self.atoms_dict[atom]["index"] == int(donor)]
-            donor_element_stripped = ""
-            for c in donor_element[0]:
-                try:
-                    int(c)
-                except:
-                    donor_element_stripped += c
-            donor_atom = self._base_atom(donor_element[0]).move_to((
-                self.atoms_dict[donor_element[0]]["x"],
-                self.atoms_dict[donor_element[0]]["y"],
-                self.atoms_dict[donor_element[0]]["z"]
-            ))
-            for receiver in receivers:
-                receiver_element = [atom for atom in self.atoms_dict.keys() if self.atoms_dict[atom]["index"] == int(receiver)]
-                receiver_element_stripped = ""
-                for c in receiver_element[0]:
+        if isinstance(self.bonds_dict, dict):
+            for donor, receivers in self.bonds_dict.items():
+                donor_element = [atom for atom in self.atoms_dict.keys() if self.atoms_dict[atom]["index"] == int(donor)]
+                donor_element_stripped = ""
+                for c in donor_element[0]:
                     try:
                         int(c)
                     except:
-                        receiver_element_stripped += c
-                receiver_atom = self._base_atom(receiver_element[0]).move_to((
-                    self.atoms_dict[receiver_element[0]]["x"],
-                    self.atoms_dict[receiver_element[0]]["y"],
-                    self.atoms_dict[receiver_element[0]]["z"]
+                        donor_element_stripped += c
+                donor_atom = self._base_atom(donor_element[0]).move_to((
+                    self.atoms_dict[donor_element[0]]["x"],
+                    self.atoms_dict[donor_element[0]]["y"],
+                    self.atoms_dict[donor_element[0]]["z"]
                 ))
-                bonds.add(
-                    self._base_bond(
-                        donor_atom, receiver_atom,
-                        self.electronegativities[donor_element_stripped],
-                        self.electronegativities[receiver_element_stripped]
+                for receiver in receivers:
+                    receiver_element = [atom for atom in self.atoms_dict.keys() if self.atoms_dict[atom]["index"] == int(receiver)]
+                    receiver_element_stripped = ""
+                    for c in receiver_element[0]:
+                        try:
+                            int(c)
+                        except:
+                            receiver_element_stripped += c
+                    receiver_atom = self._base_atom(receiver_element[0]).move_to((
+                        self.atoms_dict[receiver_element[0]]["x"],
+                        self.atoms_dict[receiver_element[0]]["y"],
+                        self.atoms_dict[receiver_element[0]]["z"]
+                    ))
+                    bonds.add(
+                        self._base_bond(
+                            donor_atom, receiver_atom,
+                            self.electronegativities[donor_element_stripped],
+                            self.electronegativities[receiver_element_stripped]
+                        )
                     )
-                )
         return bonds
 
     # def bind_atoms(self):

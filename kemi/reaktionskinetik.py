@@ -291,6 +291,80 @@ class HastighedsFordeling(MovingCameraScene, Slide if slides else Scene):
         self.slide_pause()
 
 
+class HastighedsFordelingThumbnail(HastighedsFordeling):
+    def construct(self):
+        eps = 1e-6
+        _unit = 1.6605E-27 # kg
+        kB = 1.380649E-23 # m^2 kg s^-2 K^-1
+        T = 1500 # K
+        m = 30 * _unit # starter på Brom
+        plane = NumberPlane(
+            x_range=(0, 3000+eps, 500),
+            y_range=(0, 0.001+eps, 0.00025),
+            x_length=11,
+            y_length=6,
+            background_line_style={
+                "stroke_color": LIGHTER_GRAY,
+                "stroke_width": 1,
+                "stroke_opacity": 0.3,
+            },
+            axis_config={
+                "include_tip": True,
+                "tip_shape": StealthTip,
+                "tip_width": 0.2,
+                "tip_height": 0.2
+            },
+        )
+        axis_labels = VGroup(
+            MathTex("v~[m/s]", font_size=36).next_to(plane[2], RIGHT, aligned_edge=DOWN),
+            MathTex("p", font_size=36).next_to(plane[3], UP, aligned_edge=LEFT)
+        )
+        tickmarks = {
+            "x": VGroup(*[Line(
+                start=plane.c2p(x, 0.000025), end=plane.c2p(x, -0.000025),
+                color=WHITE, stroke_width=0.75
+            ) for x in np.arange(0, 3000, 500)]).set_z_index(4),
+            "y": VGroup(*[Line(
+                start=plane.c2p(100, y), end=plane.c2p(100, y),
+                color=WHITE, stroke_width=0.75
+            ) for y in np.arange(0, 0.001, 0.00025)]).set_z_index(4),
+        }
+        ticks = {
+            "x": VGroup(*[DecimalNumber(
+                number=x, num_decimal_places=0, include_sign=x < 0,
+                color=WHITE, font_size=24 if x != 0 else 0.01
+            ).set_z_index(4).next_to(
+                tm, DOWN, buff=0.2
+            ) for x, tm in zip(np.arange(0, 3000, 500), tickmarks["x"])]),
+            "y": VGroup(*[DecimalNumber(
+                number=y, num_decimal_places=5, include_sign=y < 0,
+                color=WHITE, font_size=24 if y != 0 else 0.01
+            ).set_z_index(4).next_to(
+                tm, LEFT, buff=0.5
+            ) for y, tm in zip(np.arange(0, 0.001+eps, 0.00025), tickmarks["y"])]),
+        }
+        graph = always_redraw(lambda:
+            plane.plot(
+                lambda v: (m/(2*np.pi*kB*T))**(3/2) * 4*np.pi*v**2 * np.exp((-m*v**2)/(2*kB*T)),
+                x_range=(0, 3000),
+                color=RED
+            )
+        )
+        andel_areal = plane.get_riemann_rectangles(
+            graph, x_range=(1000, 3000), dx=10, fill_opacity=0.75,
+            stroke_width=0, color=GREEN, show_signed_area=True
+        )
+        VGroup(
+            plane, graph, *tickmarks.values(), *ticks.values(), axis_labels, andel_areal
+        ).scale(0.9).to_edge(DR, buff=0.1)
+        overskrift = Tex(r"Maxwell-Boltzmanns hastighedsfordeling", font_size=60).to_edge(UL)
+        overskrift_boks = get_background_rect(overskrift, stroke_colour=RED, stroke_width=4)
+        VGroup(overskrift, overskrift_boks).to_edge(UL, buff=0.05)
+        self.add(
+            plane, graph, *tickmarks.values(), *ticks.values(), axis_labels, overskrift, overskrift_boks, andel_areal
+        )
+
+
 if __name__ == "__main__":
     classes = [
         HastighedsFordeling,
