@@ -1305,9 +1305,10 @@ if __name__ == "__main__":
         # BasisSandsynlighed,
         # DeskriptorerBinomial,
         # BinomialFordeling,
-        BinomialTestKonfidens,
-        BinomialTestEn,
-        BinomialTestTo
+        BinomialTest,
+        # BinomialTestKonfidens,
+        # BinomialTestEn,
+        # BinomialTestTo
     ]
     for cls in classes:
         class_name = cls.__name__
