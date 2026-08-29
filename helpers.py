@@ -303,7 +303,7 @@ def create_table(data, orientation="vertical", numcol1=BLUE, numcol2=None, dec=0
 slides = False
 
 
-def slides_pause(self, t=1.0, slides_bool=True):
+def slides_pause(self, t=1.0, slides_bool=True, indicator_scale_factor=1.0):
     if t <= 0:
         pass
     if slides_bool:
@@ -313,7 +313,7 @@ def slides_pause(self, t=1.0, slides_bool=True):
         # ).scale(0.5).to_edge(DR, buff=0.1)
         indicator = MathTex(
             ">", font_size=50, color=GREEN, stroke_width=7, fill_opacity=0.5, stroke_opacity=0.5
-        ).to_edge(DR, buff=0.1).set_z_index(100)
+        ).scale(indicator_scale_factor).to_edge(DR, buff=0.1).set_z_index(100)
         indicator.move_to(self.camera.frame.get_corner(DR)).shift(0.5*indicator.width*LEFT+0.5*indicator.width*UP)
         # indicator = Dot(fill_opacity=0.5, fill_color=GREEN).scale(0.5).move_to(
         #     0.45 * (ManimFrame().frame_width * RIGHT + ManimFrame().frame_height * DOWN)

@@ -812,7 +812,7 @@ class TerningHenfald(MovingCameraScene, Slide if slides else Scene):
 
 if __name__ == "__main__":
     classes = [
-        ToPunktExp,
+        # ToPunktExp,
         TerningHenfald
     ]
     for cls in classes:

@@ -31,7 +31,7 @@ class BasisSandsynlighed(MovingCameraScene, Slide if slides else Scene):
         self.slide_pause(5)
 
     def slide_pause(self, t=1.0, slides_bool=slides):
-        return slides_pause(self, t, slides_bool)
+        return slides_pause(self, t, slides_bool, indicator_scale_factor=0.5)
 
     def stokastisk_variabel(self):
         np.random.seed(42)
@@ -52,7 +52,7 @@ class BasisSandsynlighed(MovingCameraScene, Slide if slides else Scene):
         slices = always_redraw(lambda:
             VGroup(
                 Sector(
-                    radius=2*radius, start_angle=PI/2, arc_center=circle_diagram.get_center(),
+                    radius=radius, start_angle=PI/2, arc_center=circle_diagram.get_center(),
                     angle=pA.get_value() * TAU, fill_color=cmap["A"], fill_opacity=0.75, stroke_color=cmap["A"],
                     stroke_width=0.75
                 ),
@@ -343,26 +343,26 @@ class BinomialFordeling(DeskriptorerBinomial):
 
     def basis_for_graphing(self):
         cmap = self.get_cmap()
+        n, p = 50, 0.5
+        n, p = ValueTracker(n), ValueTracker(p)
         xmin, xmax, xstep = 0, 50, 5
         ymin, ymax, ystep = 0, 0.25, 0.05
-        plane = Axes(
-            x_range=(xmin, xmax, xstep),
+        plane = always_redraw(lambda: Axes(
+            x_range=(xmin, int(np.max([xmax, np.ceil(n.get_value())]), xstep * n.get_value()//xmax)),
             y_range=(ymin, ymax, ystep),
             x_length=12,
             y_length=5,
             x_axis_config={"include_numbers": True},
             y_axis_config={"include_numbers": True},
             tips=False
-        ).set_z_index(1).to_edge(DL)
-        axhlines = VGroup(*[
+        ).set_z_index(1).to_edge(DL))
+        axhlines = always_redraw(lambda: VGroup(*[
             DashedLine(
-                start=plane.c2p(0, y), end=plane.c2p(xmax, y), stroke_width=0.5
+                start=plane.c2p(0, y), end=plane.c2p(np.max([xmax, np.ceil(n.get_value())]), y), stroke_width=0.5
             ) for y in plane[1].get_tick_range()
-        ]).set_z_index(plane.get_z_index()+1)
+        ]).set_z_index(plane.get_z_index()+1))
         self.add(plane, axhlines)
 
-        n, p = 50, 0.5
-        n, p = ValueTracker(n), ValueTracker(p)
         param_labels = always_redraw(lambda:
             VGroup(
                 VGroup(
@@ -494,24 +494,43 @@ class BinomialFordeling(DeskriptorerBinomial):
         )
         self.add(musig_vals)
 
+        self.slide_pause()
+
         self.play(
             p.animate.set_value(0.125),
-            run_time=1/_FRAMERATE[q]
+            # run_time=1/_FRAMERATE[q]
+            run_time=5
         )
         self.slide_pause()
         self.play(
             # n.animate.set_value(50),
             p.animate.set_value(0.95),
-            run_time=1/_FRAMERATE[q]
+            # run_time=1/_FRAMERATE[q]
+            run_time=5
         )
+        self.slide_pause()
+
+        # self.play(
+        #     p.animate.set_value(0.05),
+        #     run_time=5
+        # )
+        # self.slide_pause()
+        #
+        # self.play(
+        #     n.animate.set_value(200),
+        #     run_time=5
+        # )
+        # self.slide_pause()
 
 
 class BinomialTest(BinomialFordeling):
+    _additional_input = " --flush_cache --disable_caching"
+
     def construct(self):
-        # self.konfidensinterval()
-        # self.overgang1()
-        # self.to_sidet_test()
-        # self.overgang2()
+        self.konfidensinterval()
+        self.overgang1()
+        self.to_sidet_test()
+        self.overgang2()
         self.enkel_sidet_test()
         self.slide_pause(5)
 
@@ -650,10 +669,10 @@ class BinomialTest(BinomialFordeling):
         # )
         # self.slide_pause(5*_ONEFRAME)
 
-        self.play(
-            parameter_tekst.animate.scale(0.75).to_edge(UL),
-            run_time=0.5
-        )
+        # self.play(
+        #     parameter_tekst.animate.scale(0.75).to_edge(UL),
+        #     run_time=0.5
+        # )
         # self.slide_pause(5*_ONEFRAME)
 
         afvigelser_tekst = VGroup(
@@ -662,12 +681,16 @@ class BinomialTest(BinomialFordeling):
         ).scale(0.75).arrange(DOWN, aligned_edge=LEFT).to_edge(UR)
         # self.add(afvigelser_tekst)
         self.play(
-            Write(afvigelser_tekst)
+            LaggedStart(
+                parameter_tekst.animate.scale(0.75).to_edge(UL),
+                Write(afvigelser_tekst),
+                lag_ratio=0.8
+            )
         )
         self.slide_pause(5*_ONEFRAME)
 
         signifikans_tekst = Tex(
-            "Normalt sættes {{signifikans}}niveauet til ", "$95\%$"
+            "Normalt sættes {{signifikans}}niveauet til ", r"$95\%$"
         ).set_color_by_tex_to_color_map(cmap).next_to(plane, UP, buff=0.25)
         signifikans_tekst[-1].set_color(cmap["tilfæl"])
         # self.add(signifikans_tekst)
@@ -960,13 +983,21 @@ class BinomialTest(BinomialFordeling):
         )
         self.slide_pause(5*_ONEFRAME)
         for i, led in enumerate(ligning_sum[1:]):
-            self.play(
-                TransformMatchingShapes(
-                    ligning[:5].copy(),
-                    led,
-                    fade_transform_mismatches=True
+            try:
+                self.play(
+                    TransformMatchingShapes(
+                        ligning[:5].copy(),
+                        led,
+                        fade_transform_mismatches=True
+                    )
                 )
-            )
+            except:
+                self.play(
+                    ReplacementTransform(
+                        ligning[:5].copy(),
+                        led
+                    )
+                )
             self.slide_pause(5*_ONEFRAME)
 
         alle_udregninger = VGroup(
@@ -1018,8 +1049,8 @@ class BinomialTest(BinomialFordeling):
         )
 
         forklaring_tekst = VGroup(
-            Tex("Til en ", "tosidet", " test med ", "signifikans", "niveau på ", "$95\%$").set_color_by_tex_to_color_map(cmap),
-            Tex("skal grænsen findes ved ", "$2.5\%$", " på hver side.")
+            Tex("Til en ", "tosidet", " test med ", "signifikans", "niveau på ", r"$95\%$").set_color_by_tex_to_color_map(cmap),
+            Tex("skal grænsen findes ved ", r"$2.5\%$", " på hver side.")
         ).arrange(DOWN)
         forklaring_tekst[0][-1].set_color(cmap["tilfæl"])
         forklaring_tekst[1][1].set_color(cmap["signif"])
@@ -1056,7 +1087,7 @@ class BinomialTest(BinomialFordeling):
         section_headers = VGroup(
             *[
                 Tex(
-                    l, " $2.5\%$", color=c
+                    l, r" $2.5\%$", color=c
                 ).next_to(sec, dire, aligned_edge=UP).shift(0.25*DOWN) for l, c, sec, dire in zip(
                     ("Nedre", "Øvre"), (sections[0].get_color(), sections[1].get_color()),
                     (sections[1], sections[0]), (LEFT, RIGHT)
@@ -1118,7 +1149,7 @@ class BinomialTest(BinomialFordeling):
         self.slide_pause(5*_ONEFRAME)
 
         konklusion_tekst = VGroup(
-            Tex("Grænsen til de ", "nederste $2.5\%$", " er ", f"{lowers[0]}", "."),
+            Tex("Grænsen til de ", r"nederste $2.5\%$", " er ", f"{lowers[0]}", "."),
             Tex("Derfor er observationen ", f"$r={r}$", " mere afvigende,"),
             Tex("end hvad vi forventer fra ", "tilfældighed"),
             Tex("og vi kan derfor ", "forkaste", " hypotesen om, at mønten er ærlig.")
@@ -1227,16 +1258,63 @@ class BinomialTest(BinomialFordeling):
         self.slide_pause(5*_ONEFRAME)
 
 
+class BinomialTestKonfidens(BinomialTest):
+    def construct(self):
+        self.camera.background_color = DARKER_GRAY
+        title = Tex("Konfidensinterval").scale(2)
+        self.add(title)
+        self.slide_pause()
+        self.play(
+            FadeOut(title),
+            run_time=0.25
+        )
+        self.konfidensinterval()
+
+
+
+class BinomialTestTo(BinomialTest):
+    def construct(self):
+        self.camera.background_color = DARKER_GRAY
+        title = Tex("Tosidet binomialtest").scale(2)
+        self.add(title)
+        self.slide_pause()
+        self.play(
+            FadeOut(title),
+            run_time=0.25
+        )
+        self.overgang1()
+        self.to_sidet_test()
+
+
+class BinomialTestEn(BinomialTest):
+    def construct(self):
+        self.camera.background_color = DARKER_GRAY
+        title = Tex("Enkeltsidet binomialtest").scale(2)
+        self.add(title)
+        self.slide_pause()
+        self.play(
+            FadeOut(title),
+            run_time=0.25
+        )
+        self.overgang2()
+        self.enkel_sidet_test()
+
+
 if __name__ == "__main__":
     classes = [
-        BasisSandsynlighed,
-        DeskriptorerBinomial,
-        BinomialFordeling,
-        BinomialTest
+        # BasisSandsynlighed,
+        # DeskriptorerBinomial,
+        # BinomialFordeling,
+        BinomialTestKonfidens,
+        BinomialTestEn,
+        BinomialTestTo
     ]
     for cls in classes:
         class_name = cls.__name__
-        command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}"
+        add_inp = ""
+        if hasattr(cls, "_additional_input"):
+            add_inp = cls._additional_input
+        command = rf"manim {sys.argv[0]} {class_name} -p --resolution={_RESOLUTION[q]} --frame_rate={_FRAMERATE[q]}{add_inp}"
         scene_marker(rf"RUNNNING:    {command}")
         subprocess.run(command)
         if slides and q == "h":
