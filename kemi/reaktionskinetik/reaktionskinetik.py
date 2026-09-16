@@ -8,8 +8,8 @@ import sys
 
 from manim_chemistry import ChemicalFormula
 
-sys.path.append("../")
 sys.path.append("../../")
+sys.path.append("../../../")
 import numpy as np
 import pandas as pd
 import scipy
@@ -18,7 +18,7 @@ from helpers import *
 from custom_classes import *
 # from manim_chemistry import *
 
-slides = True
+slides = False
 if slides:
     from manim_slides import Slide
 
@@ -365,9 +365,92 @@ class HastighedsFordelingThumbnail(HastighedsFordeling):
         )
 
 
+class Energidiagrammer(MovingCameraScene, Slide if slides else Scene):
+    def construct(self):
+        # self.camera.background_color = DARKER_GRAY
+        self.camera.background_color = WHITE
+        # title = Tex(r"Maxwell-Boltzmanns \\hastighedsfordeling").scale(2)
+        # self.add(title)
+        # self.slide_pause()
+        # self.play(
+        #     FadeOut(title),
+        #     run_time=0.25
+        # )
+        # self.basis_energidiagram()
+        self.flertrin_energidiagram()
+        self.wait(5)
+
+    def slide_pause(self, t=0.5, slides_bool=slides):
+        return slides_pause(self, t, slides_bool)
+
+    def get_cmap(self):
+        return {"reak": GREEN, "prod": GOLD, "tran": RED}
+
+    def flertrin_energidiagram(self):
+        cmap = self.get_cmap()
+        plane = Axes(
+            x_range=(0, 8, 8),
+            y_range=(0, 1, 0.1),
+            x_length=11,
+            y_length=6,
+            # background_line_style={
+            #     "stroke_color": LIGHTER_GRAY,
+            #     "stroke_width": 1,
+            #     "stroke_opacity": 0.3,
+            # },
+            axis_config={
+                "include_tip": True,
+                "tip_shape": StealthTip,
+                "tip_width": 0.2,
+                "tip_height": 0.2
+            },
+        ).set_color(BLACK)
+        axis_labels = VGroup(
+            Tex("Reaktionskoordinat", color=BLACK, font_size=36).next_to(plane[0], UP, aligned_edge=RIGHT),
+            MathTex("E_{pot}", color=BLACK, font_size=36).next_to(plane[1], RIGHT, aligned_edge=UP),
+        )
+        _points = [
+            (1, 0.5, 0),
+            (2, 0.5, 0),
+            (3, 0.8, 0),
+            (4, 0.35, 0),
+            (5, 0.7, 0),
+            (6, 0.3, 0),
+            (7, 0.3, 0)
+        ]
+        points = [plane.c2p(p) for p in _points]
+        dots = VGroup(
+            *[
+                Dot().move_to(plane.c2p(_p)) for _p in _points
+            ]
+        )
+        lines = VGroup(
+            *[
+                CubicBezier(
+                    p1, p1+0.5*RIGHT, p2+0.5*LEFT, p2, color=BLACK, stroke_width=8
+                ) for p1, p2 in zip(points[:-1], points[1:])
+            ]
+        )
+        self.add(lines, plane, axis_labels)
+
+        dashed_lines = VGroup(
+            *[
+                DashedLine(
+                    start=plane.c2p(0, y), end=plane.c2p(x, y), color=c, stroke_width=2
+                ) for x, y, c in zip(
+                    (_points[0][0], _points[2][0], _points[3][0], _points[4][0], _points[5][0]),
+                    (_points[0][1], _points[2][1], _points[3][1], _points[4][1], _points[5][1]),
+                    (cmap["reak"], cmap["tran"], interpolate_color(cmap["reak"], cmap["prod"], 0.5), cmap["tran"], cmap["prod"])
+                )
+            ]
+        )
+        self.add(dashed_lines)
+
+
 if __name__ == "__main__":
     classes = [
-        HastighedsFordeling,
+        # HastighedsFordeling,
+        Energidiagrammer,
     ]
     for cls in classes:
         class_name = cls.__name__

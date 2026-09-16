@@ -102,6 +102,7 @@ class BohrAtom(VGroup):
         electron_color=BLUE,
         proton_color=RED,
         neutron_color=WHITE,
+        orbit_stroke_width=1,
         separate_nuclei=False,
         sheen_factor=-0.25,
         sheen_direction=DR,
@@ -119,6 +120,7 @@ class BohrAtom(VGroup):
         self.neutron_color = neutron_color
         self.add(self.orbitals_group(), self.electrons_group(), self.nuclei_groups())
         # self.add(self.orbitals_group(), self.electrons_group(), self.protons_group(), self.neutrons_group())
+        self.orbit_stroke_width = orbit_stroke_width
         self.separate_nuclei = separate_nuclei
         self.sheen_factor = sheen_factor
         self.sheen_direction = sheen_direction
@@ -150,12 +152,12 @@ class BohrAtom(VGroup):
             next(x for x in list(TOTAL_ELECTRONS_PER_LEVEL.keys()) if x >= self.e)
         ]
 
-    def calculate_arrangement_angles(self, n_electrons: int = 0):
+    def OLDcalculate_arrangement_angles(self, n_electrons: int = 0):
         print(n_electrons)
         arrangement_angles = []
         if n_electrons <= 4:
             arrangement_angles.append([
-                i * TAU / n_electrons for i in range(n_electrons)
+                i * TAU / 4 for i in range(n_electrons)
             ])
         elif 4 < n_electrons <= 8:
             # arrangement_angles = [
@@ -163,19 +165,19 @@ class BohrAtom(VGroup):
             #     *[i * (TAU - 0) / 4 + 0.05 * PI for i in range(4) if i < n_electrons % 4],
             #     *[i * (TAU - 0) / 4 - 0.05 * PI for i in range(4) if i < n_electrons % 4],
             # ]
-            arrangement_angles.append([0.05*PI, -0.05*PI])
+            arrangement_angles.append([0.05 * PI, -0.05 * PI])
             if n_electrons >= 6:
-                arrangement_angles.append([1.05*PI, 0.95*PI])
+                arrangement_angles.append([1.05 * PI, 0.95 * PI])
             else:
-                arrangement_angles.append([1.0*PI])
+                arrangement_angles.append([1.0 * PI])
             if n_electrons >= 7:
-                arrangement_angles.append([0.55*PI, 0.45*PI])
+                arrangement_angles.append([0.55 * PI, 0.45 * PI])
             else:
-                arrangement_angles.append([0.5*PI])
+                arrangement_angles.append([0.5 * PI])
             if n_electrons == 8:
-                arrangement_angles.append([1.55*PI, 1.45*PI])
+                arrangement_angles.append([1.55 * PI, 1.45 * PI])
             else:
-                arrangement_angles.append([1.5*PI])
+                arrangement_angles.append([1.5 * PI])
         # elif n_electrons == 8:
         #     arrangement_angles = [
         #         *[i * (2*TAU - 0)/n_electrons + 0.05*PI for i in range(4)],
@@ -186,11 +188,43 @@ class BohrAtom(VGroup):
         # print(arrangement_angles)
         return arrangement_angles
 
+    def calculate_arrangement_angles(self, n_electrons: int = 0, shell: int = 1):
+        ba = [i * 90*DEGREES for i in (0, 2, 1, 3)] # base angles
+        oa = [a * 5 * DEGREES for a in (1, -1)] # offset angles
+        shell_angles = {
+            1: {
+                1: [ba[0]], 2: [ba[0] + a for a in oa]
+            },
+            2: {
+                1: [ba[0]], 2: [ba[i] for i in range(2)], 3: [ba[i] for i in range(3)], 4: [ba[j] for j in range(4)],
+                5: [*[ba[i] + a for i in range(1) for a in oa], *[ba[j] for j in (1, 2, 3)]],
+                6: [*[ba[i] + a for i in range(2) for a in oa], *[ba[j] for j in (2, 3)]],
+                7: [*[ba[i] + a for i in range(3) for a in oa], *[ba[3]]],
+                8: [*[ba[i] + a for i in range(4) for a in oa]],
+            },
+            3: {
+                1: [ba[0]], 2: [ba[i] for i in range(2)], 3: [ba[i] for i in range(3)], 4: [ba[j] for j in range(4)],
+                5: [*[ba[i] + a for i in range(1) for a in oa], *[ba[j] for j in (1, 2, 3)]],
+                6: [*[ba[i] + a for i in range(2) for a in oa], *[ba[j] for j in (2, 3)]],
+                7: [*[ba[i] + a for i in range(3) for a in oa], *[ba[3]]],
+                8: [*[ba[i] + a for i in range(4) for a in oa]],
+            },
+        }
+        # shell = 1 if n_electrons <= 2 else 2
+        # print(f"Skaller: {shell}\nantal elektroner: {n_electrons}\nkoord: {shell_angles[shell][n_electrons]}\n\n")
+        arrangement_angles = shell_angles[shell][n_electrons]
+        return arrangement_angles
+
     def orbitals_group(self):
         return VGroup(
             *[
                 # Circle(radius=1 + i, color=self.orbit_color)
-                Circle(radius=1 + i + self.n_nucleons()**0.1, color=self.orbit_color)
+                Circle(
+                    radius=1 + i + self.n_nucleons()**0.1,
+                    color=self.orbit_color,
+                    # stroke_width=self.orbit_stroke_width
+                    stroke_width=1
+                )
                 # TODO: Find ud af, hvordan afstanden kan skrives til at være nogenlunde rigtig
                 for i in range(self.occupied_levels)
             ]
@@ -215,7 +249,7 @@ class BohrAtom(VGroup):
         if self.p > 1:
             # [proton.shift(np.random.uniform(-0.05, 0.05, 3) * self.n_nucleons()**0.5) for proton in protons]
             [proton.move_to(Circle(
-                radius=np.random.uniform(0, 0.05)*self.n_nucleons()**0.5
+                radius=np.random.uniform(0, 0.1)*self.n_nucleons()**0.5
             ).point_at_angle(np.random.uniform(0, 2*PI))) for proton in protons]
             [proton.set_z_index(2*z) for z, proton in enumerate(protons)]
         # print(protons[0].nuclid_color, type(protons[0].nuclid_color), self.proton_color, type(self.proton_color))
@@ -237,7 +271,7 @@ class BohrAtom(VGroup):
         if self.n > 1:
             # [neutron.shift(np.random.uniform(-0.05, 0.05, 3) * self.n_nucleons()**0.5) for neutron in neutrons]
             [neutron.move_to(Circle(
-                radius=np.random.uniform(0, 0.05)*self.n_nucleons()**0.5
+                radius=np.random.uniform(0, 0.1)*self.n_nucleons()**0.5
             ).point_at_angle(np.random.uniform(0, 2*PI))) for neutron in neutrons]
             [neutron.set_z_index(2*z + 1) for z, neutron in enumerate(neutrons)]
         return neutrons
@@ -245,8 +279,13 @@ class BohrAtom(VGroup):
     def nuclei_groups(self) -> VGroup:#, protons: list, neutrons: list) -> VGroup:
         protons = self.protons_group()
         neutrons = self.neutrons_group()
-        nuclei = VGroup(*protons, *neutrons)
-        random.shuffle(nuclei)
+        a = len(protons) + len(neutrons)
+        # nuclei = VGroup(*protons, *neutrons)
+        # random.shuffle(nuclei)
+        nuclei = VGroup()
+        for nuc in protons.add(neutrons):
+            nuc.set_z_index(np.random.uniform(1, a))
+            nuclei.add(nuc)
         return VGroup(*nuclei)
 
     def electrons_group(self):
@@ -267,12 +306,12 @@ class BohrAtom(VGroup):
             if remaining_electrons > level_electrons:
                 # group = self.arrange_electrons(level_electrons, level)
                 group = self.arrange_electrons(
-                    level_electrons, self.orbitals_group()[level-1].radius, use_orig_method=False
+                    level_electrons, level, self.orbitals_group()[level-1].radius, use_orig_method=False
                 )
             else:
                 # group = self.arrange_electrons(remaining_electrons, level)
                 group = self.arrange_electrons(
-                    remaining_electrons, self.orbitals_group()[level-1].radius, use_orig_method=False
+                    remaining_electrons, level, self.orbitals_group()[level-1].radius, use_orig_method=False
                 )
                 electrons_group.add(group)
                 break
@@ -282,20 +321,20 @@ class BohrAtom(VGroup):
 
         return electrons_group
 
-    def arrange_electrons(self, n_electrons, level, use_orig_method=True):
+    def arrange_electrons(self, n_electrons, level, shell_radius, use_orig_method=False):
         level_group = VGroup()
-        arrangement_angles = np.arange(0, TAU, TAU / n_electrons) if use_orig_method else self.calculate_arrangement_angles(n_electrons)
+        arrangement_angles = np.arange(0, TAU, TAU / n_electrons) if use_orig_method else self.calculate_arrangement_angles(n_electrons, shell=level)
         # for angle in np.arange(0, TAU, TAU / n_electrons):
-        for angle in self.calculate_arrangement_angles(n_electrons):
-            print(f"Angle={angle}")
+        # for angle in self.calculate_arrangement_angles(n_electrons):
+        for angle in arrangement_angles:
+            # print(f"Angle={angle}")
             electron = Dot(
                 color=self.electron_color, sheen_factor=self.sheen_factor, sheen_direction=self.sheen_direction,
                 stroke_width=1, stroke_color=BLACK
             ).scale(2)
-            electron.shift(level * UP)
+            electron.shift(shell_radius * UP)
             electron.rotate(angle, about_point=[0, 0, 0])
             level_group.add(electron)
-
         return level_group
 
     def get_orbitals(self):
@@ -492,7 +531,7 @@ class Molecule2D(VGroup):
         self.electronegativities = {
             'H': 2.2, 'He': 0.0,
             'Li': 0.98, 'Be': 1.57, 'B': 2.04, 'C': 2.55, 'N': 3.04, 'O': 3.44, 'F': 3.98, 'Ne': 0.0,
-            'Na': 0.93, '   Mg': 1.31, 'Al': 1.61, 'Si': 1.9, 'P': 2.19, 'S': 2.58, 'Cl': 3.16, 'Ar': 0.0,
+            'Na': 0.93, 'Mg': 1.31, 'Al': 1.61, 'Si': 1.9, 'P': 2.19, 'S': 2.58, 'Cl': 3.16, 'Ar': 0.0,
             'K': 0.82, 'Ca': 1.0, 'Sc': 1.36, 'Ti': 1.54, 'V': 1.63, 'Cr': 1.66, 'Mn': 1.55, 'Fe': 1.83, 'Co': 1.88,
             'Ni': 1.91, 'Cu': 1.9, 'Zn': 1.65, 'Ga': 1.81, 'Ge': 2.01, 'As': 2.18, 'Se': 2.55, 'Br': 2.96, 'Kr': 3.0,
             'Rb': 0.82, 'Sr': 0.95, 'Y': 1.22, 'Zr': 1.33, 'Nb': 1.6, 'Mo': 2.16, 'Tc': 1.9, 'Ru': 2.2, 'Rh': 2.28,
