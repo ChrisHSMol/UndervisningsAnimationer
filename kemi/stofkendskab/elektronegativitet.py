@@ -347,7 +347,8 @@ class PolarBonds(ElektronegativitetTabel):
         # molekyler, hvor bindingerne bliver gradientfarvet fra f.eks. blå til rød med intensitet svarende til
         # deres EN-forskel. Upolære bindinger er hvide.
         # self.polar_bonds()
-        self.cfc()
+        # self.cfc()
+        self.mgo()
         self.wait()
         # pass
 
@@ -399,6 +400,19 @@ class PolarBonds(ElektronegativitetTabel):
             },
             bonds_dict={
                 "0": (1, 2, 3, 4),
+            }
+        )
+        self.add(molecule)
+
+    def mgo(self):
+        atomer = ("Mg", "O")
+        molecule = Molecule2D(
+            atoms_dict={
+                atomer[0]: {"x": 0, "y": 0, "z": 0, "charge": 0, "index": 0},
+                atomer[1]: {"x": 0, "y": 1, "z": 0, "charge": 0, "index": 1},
+            },
+            bonds_dict={
+                "Mg": (1),
             }
         )
         self.add(molecule)

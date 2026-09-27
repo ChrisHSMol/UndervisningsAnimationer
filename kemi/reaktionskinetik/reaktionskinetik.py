@@ -22,7 +22,7 @@ slides = False
 if slides:
     from manim_slides import Slide
 
-q = "h"
+q = "l"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -447,10 +447,177 @@ class Energidiagrammer(MovingCameraScene, Slide if slides else Scene):
         self.add(dashed_lines)
 
 
+class BestemmelseAfHastighedsudtryk(Energidiagrammer):
+    def construct(self):
+        self.camera.background_color = DARKER_GRAY
+        conc_data = self.show_first_graph()
+        self.show_velocity(conc_data)
+        self.wait(5)
+
+    def get_data_points(self):
+        times = [0, 100, 200, 400, 600, 900, 1200, 1500] # s
+        concs = [5.0e-3, 4.65e-3, 4.32e-3, 3.74e-3, 3.23e-3, 2.60e-3, 2.09e-3, 1.68e-3] # M
+        return [times, concs]
+
+    def get_cmap(self):
+        return {"tid": BLUE, "konc": YELLOW, "velo": RED}
+
+    def show_first_graph(self):
+        times, concs = self.get_data_points()
+        cmap = self.get_cmap()
+        t_start, t_slut, eps = 0, 1.05*max(times), 1e-6
+        plane = NumberPlane(
+            x_range=(t_start-eps, t_slut+eps+0.25, 250),
+            y_range=(0, 1.05*max(concs)+eps, 1e-3),
+            x_length=8.5,
+            y_length=7,
+            background_line_style={
+                "stroke_color": LIGHTER_GRAY,
+                "stroke_width": 1,
+                "stroke_opacity": 0.3,
+            },
+            axis_config={
+                # "include_numbers": True,
+                "include_tip": True,
+                "tip_shape": StealthTip,
+                "tip_width": 0.2,
+                "tip_height": 0.2
+            },
+        )
+        # ).to_edge(LEFT, buff=0.2)
+        axis_labels = VGroup(*[
+            MathTex(
+                lab, color=c, font_size=36
+            ).move_to(plane.c2p(coord)).set_z_index(plane.get_z_index()+5)
+            for lab, c, coord in zip(
+                ["t~[s]", "[N_2O_5]~[M]"], [cmap["tid"], cmap["konc"]], [(1500, 2.5e-4), (200, 5.0e-3)]
+            )
+        ])
+        tickmarks = {
+            "x": VGroup(*[Line(
+                start=plane.c2p(x, 5.0e-5), end=plane.c2p(x, -5.0e-5), color=WHITE, stroke_width=1.5
+            ) for x in np.arange(0, 1501, 250)]).set_z_index(4),
+            "y": VGroup(*[Line(
+                start=plane.c2p(10, y), end=plane.c2p(-10, y), color=WHITE, stroke_width=1.5
+            ) for y in np.arange(0, 6.0e-3, 1.0e-3)]).set_z_index(4),
+        }
+        ticks = {
+            "x": VGroup(*[DecimalNumber(
+                number=x, num_decimal_places=0, include_sign=x < 0, color=cmap["tid"], font_size=24 if x != 0 else 0.01
+            ).set_z_index(4).next_to(
+                tm, DOWN, buff=0.2
+            ) for x, tm in zip(np.arange(0, 1501, 250), tickmarks["x"])]),
+            "y": VGroup(*[DecimalNumber(
+                number=y, num_decimal_places=3, include_sign=y < 0, color=cmap["konc"], font_size=24 if y != 0 else 0.01
+            ).set_z_index(4).next_to(
+                tm, LEFT, buff=0.2
+            ) for y, tm in zip(np.arange(0, 6.0e-3, 1.0e-3), tickmarks["y"])]),
+        }
+        # tick_bgs = VGroup(
+        #     *[
+        #         SurroundingRectangle(
+        #         m, stroke_width=0, fill_opacity=1, fill_color=DARKER_GRAY, buff=0.025
+        #         ) for m in ticks["x"]
+        #     ],
+        #     *[
+        #         SurroundingRectangle(
+        #         m, stroke_width=0, fill_opacity=1, fill_color=DARKER_GRAY, buff=0.025
+        #         ) for m in ticks["y"]
+        #     ],
+        #     *[
+        #         SurroundingRectangle(
+        #         m, stroke_width=0, fill_opacity=1, fill_color=DARKER_GRAY, buff=0.025
+        #         ) for m in axis_labels
+        #     ]
+        # )
+        [m.scale(0.9) for m in self.mobjects]
+        self.add(plane, axis_labels, *tickmarks.values(), *ticks.values())
+        self.slide_pause(5*_ONEFRAME)
+
+        data_points = VGroup(
+            *[
+                Dot().move_to(plane.c2p(t, c)) for t, c in zip(times, concs)
+            ]
+        )
+        self.add(data_points)
+        self.slide_pause(5*_ONEFRAME)
+
+        regression = np.exp(np.polyfit(times, np.log(concs), 1))
+        graph = plane.plot(
+            lambda x: regression[1] * regression[0]**x,
+            color=cmap["konc"]
+        ).set_z_index(2)
+        self.add(graph)
+        self.slide_pause(5*_ONEFRAME)
+        self.remove(plane, axis_labels, *tickmarks.values(), *ticks.values(), data_points, graph)
+        return [plane, axis_labels, tickmarks, ticks, data_points, regression, graph]
+
+    def show_velocity(self, prev_mobs):
+        conc_plane, conc_axis_labels, conc_tickmarks, conc_ticks, data_points, regression, conc_graph = prev_mobs
+        self.add(conc_plane, conc_axis_labels, conc_tickmarks, conc_ticks, data_points, regression, conc_graph)
+
+        times, concs = self.get_data_points()
+        cmap = self.get_cmap()
+        c_start, c_slut, eps = 0, 1.05*max(concs), 1e-6
+        v_start = -0.5
+        v_slut = -v_start*1.05
+        velo_plane = NumberPlane(
+            x_range=(c_start-eps, c_slut+eps+0.25, 1e-3),
+            y_range=(v_start-eps, v_slut+eps, 2e-1),
+            x_length=8.5,
+            y_length=7,
+            background_line_style={
+                "stroke_color": LIGHTER_GRAY,
+                "stroke_width": 1,
+                "stroke_opacity": 0.3,
+            },
+            axis_config={
+                # "include_numbers": True,
+                "include_tip": True,
+                "tip_shape": StealthTip,
+                "tip_width": 0.2,
+                "tip_height": 0.2
+            },
+        )
+        # ).to_edge(LEFT, buff=0.2)
+        # axis_labels = VGroup(*[
+        #     MathTex(
+        #         lab, color=c, font_size=36
+        #     ).move_to(plane.c2p(coord)).set_z_index(plane.get_z_index()+5)
+        #     for lab, c, coord in zip(
+        #         ["t~[s]", "[N_2O_5]~[M]"], [cmap["tid"], cmap["konc"]], [(1500, 2.5e-4), (200, 5.0e-3)]
+        #     )
+        # ])
+        # tickmarks = {
+        #     "x": VGroup(*[Line(
+        #         start=plane.c2p(x, 5.0e-5), end=plane.c2p(x, -5.0e-5), color=WHITE, stroke_width=1.5
+        #     ) for x in np.arange(0, 1501, 250)]).set_z_index(4),
+        #     "y": VGroup(*[Line(
+        #         start=plane.c2p(10, y), end=plane.c2p(-10, y), color=WHITE, stroke_width=1.5
+        #     ) for y in np.arange(0, 6.0e-3, 1.0e-3)]).set_z_index(4),
+        # }
+        # ticks = {
+        #     "x": VGroup(*[DecimalNumber(
+        #         number=x, num_decimal_places=0, include_sign=x < 0, color=cmap["tid"], font_size=24 if x != 0 else 0.01
+        #     ).set_z_index(4).next_to(
+        #         tm, DOWN, buff=0.2
+        #     ) for x, tm in zip(np.arange(0, 1501, 250), tickmarks["x"])]),
+        #     "y": VGroup(*[DecimalNumber(
+        #         number=y, num_decimal_places=3, include_sign=y < 0, color=cmap["konc"], font_size=24 if y != 0 else 0.01
+        #     ).set_z_index(4).next_to(
+        #         tm, LEFT, buff=0.2
+        #     ) for y, tm in zip(np.arange(0, 6.0e-3, 1.0e-3), tickmarks["y"])]),
+        # }
+        velo_plane.next_to(conc_plane, RIGHT)
+        self.camera.frame.scale(0.75).move_to(VGroup(conc_plane, velo_plane))
+        self.add(velo_plane)
+
+
 if __name__ == "__main__":
     classes = [
         # HastighedsFordeling,
-        Energidiagrammer,
+        # Energidiagrammer,
+        BestemmelseAfHastighedsudtryk
     ]
     for cls in classes:
         class_name = cls.__name__
