@@ -486,7 +486,8 @@ class BestemmelseAfHastighedsudtryk(Energidiagrammer):
         problem_text[3].next_to(problem_text[2], DOWN, aligned_edge=RIGHT)
         for t in problem_text:
             self.play(
-                Write(t)
+                Write(t),
+                run_time=0.5
             )
             self.slide_pause()
         self.play(
@@ -615,6 +616,64 @@ class BestemmelseAfHastighedsudtryk(Energidiagrammer):
         # )
         # self.slide_pause()
 
+        data_table_structure = VGroup(
+            *[
+                VGroup(
+                    *[
+                        Rectangle(
+                            width=2, height=0.75, stroke_width=0.1, fill_color=c, fill_opacity=0.05
+                        ) for c in [cmap["tid"], cmap["konc"]]
+                    ]
+                ).arrange(RIGHT, buff=0.05) for _ in range(len(times) + 1)
+            ]
+        ).arrange(DOWN, buff=0.05).next_to(overall_problem, DOWN, aligned_edge=RIGHT)
+        data_table_values = VGroup(
+            *[
+                VGroup(
+                    *[
+                        DecimalNumber(
+                            v, num_decimal_places=ndp, color=c
+                        ).next_to(cell, LEFT, buff=0.1).shift(RIGHT*cell.width) for v, ndp, c, cell in zip(
+                            (time, conc), (0, 5), (cmap["tid"], cmap["konc"]), row
+                        )
+                    ]
+                ) for time, conc, row in zip(times, concs, data_table_structure[1:])
+            ]
+        )
+        data_table_headers = VGroup(
+            *[
+                al.copy().next_to(cell, LEFT, buff=0.1).shift(cell.width*RIGHT) for al, cell in zip(
+                    axis_labels, data_table_structure[0]
+                )
+            ]
+        )
+        self.add(data_table_structure, data_table_values, data_table_headers)
+        self.play(
+            LaggedStart(
+                *[
+                    LaggedStart(
+                        *[
+                            DrawBorderThenFill(cell) for cell in row
+                        ],
+                        lag_ratio=0.1
+                    ) for row in data_table_structure
+                ],
+                *[
+                    Write(header) for header in data_table_headers
+                ],
+                *[
+                    LaggedStart(
+                        *[
+                            Write(val) for val in vals
+                        ],
+                        lag_ratio=0.1
+                    ) for vals in data_table_values
+                ],
+                lag_ratio=0.1
+            )
+        )
+        self.slide_pause()
+
         data_points = VGroup(
             *[
                 Dot().move_to(plane.c2p(t, c)) for t, c in zip(times, concs)
@@ -622,9 +681,14 @@ class BestemmelseAfHastighedsudtryk(Energidiagrammer):
         )
         self.play(
             LaggedStart(
-                *[DrawBorderThenFill(dot) for dot in data_points],
-                lag_ratio=0.1
-            )
+                # *[DrawBorderThenFill(dot) for dot in data_points],
+                *[
+                    ReplacementTransform(VGroup(val[0].copy(), val[1].copy()), dot) for val, dot in zip(
+                        data_table_values, data_points
+                    )
+                ],
+                lag_ratio=0.5
+            ),
         )
         self.remove(data_points)
         self.add(data_points)
@@ -640,6 +704,12 @@ class BestemmelseAfHastighedsudtryk(Energidiagrammer):
             Create(graph)
         )
         self.slide_pause(5*_ONEFRAME)
+        self.play(
+            FadeOut(data_table_values),
+            FadeOut(data_table_structure),
+            FadeOut(data_table_headers),
+            run_time=0.25
+        )
         self.remove(plane, axis_labels, *tickmarks.values(), *ticks.values(), data_points, graph, overall_problem)
         return [plane, axis_labels, tickmarks, ticks, data_points, regression, graph, overall_problem]
 
@@ -884,7 +954,10 @@ class BestemmelseAfHastighedsudtryk(Energidiagrammer):
         for m in (slope_unit, slope_val, slope_text, velo_marker, conc_markers, moving_tangent_line, moving_tangent_point):
             print(m)
         self.play(
-            *[FadeOut(m) for m in (slope_unit, slope_val, slope_text, velo_marker, conc_markers, moving_tangent_line, moving_tangent_point)]
+            *[FadeOut(m) for m in (
+                slope_unit, slope_val, slope_text, velo_marker, conc_markers, moving_tangent_line, moving_tangent_point,
+                data_points
+            )]
         )
         self.slide_pause()
 
@@ -1079,23 +1152,34 @@ class BestemmelseAfHastighedsudtryk(Energidiagrammer):
             ],
             FadeOut(forklarende_tekst, shift=0.5*DOWN),
             FadeOut(forklarende_tekst_bkg, shift=0.5*DOWN),
+            FadeOut(data_points),
             FadeIn(mere_forklarende, shift=0.5*DOWN),
-            overall_problem.animate.next_to(mere_forklarende, UP)
+            overall_problem.animate.next_to(mere_forklarende, UP),
         )
         self.slide_pause()
 
+        r_orden = MathTex("^1").move_to(overall_problem[0][1][-1])
         self.play(
             FadeOut(overall_problem[1]),
             overall_problem[0][0].animate.shift(UP),
             ReplacementTransform(
                 overall_problem[0][1][-1],
-                MathTex("^1")
+                r_orden,
             )
         )
         self.slide_pause()
 
         self.play(
-            *[FadeOut(m) for m in self.mobjects]
+            FadeOut(r_orden),
+            run_time=0.25
+        )
+
+        self.play(
+            LaggedStart(
+                *[FadeOut(m) for m in self.mobjects],
+                lag_ratio=0.05
+            ),
+            run_time=1
         )
 
 
