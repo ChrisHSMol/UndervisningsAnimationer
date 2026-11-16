@@ -11,11 +11,11 @@ import subprocess
 from helpers import *
 from custom_classes import *
 
-slides = False
+slides = True
 if slides:
     from manim_slides import Slide
 
-q = "l"
+q = "h"
 _RESOLUTION = {
     "ul": "426,240",
     "l": "854,480",
@@ -118,7 +118,7 @@ class BjerrumDiagram(MovingCameraScene, Slide if slides else Scene):
         self.play(
             reaktionsskema.animate.to_edge(UP)
         )
-        self.slide_pause()
+        # self.slide_pause()
 
         pKs = 4.76
         # xS_list = [1-1e-3*i for i in range(1000)]
@@ -200,31 +200,28 @@ class BjerrumDiagram(MovingCameraScene, Slide if slides else Scene):
         ).set_z_index(10).next_to(reaktionsskema, DOWN, aligned_edge=RIGHT).shift(2*RIGHT)
         V_tilsat_tekst = VGroup(
             Tex("V tilsat NaOH: "),
-            DecimalNumber((V_total[0]-V_syre)*1000, num_decimal_places=1, unit=r"~\text{mL}")
+            DecimalNumber((V_total[0]-V_syre)*1000, num_decimal_places=2, unit=r"~\text{mL}")
         ).set_z_index(11).arrange(RIGHT).next_to(tekst_felt, UP, aligned_edge=LEFT, buff=-0.5)
         pH_tekst = VGroup(
             Tex("pH: ", color=cmap["pH"]),
-            DecimalNumber(pH_list[0], num_decimal_places=2, color=cmap["pH"])
+            DecimalNumber(pH_list[0], num_decimal_places=3, color=cmap["pH"])
         ).set_z_index(11).arrange(RIGHT).next_to(V_tilsat_tekst, DOWN, aligned_edge=LEFT, buff=0.5)
         xS_tekst = VGroup(
             Tex(r"Syrebrøken: $x_S = \frac{[S]}{[S]+[B]} = $", color=cmap["xS"]),
-            DecimalNumber(xS_list[0], num_decimal_places=2, color=cmap["xS"])
-        ).scale(1).set_z_index(11).arrange(RIGHT).next_to(pH_tekst, DOWN, aligned_edge=LEFT, buff=0.5)
+            DecimalNumber(xS_list[0], num_decimal_places=4, color=cmap["xS"])
+        ).scale(0.9).set_z_index(11).arrange(RIGHT).next_to(pH_tekst, DOWN, aligned_edge=LEFT, buff=0.5)
 
         self.play(
             FadeIn(
                 VGroup(tekst_felt, V_tilsat_tekst, pH_tekst, xS_tekst), shift=LEFT
-            )
+            ),
+            FadeIn(dots[0].scale(3))
         )
         self.slide_pause()
 
         # self.add(tekst_felt, V_tilsat_tekst, pH_tekst, xS_tekst)
         # self.add(dots)
         # self.add(dots[0].scale(3))
-        self.play(
-            FadeIn(dots[0].scale(3))
-        )
-        self.slide_pause()
 
         for i in [1, 2, 3, 4, 5]:
             self.play(
@@ -513,8 +510,8 @@ class Titrerkurve(BjerrumDiagram):
 
 if __name__ == "__main__":
     classes = [
-        # BjerrumDiagram,
-        Titrerkurve
+        BjerrumDiagram,
+        # Titrerkurve
     ]
     for cls in classes:
         class_name = cls.__name__
