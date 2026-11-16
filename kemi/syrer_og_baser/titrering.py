@@ -258,6 +258,9 @@ class BjerrumDiagram(MovingCameraScene, Slide if slides else Scene):
             lambda x: self.bjerrum_sigmoid(x, *popt),
             stroke_color=color_gradient((BLUE, RED), 2)
         )
+        inv_bjerrum_graph = plane.plot(
+            lambda x: 1
+        )
         # self.add(bjerrum_graph)
         self.play(
             Create(bjerrum_graph),
@@ -273,10 +276,20 @@ class BjerrumDiagram(MovingCameraScene, Slide if slides else Scene):
                 r"CH$_3$COO$^-$", color=cmap["korr_base"]
             ).rotate(-80*DEGREES).move_to(plane.c2p(5.5, 0.5)).set_z_index(plane.get_z_index() + 3)
         )
+        areas = VGroup(
+            plane.get_riemann_rectangles(
+                bjerrum_graph, x_range=(x_start, x_slut), dx=0.05, color=cmap["korr_syre"], fill_opacity=0.25, stroke_width=0
+            ),
+            plane.get_riemann_rectangles(
+                inv_bjerrum_graph, bounded_graph=bjerrum_graph,
+                x_range=(x_start, x_slut), dx=0.05, color=cmap["korr_base"], fill_opacity=0.25, stroke_width=0
+            )
+        )
         # self.add(korr_par)
         self.play(
             ReplacementTransform(reaktionsskema[0].copy(), korr_par[0]),
-            ReplacementTransform(reaktionsskema[6].copy(), korr_par[1])
+            ReplacementTransform(reaktionsskema[6].copy(), korr_par[1]),
+            FadeIn(areas)
         )
         self.slide_pause()
 
@@ -300,7 +313,7 @@ class BjerrumDiagram(MovingCameraScene, Slide if slides else Scene):
         self.slide_pause()
 
         pKs_tekst = Tex(
-            r"{{pH}}-værdien, når {{$x_S=0.5$}}\\aflæses som pKs-værdien"
+            r"{{pH}}-værdien, når {{$x_S=0.5$}},\\aflæses som pKs-værdien"
         ).next_to(xS_tekst, DOWN, aligned_edge=RIGHT, buff=1).set_z_index(plane.get_z_index() + 3)
         pKs_tekst[0].set_color(cmap["pH"])
         pKs_tekst[2].set_color(cmap["xS"])
@@ -327,7 +340,7 @@ class BjerrumDiagram(MovingCameraScene, Slide if slides else Scene):
             *[
                 FadeOut(m) for m in (
                     plane, axis_labels, *ticks.values(), *tickmarks.values(), korr_par, bjerrum_graph, afl_lines,
-                    pKs_marker, pKs_tekst, pKs_bkg
+                    pKs_marker, pKs_tekst, pKs_bkg, areas
                 )
             ],
             reaktionsskema.animate.move_to(ORIGIN + 0.5*UP),
